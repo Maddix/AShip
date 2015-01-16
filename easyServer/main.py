@@ -1,6 +1,3 @@
-#My Ethernet IP at work "192.168.1.176"
-#My wireless IP at work "192.168.1.162"
-#At home "192.168.2.219"
 import bottle.bottle as bottle
 
 # Turn on debug
@@ -21,13 +18,4 @@ def getFile(folder, filename):
 def game():
    return bottle.template("game.tpl")
 
-#@bottle.route("/socket")
-#def socketTest():
-#   return bottle.template("socketTest.tpl")
-
-try:
-   print("Launching LAN server..")
-   bottle.run(host="192.168.1.142", port=8080)
-except:
-   print("LAN server failed! Hosting local..")
-   bottle.run(host="localhost", port=8080)
+bottle.run(host="localhost", port=8080)

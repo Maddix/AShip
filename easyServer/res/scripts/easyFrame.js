@@ -1,4 +1,4 @@
-// Courtland Jones 2/1/2014 ~ Last update on 8/12/2014 (MM/DD/YYYY)
+// Maddix 2/1/2014 ~ Last update on 8/12/2014 (MM/DD/YYYY)
 
 // ///////////////
 // General Issues
