@@ -1,15 +1,20 @@
 # AShip
 A very simple HTML5 Javascipt game engine.
 
-I originally start out working with Kinectjs
-
-This is my attempt at building a game engine. This project was started back in October 2013.
+This is my attempt at building a game engine. I originally started out using 
+<a href="https://github.com/ericdrowell/KineticJS/">KineticJS</a> for rendering with canvas, but due to a number of factors I decided to write my own rendering code. The project was started back in October 2013 and is still ongoing.
 
 # Libraries Used
 
 - <a href="https://github.com/bottlepy/bottle">Bottle.py</a> - Used to host a small server
 - <a href="http://jquery.com">Jquery</a> - Cross-browser support
 - <a href="https://github.com/jquery/jquery-mousewheel/">Jquery-mousewheel</a> - Used to get mousewheel input
+
+Everything else is made from scratch on top of canvas.
+
+# Features
+
+(Add list here)
 
 # Examples
 
