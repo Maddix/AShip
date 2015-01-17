@@ -36,7 +36,7 @@ function setup(images) {
 				}
 			},
 		layerController:layerController,
-		screenRatio:[layerController.width, layerController.height],
+		screenRatio:layerController.ratio,
 		keyMouseController:keyMouseController,
 		inputController:inputController,
 		mainLoop:undefined,
