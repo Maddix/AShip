@@ -1,15 +1,14 @@
-// Maddix 2/1/2014 ~ Last update on 8/12/2014 (MM/DD/YYYY)
+// Maddix 2/1/2014 (MM/DD/YYYY)
 
 // ///////////////
 // General Issues
 //	- Rectangle doesn't play well with alpha
 //  - If setting globalAlpha fails when trying to draw, you are passing the wrong "this" to the function. 
-//		That or you're missing the "context".
-// DRY Issues 
+//		That or you're missing the "context". 
 
 
 // /////////////////////////////////////////////
-// General Notes for understanding this library
+// General Notes for understanding this micro-framework(?)
 // - Rotations are in radians.
 // - ratio = [width, height] 
 // - pos = [x, y]
@@ -111,16 +110,16 @@ function easyFrame() {
 				objects: [],
 			};
 			
-			local.setup = function(container, id, width, height) {
-				this.createCanvas(container, id, width, height);
+			local.setup = function(container, id, ratio) {
+				this.createCanvas(container, id, ratio);
 				this.context = this.canvas.getContext("2d");
 			};
 			
-			local.createCanvas = function(container, id, width, height) {
+			local.createCanvas = function(container, id, ratio) {
 				var newCanvas = document.createElement("canvas");
 				newCanvas.setAttribute("id", id);
-				newCanvas.setAttribute("width", width + "px");
-				newCanvas.setAttribute("height", height + "px");
+				newCanvas.setAttribute("width", ratio[0] + "px");
+				newCanvas.setAttribute("height", ratio[1] + "px");
 				newCanvas.setAttribute("style", "position: absolute; background-color: transparent;");
 				container.appendChild(newCanvas);
 				this.canvas = newCanvas;
@@ -149,8 +148,7 @@ function easyFrame() {
 				layerIds: 0,
 				incerLayerIds: function() {this.layerIds++;},
 				container: undefined,
-				width: 0,
-				height: 0,
+				ratio: [640, 480],
 				div: null,
 				layers: [],
 				layerNames: []
@@ -161,8 +159,8 @@ function easyFrame() {
 			local.container = document.getElementById(local.container);
 
 			local.addLayer = function(name, newLayer) {
-				// Why am I not using this.div?
-				newLayer.setup(local.div, local.layerIds, local.width, local.height);
+				var layerId = "Layer" + this.layerIds + "_" + name;
+				newLayer.setup(this.div, layerId, this.ratio);
 				this.incerLayerIds();
 				this.layers.push(newLayer);
 				this.layerNames.push(name);
@@ -178,8 +176,8 @@ function easyFrame() {
 				var div = document.createElement("div");
 				div.setAttribute("id", "easyFrame");
 				div.setAttribute("oncontextmenu", "return false;"); // Stops right-clicking bringing up a context menu
-				div.setAttribute("style", "position: relative; width: " + this.width + "px; height: " + this.height + "px;");
-				this.container.appendChild(div);
+				div.setAttribute("style", "position: relative; width: " + this.ratio[0] + "px; height: " + this.ratio[1] + "px;");
+				if (this.container) this.container.appendChild(div);
 				this.div = div;
 			};
 			
