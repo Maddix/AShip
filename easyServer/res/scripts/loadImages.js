@@ -1,7 +1,7 @@
 // Rename file to LoadImages
 function loadImage(){
 	var images = {};
-	var folder = "res/images/";
+	var folder = "/AShip/easyServer/res/images/";
 	// Could be a dynamic list..
 	var imageUrls = {
 		"player":"ship.png",
