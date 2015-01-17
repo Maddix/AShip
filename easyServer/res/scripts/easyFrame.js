@@ -160,7 +160,7 @@ function easyFrame() {
 
 			local.addLayer = function(name, newLayer) {
 				var layerId = "Layer " + this.layerIds + " " + name;
-				newLayer.setup(this.div, this.layerId, this.ratio);
+				newLayer.setup(this.div, layerId, this.ratio);
 				this.incerLayerIds();
 				this.layers.push(newLayer);
 				this.layerNames.push(name);

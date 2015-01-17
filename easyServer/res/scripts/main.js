@@ -6,8 +6,7 @@ function setup(images) {
 	// Create the layerController	
 	var layerController = easy.base.getLayerController({
 			container:"container",
-			width:1080, // 720
-			height:720, // 640
+			ratio[1080, 720] // 720, 640
 	});
 	layerController.createDiv();
 	
