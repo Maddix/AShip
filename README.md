@@ -4,6 +4,8 @@ A very simple HTML5 Javascipt game engine.
 This is my attempt at building a game engine. I originally started out using 
 <a href="https://github.com/ericdrowell/KineticJS/">KineticJS</a> for rendering with canvas, but due to a number of factors I decided to write my own rendering code. The project was started back in October 2013 and is still ongoing.
 
+Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of the engine.
+
 # Libraries Used
 
 - <a href="https://github.com/bottlepy/bottle">Bottle.py</a> - Used to host a small server
