@@ -23,7 +23,7 @@ Everything else is made from scratch on top of canvas.
 (Add comments here)
 
 ```javascript
-// main({imageName:image, ..}) ~ takes a object of images
+// main({imageName:image, ..}) ~ Takes a object of images
 function main(images) {
   
   // create the main library
@@ -31,7 +31,7 @@ function main(images) {
 
   // Create the layerController, which manages canvases
 	var layerController = easy.base.getLayerController({
-			container:"container", // place all the layers into a div called 'container'
+			container:"container", // Place all the layers into a div called 'container'
 			width:1080, // 720
 			height:720, // 640
 	});
@@ -42,11 +42,11 @@ function main(images) {
 	
 	// Create a global object that holds static data and references to other important objects
 	DATA = {
-	  images:images,
-	  layerController:layerController,
-	  screenRatio: [layerController.width, layerController.height],
-	  mainLoop:undefined,
-	  easyFrame:easy
+		images:images,
+		layerController:layerController,
+		screenRatio: [layerController.width, layerController.height],
+		mainLoop:undefined,
+		easyFrame:easy
 	};
 	
 	/*==============
@@ -54,21 +54,38 @@ function main(images) {
 	  ==============*/
 	
 	var rectangle = easy.base.getAtomRectangle({
-	  pos:[DATA.screenRatio[0]/2, 50], // Position x = center of the canvas, y = 50
-	  ratio:[150, 50], // Width, Height
-	  color:"green" // Fill color
-	  // Pass anything else you want rectangle to remember
+		pos:[50, 50], // Set the rectangles position to x = 50, y = 50
+		ratio:[150, 50], // Width, Height
+		color:"green", // Fill color
+		velocity:[5, -5] // displacement in pixels per second
 	});
 	
-	// add our rectangle to the mainLayer
+	// getAtomRectangle has a update() function already, so we need to preserve it
+	rectangle.updateRect = rectangle.update;
+	
+	// Give rectangle a new update function
+	rectangle.update = function(frame) {
+		// Change the rectangles position by velocity per second, frame.delta makes sure that the movement is smooth 
+		this.pos[0] += this.velocity[0]*frame.delta;
+		this.pos[1] += this.velocity[1]*frame.delta;
+		// Call the original update function (It doesn't take a frame object)
+		this.updateRect();
+	};
+	
+	// Add our rectangle to the mainLayer
 	layerController.getLayer("mainLayer").add(rectangle);
 	
+	/*===========
+	  Engine Loop
+	  ===========*/
+	
 	var mainLoop = easy.base.loop({
-	  func:function(frame) {
-	    
-	  }, 
-	  fps:60, // if your browser is reporting less than 60 fps then set fps to 80 (Such is the case with opera)
-	  useRAF:true // request animation frame
+		func:function(frame) {
+			// Call update on the layerController and pass in the frame object
+			layerController.update(frame); // layerController will update everything in its object list and so on
+		}, 
+		fps:60, // If your browser is reporting less than 60 fps then set fps to 80 (Such is the case with opera)
+		useRAF:true // Request animation frame
 	});
 	
 	// Start the loop
