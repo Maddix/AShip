@@ -354,7 +354,7 @@ function easyFrame() {
 				borderColor:"black",
 				borderStyle:"round", // bevel, round, miter
 				borderAlpha: 1
-			
+			};
 			this.newObject(this.atom, local);
 			return local;
 		};
