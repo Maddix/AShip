@@ -31,7 +31,7 @@ function main(images) {
 
   // Create the layerController, which manages canvases
 	var layerController = easy.base.getLayerController({
-			container:"container",
+			container:"container", // place all the layers into a div called 'container'
 			width:1080, // 720
 			height:720, // 640
 	});
