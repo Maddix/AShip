@@ -1,15 +1,14 @@
-// Maddix 2/1/2014 ~ Last update on 8/12/2014 (MM/DD/YYYY)
+// Maddix 2/1/2014 (MM/DD/YYYY)
 
 // ///////////////
 // General Issues
 //	- Rectangle doesn't play well with alpha
 //  - If setting globalAlpha fails when trying to draw, you are passing the wrong "this" to the function. 
-//		That or you're missing the "context".
-// DRY Issues 
+//		That or you're missing the "context". 
 
 
 // /////////////////////////////////////////////
-// General Notes for understanding this library
+// General Notes for understanding this micro-framework(?)
 // - Rotations are in radians.
 // - ratio = [width, height] 
 // - pos = [x, y]
@@ -355,7 +354,7 @@ function easyFrame() {
 				borderColor:"black",
 				borderStyle:"round", // bevel, round, miter
 				borderAlpha: 1
-			};
+			
 			this.newObject(this.atom, local);
 			return local;
 		};

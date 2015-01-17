@@ -55,7 +55,7 @@ function main() {
 	createContent();
 	
 	// Make the loop
-	mainLoop = DATA.easyFrame.base.loop({func:function(frame) {
+	var mainLoop = DATA.easyFrame.base.loop({func:function(frame) {
 		
 		// update keys
 		DATA.inputController.update(DATA.keyMouseController.update());
