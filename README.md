@@ -45,15 +45,6 @@ function main(images) {
 	// Create a canvas to draw images on and add it to the layerController
 	layerController.addLayer("mainLayer", easy.base.getLayer());
 	
-	// Create a global object that holds static data and references to other important objects
-	DATA = {
-		images:images,
-		layerController:layerController,
-		screenRatio: [layerController.width, layerController.height],
-		mainLoop:undefined,
-		easyFrame:easy
-	};
-	
 	/*==============
 	  Create content
 	  ==============*/
@@ -95,7 +86,5 @@ function main(images) {
 	
 	// Start the loop
 	mainLoop.start();
-	
-	DATA.mainLoop = mainLoop;
 }
 ```
