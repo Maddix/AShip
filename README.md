@@ -26,10 +26,14 @@ Everything else is made from scratch on top of canvas.
 // main({imageName:image, ..}) ~ Takes a object of images
 function main(images) {
   
-  // create the main library
-  var easy = easyFrame();
+  	/*==========
+	  Main setup
+	  ==========*/
+  
+	// create the main library
+	var easy = easyFrame();
 
-  // Create the layerController, which manages canvases
+	// Create the layerController, which manages canvases
 	var layerController = easy.base.getLayerController({
 			container:"container", // Place all the layers into a div called 'container'
 			width:1080, // 720
@@ -76,7 +80,7 @@ function main(images) {
 	layerController.getLayer("mainLayer").add(rectangle);
 	
 	/*===========
-	  Engine Loop
+	  Engine loop
 	  ===========*/
 	
 	var mainLoop = easy.base.loop({
