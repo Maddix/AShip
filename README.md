@@ -37,8 +37,7 @@ function main(images) {
 	var layerController = easy.base.getLayerController({
 		// Place our layerContoller-created-div that holds all the layers into a div called 'container'
 		container:"container",
-		width:1080, // 720
-		height:720, // 640
+		ratio:[1080, 720] // The width and height of the canvas
 	});
 	layerController.createDiv();
 	
