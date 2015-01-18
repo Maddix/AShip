@@ -532,7 +532,7 @@ function easyFrame() {
 					if (this.elapsedTime >= this.fps) {
 						var frame = {
 							rate: parseFloat((1000/this.elapsedTime).toFixed(1)),
-							updateTime: timeDifference, // Should I tie this in with this.modifier?
+							updateTime: timeDifference*this.modifier, // Should I tie this in with this.modifier?
 							delta: (this.elapsedTime/1000)*this.modifier,
 							time: this.tick*this.modifier
 						};

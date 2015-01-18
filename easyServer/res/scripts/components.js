@@ -128,7 +128,7 @@ function components(easyFrame) {
 						};	
 					}
 				}
-				console.log("--- '" + movementName + "' Torque: " + totalTorque + " TotalEngines: " + possibleEngines.length + " ---");
+				//console.log("--- '" + movementName + "' Torque: " + totalTorque + " TotalEngines: " + possibleEngines.length + " ---");
 				this.engineGroups[movementName] = possibleEngines;
 			}
 		};

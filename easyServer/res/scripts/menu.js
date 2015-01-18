@@ -18,7 +18,7 @@ function windowLib(easyFrameBase) {
 	localContainer.getWindowManager = function() {
 		var local = {
 			activeWindow: "",
-			windowOrder: [],
+			windowOrder: [], // holds windowNames
 			windows: {},
 			clicked: false,
 			context: null // For the windows
@@ -26,12 +26,17 @@ function windowLib(easyFrameBase) {
 		
 		local.setup = function(context) {
 			this.context = context;
+			// Ignoring order here too as it doesn't matter (It shouldn't ?)
+			for (var windowName in this.windows) {
+				this.windows[windowName].setup(context);
+			}
 		};
 		
 		local.addWindow = function(windowName, newWindow) {
 			this.windowOrder.push(windowName);
 			this.windows[windowName] = newWindow;
-			newWindow.setup(this.context);
+			// set up if we have already set up
+			if (this.context) newWindow.setup(this.context);
 		};
 		
 		local.reorderWindow = function(windowName, id) {
@@ -89,7 +94,7 @@ function windowLib(easyFrameBase) {
 			ratio:[100, 100],
 			context: null,
 			blocks:{},
-			blockOrder:[],
+			blockOrder:[], // holds blockNames
 			clickOffset: 0,
 			clicked:false,
 			activeWidget: false, // Block name, widget index
@@ -110,6 +115,7 @@ function windowLib(easyFrameBase) {
 			}
 		};
 		
+		// Block could almost be its own object, though its so closely tied with getWindow. Hmm
 		local.createBlock = function(blockName, config) {
 			var newBlock = {
 				pos:[0, 0], // 0% to 100%
@@ -124,7 +130,7 @@ function windowLib(easyFrameBase) {
 		
 		local.addWidget = function(blockName, widget) {
 			this.blocks[blockName].widgets.push(widget);
-			widget.setup(this.context);
+			if (this.context) widget.setup(this.context);
 		};
 		
 		local.addEnhancement = function(blockName, enhancement) {

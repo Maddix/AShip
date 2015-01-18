@@ -124,10 +124,9 @@ function createContent() {
 	*  ======= */
 	
 	var windowManager = easy.windowLib.getWindowManager();
-	//menu.add(windowManager);
 	
 	var titleWindow = easy.windowLib.getWindow({
-		pos:[100, 100],
+		pos:[300, 100],
 		ratio:[200, 200]
 	});
 	windowManager.addWindow("title", titleWindow);
@@ -138,9 +137,11 @@ function createContent() {
 	
 	var titleTextWidget = easy.windowLib.getTextWidget({
 		text:"A Ship",
-		ratio:[0, 30],
+		ratio:[0, 30]
 	});
-	//titleWindow.addWidget("fullWindow", titleTextWidget);	
+	titleWindow.addWidget("fullWindow", titleTextWidget);	
+	
+	menu.add(windowManager);
 	
 	/* ============= *
 	   Input profile

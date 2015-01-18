@@ -63,7 +63,7 @@ function main() {
 		// Update all the layers in the layerController
 		DATA.layerController.update(frame);
 		
-	}, fps:80, useRAF:true}); // opera won't do 60 FPS (canvas max) if set to 60, to get around that set it to 80.
+	}, fps:80, useRAF:true, modifier:1}); // opera won't do 60 FPS (canvas max) if set to 60, to get around that set it to 80.
 	
 	// Kick off the loop
 	mainLoop.start();
