@@ -23,8 +23,7 @@ Everything else is made from scratch on top of canvas.
 The example below creates a canvas with a green rectangle that moves to the lower right of the screen by 5px a second.
 
 ```javascript
-// main({imageName:image, ..}) ~ Takes a object of images
-function main(images) {
+function main() {
   
   	/*==========
 	  Main setup
