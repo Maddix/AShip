@@ -53,7 +53,7 @@ function components(easyFrame) {
 			// Update objects
 			for (var slotName in this.slots) {
 				var slot = this.slots[slotName];
-				slot.object.update(frame, this);
+				if (slot.object) slot.object.update(frame, this);
 			}
 			
 			// Update software
@@ -79,7 +79,8 @@ function components(easyFrame) {
 				"turnLeft":{torque:1}
 			},
 			engineGroups: {},
-			quedEvents: []
+			quedEvents: [],
+			defaultAngleOffset: Math.PI/8
 		};
 		
 		local.setup = function(parent) {
@@ -90,48 +91,58 @@ function components(easyFrame) {
 			for (var movementName in this.engineSorting) {		
 				var movement = this.engineSorting[movementName];
 				var totalTorque = 0;
-				// I should worry about the x and y velocity
+				// I should worry about the x and y  ?
 				var possibleEngines = [];
-				
 				for (var engineName in parentEngines) {
-					//console.log(parentEngines[engineName]);
+					
 					var engine = parentEngines[engineName].object;
-					var engineStats = engine.getInfo();
-					var add = false;
-					
-					// if engine rotation is within +1/8 or -1/8 of the target rotation then add
-					//console.log("Engine rotation: " + engineStats.rotation + " == movement rotation: " + movement.rotation);
-					if (engineStats.rotation === movement.rotation) {
-						add = true;
-					} 
-					// if engine torque is matching movement torque then add
-					if (movement.torque < 0) {
-						if (engineStats.torque >= movement.torque) {
+					if (engine) {
+						var engineStats = engine.getInfo();
+						var add = false;
+						
+						var angleOffset = movement.angleOffset ? movement.angleOffset : this.defaultAngleOffset
+						var rotationCone = [
+							movement.rotation - angleOffset, 
+							movement.rotation + angleOffset
+						];
+
+						if (rotationCone[0] <= engineStats.rotation && engineStats.rotation <= rotationCone[1]) {
 							add = true;
+						} 
+						
+						// if engine torque is matching movement torque then add
+						if (movement.torque > 0) {
+							if (engineStats.torque != 0 && engineStats.torque <= movement.torque) {
+								add = true;
+							}
+						} else if (movement.torque < 0) {
+							if (engineStats.torque != 0 && engineStats.torque >= movement.torque) {
+								add = true;
+							}
 						}
-					} else if (movement.torque > 0) {
-						if (engineStats.torque <= movement.torque) {
-							add = true;
-						}
+						
+						// Add the engine
+						if (add) {
+							totalTorque += engineStats.torque;
+							possibleEngines.push(engine);
+						};	
 					}
-					
-					// Add the engine
-					if (add) {
-						totalTorque += engineStats.torque;
-						possibleEngines.push(engine);
-					};	
 				}
-				console.log("'" + movementName + "' Torque: " + totalTorque + " TotalEngines: " + possibleEngines.length);
+				console.log("--- '" + movementName + "' Torque: " + totalTorque + " TotalEngines: " + possibleEngines.length + " ---");
 				this.engineGroups[movementName] = possibleEngines;
 			}
 		};
 		
 		local.fireThrusters = function(engineGroup, frame, parent) {
 			for (var engineIndex in this.engineGroups[engineGroup]) {
-				var engineOutput = this.engineGroups[engineGroup][engineIndex].activate(parent.rotation, parent.inertia, parent.mass);
-				parent.angularVelocity += engineOutput.angularVelocity*frame.delta;
-				parent.velocity[0] += engineOutput.velocity[0];
-				parent.velocity[1] += engineOutput.velocity[1];
+				var engine = this.engineGroups[engineGroup][engineIndex];
+				if (!engine.activated) {
+					var engineOutput = this.engineGroups[engineGroup][engineIndex].activate(parent.rotation, parent.inertia, parent.mass);
+					engine.activated = true;
+					parent.angularVelocity += engineOutput.angularVelocity*frame.delta;
+					parent.velocity[0] += engineOutput.velocity[0];
+					parent.velocity[1] += engineOutput.velocity[1];
+				}
 			}
 		}
 		
@@ -157,7 +168,8 @@ function components(easyFrame) {
 			localOffset: [0, 0],
 			power: 1,
 			localRotation: 0,
-			spawnParticle: false
+			spawnParticle: false,
+			activated: false
 		};
 		this.easy.base.newObject(this.easy.base.getAtomImage(config), local);
 		local.updateImage = local.update;
@@ -204,6 +216,9 @@ function components(easyFrame) {
 			this.pos[0] = parent.pos[0] + rotatedPos[0];
 			this.pos[1] = parent.pos[1] + rotatedPos[1];
 			this.rotation = parent.rotation + this.localRotation;
+			
+			if (this.activated) this.activated = false;
+			
 			this.particleController.pos = this.pos;
 			this.particleController.spawnRotation = this.rotation + Math.PI;
 			this.particleController.parentVelocity = parent.velocity;

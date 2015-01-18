@@ -167,9 +167,11 @@ function createContent() {
 	});
 	
 	var engineBackRightNew = easy.base.newObject({
+		//xlocalRotation:Math.PI/8
 	}, easy.base.newObject(engineDefault));
 	
 	var engineBackLeftNew = easy.base.newObject({
+		//localRotation:-Math.PI/8
 	}, easy.base.newObject(engineDefault));
 	
 	var engineFrontRightNew = easy.base.newObject({
@@ -178,6 +180,18 @@ function createContent() {
 
 	var engineFrontLeftNew = easy.base.newObject({
 		localRotation:Math.PI
+	}, easy.base.newObject(engineDefault));
+	
+	var engineBackNew = easy.base.newObject({
+		power: 20
+	}, easy.base.newObject(engineDefault));
+	
+	var engineFrontSideRight = easy.base.newObject({
+		localRotation: Math.PI/2
+	}, easy.base.newObject(engineDefault));
+
+	var engineFrontSideLeft = easy.base.newObject({
+		localRotation: Math.PI*3/2
 	}, easy.base.newObject(engineDefault));
 	
 	var engineComputer = easy.components.engineComputer({
@@ -205,6 +219,12 @@ function createContent() {
 			if (input.keys["s"]) {
 				ship.software["engineComputer"].object.activate("backward", ship);
 			}
+			if (input.keys["e"]) {
+				ship.software["engineComputer"].object.activate("strafeRight", ship);
+			}
+			if (input.keys["q"]) {
+				ship.software["engineComputer"].object.activate("strafeLeft", ship);
+			}
 			if (input.keys["r"] === false) {
 				console.log("Recalc engines..");
 				ship.software["engineComputer"].object.setupEngines(ship.slots);
@@ -225,12 +245,18 @@ function createContent() {
 	ship.addSlot("engineBackLeft", [10, 10]);
 	ship.addSlot("engineFrontRight", [-10, -10]);
 	ship.addSlot("engineFrontLeft", [10, -10]);
+	ship.addSlot("engineBack", [0, 10]);
+	ship.addSlot("engineFrontSideRight", [-13, -7]);
+	ship.addSlot("engineFrontSideLeft", [13, -7]);
 	ship.addSoftwareSlot("engineComputer", engineComputer);
 	
 	ship.addObject("engineBackRight", engineBackRightNew);
 	ship.addObject("engineBackLeft", engineBackLeftNew);
 	ship.addObject("engineFrontRight", engineFrontRightNew);
 	ship.addObject("engineFrontLeft", engineFrontLeftNew);
+	ship.addObject("engineBack", engineBackNew);
+	ship.addObject("engineFrontSideRight", engineFrontSideRight);
+	ship.addObject("engineFrontSideLeft", engineFrontSideLeft);
 	ship.addSoftware("engineComputer", engineComputer);
 	
 	profile.add("newShip", ship);	
