@@ -1,4 +1,4 @@
-# AShip
+# AShip - A seriously huge implementation project
 A very simple HTML5 Javascipt game engine.
 
 This is my attempt at building a game engine. I originally started out using 
