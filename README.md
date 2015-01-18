@@ -15,8 +15,18 @@ Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of the engine.
 Everything else is made from scratch on top of canvas.
 
 # Features
+This a not a complete list of all the features.
 
-(Add list here)
+- Object management system
+- Keyboard and Mouse input system
+- Input profiles
+- Windowing system
+- Particles
+
+I plan on adding the featrures below in the future.
+
+- Audio
+- Websockets
 
 # Examples
 
