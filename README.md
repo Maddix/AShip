@@ -8,7 +8,7 @@ Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of the engine.
 
 # Libraries Used
 
-- <a href="https://github.com/bottlepy/bottle">Bottle.py</a> - Used to host a small server
+- <a href="https://github.com/bottlepy/bottle">Bottlepy</a> - Used to host a small server
 - <a href="http://jquery.com">Jquery</a> - Cross-browser support
 - <a href="https://github.com/jquery/jquery-mousewheel/">Jquery-mousewheel</a> - Used to get mousewheel input
 
