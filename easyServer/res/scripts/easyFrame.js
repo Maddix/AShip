@@ -564,7 +564,7 @@ function easyFrame() {
 	easy.auther = "Maddix";
 	easy.base = base();
 	easy.components = components(easy);
-	easy.windowLib = windowLib(easy.base);
+	easy.windowLib = windowLib(easy);
 	easy.ai = ai(easy.base);
 	easy.inputHandler = inputHandler(easy.base);
 	

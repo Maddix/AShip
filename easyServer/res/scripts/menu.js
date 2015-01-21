@@ -7,10 +7,10 @@
 // - Write documentation above all the functions if they do anything not stated before
 
 
-function windowLib(easyFrameBase) {
+function windowLib(easyFrame) {
 	var localContainer = {
 		version:"1.0",
-		easyFrameBase: easyFrameBase
+		easy: easyFrame
 	};
 
 	// aka, the layer for windows
@@ -97,35 +97,26 @@ function windowLib(easyFrameBase) {
 			blockOrder:[], // holds blockNames
 			clickOffset: 0,
 			clicked:false,
-			activeWidget: false, // Block name, widget index
+			// activeWidget - [Block name, widget index] (Kinda odd, but it gets turned 
+			// into a array when in use. When not in use its set to false.)
+			activeWidget: false, 
 			active: false
 		};
-		this.easyFrameBase.newObject(config, local);
+		this.easy.base.newObject(config, local);
 		
 		local.setup = function(context) {
 			// Ignoring order here as it doesn't matter who gets set up first
 			this.context = context;
 			for (var blockName in this.blocks) {
-				for (var widgetIndex in this.blocks[blockName].widgets) {
-					var widget = this.blocks[blockName].widgets[widgetIndex];
-					if (widget.setup) {
-						widget.setup(context);
-					}
-				}
+				this.blocks[blockName].setup(this.context, this);
 			}
 		};
 		
-		// Block could almost be its own object, though its so closely tied with getWindow. Hmm
-		local.createBlock = function(blockName, config) {
-			var newBlock = {
-				pos:[0, 0], // 0% to 100%
-				ratio:[100, 100], // 0% to 100%
-				widgets:[],
-				arrangeStyle:"high", // high, long, free, absolute (all but absolute use percentages for placement)
-			};
-			localContainer.easyFrameBase.newObject(config, newBlock);
-			this.blocks[blockName] = newBlock;
+		local.addBlock = function(blockName, block) {
 			this.blockOrder.push(blockName);
+			this.blocks[blockName] = block;
+			// This is for when a block gets added after the window has been added to canvas
+			if (this.context) block.setup(context, this);
 		};
 		
 		local.addWidget = function(blockName, widget) {
@@ -133,22 +124,11 @@ function windowLib(easyFrameBase) {
 			if (this.context) widget.setup(this.context);
 		};
 		
-		local.addEnhancement = function(blockName, enhancement) {
-			enhancement.parent = this;
-			this.blocks[blockName].widgets.push(enhancement);
-		};
-		
 		local.getActiveWidget = function(mousePos, LMB, RMB) {
-			for (var blockNum=this.blockOrder.length; blockNum > 0; blockNum--) {
+			for (var blockNum=this.blockOrder.length; 0 < blockNum; blockNum--) {
 				var block = this.blocks[this.blockOrder[blockNum-1]];			
-				for (var widgetIndex in block.widgets) { // Reverse the search ~ first seen is last added (?)
-					var widget = block.widgets[widgetIndex];
-					if (widget.click) {
-						if (widget.click(mousePos, LMB, RMB)) {
-							return [this.blockOrder[blockNum-1], widgetIndex]; // Why is widgetIndex a string?
-						}
-					}
-				}
+				var activeIndex = block.getActiveWidget(mousePos, LMB, RMB);
+				if (activeIndex) return [this.blockOrder[blockNum-1], activeIndex];
 			}
 			return false;
 		};
@@ -170,6 +150,7 @@ function windowLib(easyFrameBase) {
 			}
 		};
 		
+		// This is reaching far into block. I should make block do the work. ?
 		local.release = function(mousePos, LMB, RMB) {
 			this.clicked = false;
 			if (this.activeWidget) { // Temp fix till window manager is here ~ What? I can't remember..
@@ -177,7 +158,50 @@ function windowLib(easyFrameBase) {
 				this.activeWidget = false;
 			}
 		};
+		
+		local.update = function() {
+			for (var blockName in this.blockOrder) {
+				var block = this.blocks[this.blockOrder[blockName]];
+			}
+		};
+		return local;
+	}
 
+	localContainer.getWindowBlock = function(config) {
+		var local = {
+			pos:[0, 0], // 0% to 100%
+			ratio:[100, 100], // 0% to 100%
+			widgets:[],
+			arrangeStyle:"high", // high, long, free, absolute (all but absolute use percentages for placement)
+			context:null,
+			parent:null
+		};
+		
+		local.setup = function(context, parent) {
+			this.context = context;
+			this.parent = parent;
+			for (var widgetIndex in this.widgets) {
+				this.widgets[widgetIndex].setup(context, parent);
+			};
+		};
+		
+		local.addWidget = function(widget) {
+			this.widgets.push(widget);
+			// I only check for context, parent should be bundled with it. Should that is..
+			if (this.context) widget.setup(this.context, this.parent);
+		};
+		
+		local.getActiveWidget = function(mousePos, LMB, RMB) {
+			for (var widgetIndex in block.widgets) { // Reverse the search ~ first seen is last added (?)
+				var widget = block.widgets[widgetIndex];
+				if (widget.click) {
+					if (widget.click(mousePos, LMB, RMB)) {
+						return widgetIndex;
+					}
+				}
+			}
+		};
+		
 		local.arrangeAlongAxis = function(widgets, pos, ratio, axis) {
 			var currentStep = pos[axis] + 10; // + 10 is a hard coded offset, remove
 			var step = ratio[axis] / widgets.length;
@@ -201,8 +225,8 @@ function windowLib(easyFrameBase) {
 		local.arrangeFree = function(widgets, pos, ratio) {
 			for (var widgetIndex in widgets) {
 				var widget = widgets[widgetIndex];
-				widget.pos = [pos[0] + (ratio[0] * toPercent(widget.localPos[0])), 
-					pos[1] + (ratio[1] * toPercent(widget.localPos[1]))];
+				widget.pos = [pos[0] + (ratio[0] * (widget.localPos[0]/100)), 
+					pos[1] + (ratio[1] * (widget.localPos[1]/100))];
 			}
 		};
 		
@@ -219,7 +243,7 @@ function windowLib(easyFrameBase) {
 			}
 		};
 		
-		local.arrangeWidgets = function(widgets, style, pos, ratio) {
+		local.arrangeWidgets = function(widgets, pos, ratio, style) {
 			if (style == "long") {
 				this.arrangeAlongAxis(widgets, pos, ratio, 0); // Stack them
 				this.arrangeAlongCenter(widgets, pos, ratio, 1); // Center them
@@ -233,26 +257,29 @@ function windowLib(easyFrameBase) {
 			}
 		};
 		
-		local.update = function() {
-			for (var blockName in this.blockOrder) {
-				var block = this.blocks[this.blockOrder[blockName]];
-				var blockPos = [this.pos[0] + (this.ratio[0] * toPercent(block.pos[0])), 
-					this.pos[1] + (this.ratio[1] * toPercent(block.pos[1]))];
-				var blockRatio = [this.ratio[0] * toPercent(block.ratio[0]), 
-					this.ratio[1] * toPercent(block.ratio[1])];
-				this.arrangeWidgets(block.widgets, block.arrangeStyle, blockPos, blockRatio);
+		local.update = function(parent) {
+			for (var widgetIndex in this.widgets) {
+				var blockPos = [
+					parent.pos[0] + (parent.ratio[0] * (this.pos[0]/100)), 
+					parent.pos[1] + (parent.ratio[1] * (this.pos[1]/100))
+				];
+				var blockRatio = [
+					parent.ratio[0] * (this.ratio[0]/100), 
+					parent.ratio[1] * (this.ratio[1]/100)
+				];
 				
-				for (var widgetIndex in block.widgets) {
-					var widget = block.widgets[widgetIndex];
+				this.arrangeWidgets(this.widgets, this.arrangeStyle, blockPos, blockRatio);
+				var widget = this.widgets[widgetIndex];
 					if (widget.update) {
-						widget.update(this, blockPos, blockRatio);
+						widget.update(blockPos, blockRatio, this); // send self?
 					}
 				}
-			}
+			
 		};
+		
 		return local;
-	}
-
+	};
+	
 	// Create some sort of window docking / Talk with the windowManager?
 	// This is a window enhancement, it lets you drag the window
 	// Rename?
@@ -301,7 +328,7 @@ function windowLib(easyFrameBase) {
 		};
 		
 		local.update = function(parentWindow, blockPos, blockRatio) {
-			this.ratio = [blockRatio[0] * toPercent(this.localRatio[0]), blockRatio[1] * toPercent(this.localRatio[1])];
+			this.ratio = [blockRatio[0] * (this.localRatio[0]/100), blockRatio[1] * (this.localRatio[1]/100)];
 		};
 		
 		return local;

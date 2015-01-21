@@ -123,6 +123,8 @@ function createContent() {
 	   Windows
 	*  ======= */
 	
+	/*
+	
 	var windowManager = easy.windowLib.getWindowManager();
 	
 	var titleWindow = easy.windowLib.getWindow({
@@ -142,6 +144,8 @@ function createContent() {
 	titleWindow.addWidget("fullWindow", titleTextWidget);	
 	
 	menu.add(windowManager);
+	
+	*/
 	
 	/* ============= *
 	   Input profile
