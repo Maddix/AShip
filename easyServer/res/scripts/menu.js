@@ -1,48 +1,39 @@
 // /////////////
 // Window system
 
-// - Rewrite all the widgets, they aren't up to par, also document this stuff and go over 
-// the basic parts and look for errors or better ways of doing things.
-// Go over getWindowManager, getWindow, getDrag/getResize enhancement
-// - Write documentation above all the functions if they do anything not stated before
-
-
 function windowLib(easyFrame) {
 	var localContainer = {
 		version:"1.0",
 		easy: easyFrame
 	};
-
+	
 	// aka, the layer for windows
 	// This handles multiple Windows
 	localContainer.getWindowManager = function() {
 		var local = {
-			activeWindow: "",
+			activeWindowName: false, // holds a string when in use
 			windowOrder: [], // holds windowNames
 			windows: {},
-			clicked: false,
+			inputContext: null,
 			context: null // For the windows
 		};
 		
 		local.setup = function(context) {
 			this.context = context;
-			// Ignoring order here too as it doesn't matter (It shouldn't ?)
-			for (var windowName in this.windows) {
-				this.windows[windowName].setup(context);
+			for (var windowIndex in this.windowOrder) {
+				this.windows[this.windowOrder[windowIndex]].setup(context);
 			}
 		};
 		
 		local.addWindow = function(windowName, newWindow) {
 			this.windowOrder.push(windowName);
 			this.windows[windowName] = newWindow;
-			// set up if we have already set up
 			if (this.context) newWindow.setup(this.context);
 		};
 		
 		local.reorderWindow = function(windowName, id) {
 			this.windowOrder.splice(this.windowOrder.indexOf(windowName), 1);
 			this.windowOrder.push(windowName);
-			//this.windowOrder.splice(id, 0, windowName);
 		};
 		
 		local.removeWindow = function(windowName) {
@@ -50,33 +41,26 @@ function windowLib(easyFrame) {
 			delete this.windows[windowName];
 		};
 
-		local.click = function(mousePos, LMB, RMB) {
-			if (!this.clicked) {
-				this.clicked = true;
-				for (var windowNum=this.windowOrder.length-1; windowNum >= 0; windowNum--) {
-					this.windows[this.windowOrder[windowNum]].active = false;
-					if (this.windows[this.windowOrder[windowNum]].click(mousePos, LMB, RMB) === true) {
-						this.activeWindow = this.windowOrder[windowNum];
-						this.reorderWindow(this.windowOrder[windowNum], 0);
-						return true;
-					}
+		local.click = function(input) {
+			// Reorder the windows if a window got clicked
+			
+			if (!this.activeWindowName) {
+				for (var windowIndex in this.windowOrder) {
+					var windowName = this.windowOrder[windowIndex]
+					var windowClick = this.windows[windowName].click(input);
+					if (windowClick != undefined) {
+						this.activeWindowName = windowName;
+						return windowClick;
+					};
 				}
 			} else {
-				if (this.activeWindow !== "") {
-					this.windows[this.activeWindow].click(mousePos, LMB, RMB);
-					return true;
-				} else {
-					return false;
-				}
+				return this.windows[this.activeWindowName].click(input);
 			}
 		};
 		
-		local.release = function(mousePos, LMB, RMB) {
-			this.clicked = false;
-			this.activeWindow = "";
-			for (var windowIndex in this.windowOrder) {
-				this.windows[this.windowOrder[windowIndex]].release(mousePos, LMB, RMB);
-			}
+		local.release = function(input) {
+			if (this.activeWindowName) this.windows[this.activeWindowName].release(input);
+			this.activeWindowName = false;
 		};
 		
 		local.update = function() {
@@ -92,31 +76,36 @@ function windowLib(easyFrame) {
 		var local = {
 			pos:[0, 0],
 			ratio:[100, 100],
-			context: null,
+			context:null,
+			clicked:false,
+			inputContexts:null,
 			blocks:{},
 			blockOrder:[], // holds blockNames
-			clickOffset: 0,
-			clicked:false,
-			// activeWidget - [Block name, widget index] (Kinda odd, but it gets turned 
-			// into a array when in use. When not in use its set to false.)
-			activeWidget: false, 
-			active: false
+			activeWidget:[],
+			clickBoundsOffset:5
 		};
 		this.easy.base.newObject(config, local);
 		
 		local.setup = function(context) {
-			// Ignoring order here as it doesn't matter who gets set up first
 			this.context = context;
-			for (var blockName in this.blocks) {
-				this.blocks[blockName].setup(this.context, this);
+			for (var blockIndex in this.blockOrder) {
+				var block = this.blocks[this.blockOrder[blockIndex]];
+				for (var blockWidgetIndex in block.widgets) {
+					block.widgets[blockWidgetIndex].setup(this.context);
+				}
 			}
 		};
 		
-		local.addBlock = function(blockName, block) {
+		local.createBlock = function(blockName, config) {
+			var newBlock = {
+				pos:[0, 0],
+				ratio:[100, 100],
+				widgets:[],
+				arrangeStyle:"high"
+			};
+			localContainer.easy.base.newObject(config, newBlock);
 			this.blockOrder.push(blockName);
-			this.blocks[blockName] = block;
-			// This is for when a block gets added after the window has been added to canvas
-			if (this.context) block.setup(context, this);
+			this.blocks[blockName] = newBlock;
 		};
 		
 		local.addWidget = function(blockName, widget) {
@@ -124,82 +113,42 @@ function windowLib(easyFrame) {
 			if (this.context) widget.setup(this.context);
 		};
 		
-		local.getActiveWidget = function(mousePos, LMB, RMB) {
-			for (var blockNum=this.blockOrder.length; 0 < blockNum; blockNum--) {
-				var block = this.blocks[this.blockOrder[blockNum-1]];			
-				var activeIndex = block.getActiveWidget(mousePos, LMB, RMB);
-				if (activeIndex) return [this.blockOrder[blockNum-1], activeIndex];
-			}
-			return false;
-		};
-		
-		local.click = function(mousePos, LMB, RMB) {
-			if (checkWithinBounds(mousePos, this.pos, this.ratio, this.clickOffset)) {
-				if (!this.clicked) {
-					this.clicked = true;
-					this.activeWidget = this.getActiveWidget(mousePos, LMB, RMB);
-					this.active = true;
-					return true; // ? Hmm
-				} 
-			} else {
-				this.clicked = true;
-			}
-			// Might want to do a this.clicked check
-			if (this.activeWidget) {
-				this.blocks[this.activeWidget[0]].widgets[this.activeWidget[1]].click(mousePos, LMB, RMB);
-			}
-		};
-		
-		// This is reaching far into block. I should make block do the work. ?
-		local.release = function(mousePos, LMB, RMB) {
-			this.clicked = false;
-			if (this.activeWidget) { // Temp fix till window manager is here ~ What? I can't remember..
-				this.blocks[this.activeWidget[0]].widgets[this.activeWidget[1]].release(mousePos, LMB, RMB);
-				this.activeWidget = false;
-			}
-		};
-		
-		local.update = function() {
-			for (var blockName in this.blockOrder) {
-				var block = this.blocks[this.blockOrder[blockName]];
-			}
-		};
-		return local;
-	}
-
-	localContainer.getWindowBlock = function(config) {
-		var local = {
-			pos:[0, 0], // 0% to 100%
-			ratio:[100, 100], // 0% to 100%
-			widgets:[],
-			arrangeStyle:"high", // high, long, free, absolute (all but absolute use percentages for placement)
-			context:null,
-			parent:null
-		};
-		
-		local.setup = function(context, parent) {
-			this.context = context;
-			this.parent = parent;
-			for (var widgetIndex in this.widgets) {
-				this.widgets[widgetIndex].setup(context, parent);
-			};
-		};
-		
-		local.addWidget = function(widget) {
-			this.widgets.push(widget);
-			// I only check for context, parent should be bundled with it. Should that is..
-			if (this.context) widget.setup(this.context, this.parent);
-		};
-		
-		local.getActiveWidget = function(mousePos, LMB, RMB) {
-			for (var widgetIndex in block.widgets) { // Reverse the search ~ first seen is last added (?)
-				var widget = block.widgets[widgetIndex];
-				if (widget.click) {
-					if (widget.click(mousePos, LMB, RMB)) {
-						return widgetIndex;
+		local.getActiveWidget = function(input) {
+			for (var blockIndex in this.blockOrder) {
+				var blockName = this.blockOrder[blockIndex]
+				var block = this.blocks[blockName];
+				for (var blockWidgetIndex in block.widgets) {
+					var widget = block.widgets[blockWidgetIndex];
+					if (widget.click && widget.click(input)) {
+						return [blockName, blockWidgetIndex];
 					}
 				}
 			}
+			return [];
+		};
+		
+		local.click = function(input) {
+			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, this.clickBoundsOffset)) {
+				if (!this.clicked) {
+					this.clicked = true;
+					this.activeWidget = this.getActiveWidget(input);
+					return input;
+				}
+			} else {
+				return false;
+			}
+			
+			if (this.activeWidget.length) {
+				this.blocks[this.activeWidget[0]].widgets[this.activeWidget[1]].click(input);
+			}
+		};
+		
+		local.release = function(input) {
+			this.clicked = false;
+			if (this.activeWidget.length) {
+				return this.blocks[this.activeWidget[0]].widgets[this.activeWidget[1]].release(input);
+			}
+			this.activeWidget = [];
 		};
 		
 		local.arrangeAlongAxis = function(widgets, pos, ratio, axis) {
@@ -257,28 +206,30 @@ function windowLib(easyFrame) {
 			}
 		};
 		
-		local.update = function(parent) {
-			for (var widgetIndex in this.widgets) {
+		local.update = function() {
+			for (var blockIndex in this.blockOrder) {
+				var block = this.blocks[this.blockOrder[blockIndex]];
 				var blockPos = [
-					parent.pos[0] + (parent.ratio[0] * (this.pos[0]/100)), 
-					parent.pos[1] + (parent.ratio[1] * (this.pos[1]/100))
+					this.pos[0] + (this.ratio[0] * (block.pos[0]/100)), 
+					this.pos[1] + (this.ratio[1] * (block.pos[1]/100))
 				];
 				var blockRatio = [
-					parent.ratio[0] * (this.ratio[0]/100), 
-					parent.ratio[1] * (this.ratio[1]/100)
+					this.ratio[0] * (block.ratio[0]/100), 
+					this.ratio[1] * (block.ratio[1]/100)
 				];
+
+				// Arrange widgets
+				this.arrangeWidgets(block.widgets, blockPos, blockRatio, block.arrangeStyle);
 				
-				this.arrangeWidgets(this.widgets, this.arrangeStyle, blockPos, blockRatio);
-				var widget = this.widgets[widgetIndex];
-					if (widget.update) {
-						widget.update(blockPos, blockRatio, this); // send self?
-					}
+				for (blockWidgetIndex in block.widgets) {
+					var widget = block.widgets[blockWidgetIndex];
+					//console.log(widget.pos);
+					if (widget.update) widget.update(blockPos, blockRatio);
 				}
-			
+			}
 		};
-		
 		return local;
-	};
+	}
 	
 	// Create some sort of window docking / Talk with the windowManager?
 	// This is a window enhancement, it lets you drag the window
@@ -458,39 +409,45 @@ function windowLib(easyFrame) {
 	};
 	
 	localContainer.getTextWidget = function(config) {
-		var local = this.easyFrameBase.newObject(this.widget);
-		this.easyFrameBase.newObject(easyFrameBase.getAtomText(config), local);
+		var local = this.easy.base.newObject(this.widget);
+		this.easy.base.newObject(this.getButtonEnhancement(), local);
+		this.easy.base.newObject(this.easy.base.getAtomText(config), local);
 		local.setup = function(context) {
 			this.context = context;
 			this.setTextWidth();
 		};
 		return local;
 	};
-	
-	localContainer.getWidgetBasics = {
-		// Put stuff that lets you add to getAtomRectangle (or any other object for that matter)
-		// to let it use enhancements such as buttonWidget :D
-	};
 
+	localContainer.getRectWidget = function(config) {
+		var local = {}
+		this.easy.base.newObject(this.widget, local);
+		this.easy.base.newObject(this.easy.base.getAtomRectangle(config), local);
+		
+		local.updateRect = local.update;
+		
+		local.update = function(blockPos, blockRatio) {
+			this.ratio = blockRatio;
+			this.updateRect();
+		};
+		return local;
+	};
+	
+	
+	
 	// is that the right name for it? is it really a widget?
 	// Shouldn't display anything by itself... It should be an enhancement! :D Done?
-	localContainer.getButtonwidget = function(config) {
+	localContainer.getButtonEnhancement = function() {
 		var local = {
-		func:undefined,
-		parent:null,
 		clicked:false,
-		buttonOffset:0 // Not sure how this effects things.. Find out and put it here
-		};
-		
-		local.setup = function(parent) {
-			this.parent = parent;
+		buttonOffset:0
 		};
 		
 		local.click = function(input) {
-			if (checkWithinBounds(input.mouse["mousePosition"], this.parent.pos, this.parent.ratio, this.buttonOffset)) {
+			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, this.buttonOffset)) {
 				if (!this.clicked) {
 					this.clicked = true;
-					this.parent.clickActivate(); // place-holder name
+					console.log("Held.");
 				}
 				return true;
 			} else {
@@ -499,12 +456,11 @@ function windowLib(easyFrame) {
 		};
 		
 		local.release = function(input) {
-			var mousePos = input.mouse["mousePosition"];
-			if (checkWithinBounds(mousePos, this.parent.pos, this.parent.ratio, this.buttonOffset)) {
-				if (this.func) this.func();
+			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, this.buttonOffset)) {
+				console.log("Clicked!");
+				console.log(this);
 			}
 			this.clicked = false;
-			this.parent.clickRelease(); // Again, place-Holder
 		};
 		
 		return local;

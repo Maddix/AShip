@@ -322,8 +322,8 @@ function easyFrame() {
 				ratio: [0, 20], // text width, text height
 				font:"Arial", 
 				color:"white",
-				aline: "start",
-				baseline: "alphabetic",
+				align: "start",
+				baseline: "alphabetic"
 			};
 			this.newObject(this.atom, local);
 			this.newObject(config, local);
@@ -337,7 +337,7 @@ function easyFrame() {
 			local.update = function() {
 				this.context.globalAlpha = this.alpha;
 				this.context.fillStyle = this.color;
-				this.context.textAline = this.aline;
+				this.context.textAlign = this.align;
 				this.context.textBaseline = this.baseline;
 				this.context.font = this.ratio[1] + "px " + this.font;
 				this.context.fillText(this.text, this.pos[0], this.pos[1]);
@@ -565,7 +565,7 @@ function easyFrame() {
 	easy.base = base();
 	easy.components = components(easy);
 	easy.windowLib = windowLib(easy);
-	easy.ai = ai(easy.base);
+	//easy.ai = ai(easy.base); // Not used atm
 	easy.inputHandler = inputHandler(easy.base);
 	
 	easy.particles = particles(easy);

@@ -119,45 +119,67 @@ function createContent() {
 	}
 	DATA.inputController.addContext("main", "mouseContext", mouseContext);
 	
-	/* ======= *
-	   Windows
-	*  ======= */
-	
-	/*
-	
-	var windowManager = easy.windowLib.getWindowManager();
-	
-	var titleWindow = easy.windowLib.getWindow({
-		pos:[300, 100],
-		ratio:[200, 200]
-	});
-	windowManager.addWindow("title", titleWindow);
-	
-	titleWindow.createBlock("fullWindow", {
-		arrangeStyle:"free"	
-	});
-	
-	var titleTextWidget = easy.windowLib.getTextWidget({
-		text:"A Ship",
-		ratio:[0, 30]
-	});
-	titleWindow.addWidget("fullWindow", titleTextWidget);	
-	
-	menu.add(windowManager);
-	
-	*/
-	
 	/* ============= *
 	   Input profile
 	*  ============= */
 	
-	
-	var profile = easy.ai.profile({
+	var profile = easy.inputHandler.getProfile({
 		//userKeyMapping:{}, // when I press 't' I want to fire 'w'
 		inputController:DATA.inputController,
 		keyMouseController:DATA.keyMouseController,
 		inputContextGroup:"test"
 	});
+	
+	/* ======= *
+	   Windows
+	*  ======= */
+	
+	var windowManager = easy.windowLib.getWindowManager();
+	
+	windowManager.inputContext = function (input) {
+		if (input.keys["LMB"]) {
+			windowManager.click(input);
+			//console.log("clicked");
+		} else if (input.keys["LMB"] === false) {
+			windowManager.release(input);
+		}
+		
+		return input;
+	};
+	
+	var titleWindow = easy.windowLib.getWindow({
+		pos:[200, 200],
+		ratio:[200, 240]
+	});
+	
+	titleWindow.createBlock("fullWindow", {
+		arrangeStyle:"free",
+		ratio:[100, 100]
+	});
+	
+	var titleRect = easy.windowLib.getRectWidget({
+		color:"green",
+		localPos:[0, 0]
+	});
+	
+	var titleWidget = easy.windowLib.getTextWidget({
+		text:"Hello!",
+		align:"start",
+		baseline:"top",
+		localPos:[0, 0]
+	});
+	
+	console.log(titleRect);
+	
+	titleWindow.addWidget("fullWindow", titleRect);
+	
+	titleWindow.addWidget("fullWindow", titleWidget);
+	
+	windowManager.addWindow("title", titleWindow);
+	
+	menu.add(windowManager);
+	console.log(windowManager);
+	profile.add("window", windowManager);
 	
 	/* ===== *
 	   Ships
@@ -233,6 +255,7 @@ function createContent() {
 			if (input.keys["r"] === false) {
 				console.log("Recalc engines..");
 				ship.software["engineComputer"].object.setupEngines(ship.slots);
+				console.log(titleWindow);
 			}
 			if (input.keys["space"]) {
 				ship.velocity = [0, 0];
@@ -255,6 +278,7 @@ function createContent() {
 	ship.addSlot("engineFrontSideLeft", [13, -7]);
 	ship.addSoftwareSlot("engineComputer", engineComputer);
 	
+	
 	ship.addObject("engineBackRight", engineBackRightNew);
 	ship.addObject("engineBackLeft", engineBackLeftNew);
 	ship.addObject("engineFrontRight", engineFrontRightNew);
@@ -262,6 +286,7 @@ function createContent() {
 	ship.addObject("engineBack", engineBackNew);
 	ship.addObject("engineFrontSideRight", engineFrontSideRight);
 	ship.addObject("engineFrontSideLeft", engineFrontSideLeft);
+	
 	ship.addSoftware("engineComputer", engineComputer);
 	
 	profile.add("newShip", ship);	
