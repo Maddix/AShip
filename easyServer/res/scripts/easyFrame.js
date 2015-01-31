@@ -24,7 +24,7 @@ function easyFrame() {
 		// This will copy the object "from" to "to". If "to" isn't given, "to" will be set to a new object
 		localContainer.newObject = function(from, to) {
 			to = to ? to : {}; // to = if 'to' is false, replace 'to' with {}, else return 'to'
-			for (var key in from) to[key] = from[key];
+			if (from) for (var key in from) to[key] = from[key];
 			return to;
 		};
 		
@@ -107,7 +107,7 @@ function easyFrame() {
 			var local = {
 				canvas: undefined,
 				context: undefined,
-				objects: [],
+				objects: []
 			};
 			
 			local.setup = function(container, id, ratio) {
@@ -143,13 +143,15 @@ function easyFrame() {
 		// /////////////////
 		// Layer Controller
 		// config {container:"div_id_name", width:720, height:640}
+		
+		// I need to revamp this
 		localContainer.getLayerController = function(config) {
 			var local = {
 				layerIds: 0,
 				incerLayerIds: function() {this.layerIds++;},
-				container: undefined,
+				container: undefined, // set the container too?
 				ratio: [640, 480],
-				div: null,
+				div: null, // Pass in a div if your not planning on creating one
 				layers: [],
 				layerNames: []
 			};

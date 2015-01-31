@@ -76,11 +76,13 @@ function inputHandler(easyFrameBase) {
 			//for (var keyIndex in this.keyEvent) {
 			//	if (this.keyEvent[keyIndex] === true) this.keyEvent[keyIndex] = "held";
 			//}
+			
 			// clear both key and mouse events
 			for (var keyIndex in this.removeKeyEvent) {
 				delete this.keyEvent[this.removeKeyEvent[keyIndex]];
 			}
 			this.removeKeyEvent = []; // reset the removeKeyEvent
+			
 			for (var mouseIndex in this.removeMouseEvent) {
 				delete this.mouseEvent[this.removeMouseEvent[mouseIndex]];
 			}

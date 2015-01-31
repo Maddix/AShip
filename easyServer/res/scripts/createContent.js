@@ -134,52 +134,115 @@ function createContent() {
 	   Windows
 	*  ======= */
 	
-	var windowManager = easy.windowLib.getWindowManager();
+	// Window manager
+	// ==============
 	
-	windowManager.inputContext = function (input) {
-		if (input.keys["LMB"]) {
-			windowManager.click(input);
-			//console.log("clicked");
-		} else if (input.keys["LMB"] === false) {
-			windowManager.release(input);
-		}
-		
-		return input;
-	};
+	//var windowManager = easy.windowLib.getWindowManager();
 	
-	var titleWindow = easy.windowLib.getWindow({
-		pos:[200, 200],
-		ratio:[200, 240]
+	var windowManager = easy.windowLib.menuManager();
+
+	// Create window
+	// =============
+	
+	//var titleWindow = easy.windowLib.getWindow({
+	//	pos:[200, 200],
+	//	ratio:[200, 240]
+	//});
+	
+	var testWindow = easy.windowLib.menuWindow({
+		pos: [200, 200],
+		ratio: [150, 200]
 	});
+
+	// Create blocks
+	// =============
 	
-	titleWindow.createBlock("fullWindow", {
+	/*
+	var blockEnhancement = easy.windowLib.getWindowBlock({
 		arrangeStyle:"free",
 		ratio:[100, 100]
 	});
 	
-	var titleRect = easy.windowLib.getRectWidget({
-		color:"green",
-		localPos:[0, 0]
+	var blockBackground = easy.windowLib.getWindowBlock({
+		arrangeStyle:"free",
+		ratio:[100, 100]
 	});
 	
-	var titleWidget = easy.windowLib.getTextWidget({
+	var blockContent = easy.windowLib.getWindowBlock({
+		arrangeStyle:"free",
+		ratio:[100, 10]
+	});
+	*/
+
+	var blockBackground = easy.windowLib.menuBlock({
+		arrangeStyle: "free"
+	});
+	
+	// Create widgets
+	// ==============
+	
+	//var dragEnhancement = easy.windowLib.getWindowWidgetDrag({
+		//parent:titleWindow,
+		//localRatio:[100, 30]
+	//});
+	
+	var backgroundRect = easy.windowLib.getRectWidget({
+		color:"gray",
+		alpha:1,
+		localRatio:[50, 50]
+	});
+	
+	var backgroundText = easy.windowLib.getTextWidget({
 		text:"Hello!",
-		align:"start",
 		baseline:"top",
-		localPos:[0, 0]
+		align:"start"
 	});
 	
-	console.log(titleRect);
+	var contentBar = easy.windowLib.getRectWidget({
+		color:"white",
+		alpha:1,
+		localRatio:[100, 30]
+	});
+
+	// Add widgets to the blocks
+	// =========================
 	
-	titleWindow.addWidget("fullWindow", titleRect);
+	/*
+	blockEnhancement.add("drag", dragEnhancement);
+	blockBackground.add("background", backgroundRect);
+	blockBackground.add("text", backgroundText);
+	blockContent.add("bar", contentBar);
+	*/
 	
-	titleWindow.addWidget("fullWindow", titleWidget);
+	blockBackground.add("backgroundRect", backgroundRect);
 	
-	windowManager.addWindow("title", titleWindow);
+	// Add blocks to the window
+	// ========================
 	
+	/*
+	titleWindow.add("enhancement", blockEnhancement);
+	titleWindow.add("background", blockBackground);
+	titleWindow.add("content", blockContent);
+	*/
+	
+	testWindow.add("blockBackground", blockBackground);
+	
+	// Create some window Enhancements for testing
+
+	// Add window to the windowManager
+	// ===============================
+
+	//windowManager.add("title", titleWindow);
+	//menu.add(windowManager);
+	
+	windowManager.add("tempWindow", testWindow);
 	menu.add(windowManager);
-	console.log(windowManager);
-	profile.add("window", windowManager);
+	
+	// Give the windowManager input
+	// ============================
+	
+	//profile.add("window", windowManager);
+	
 	
 	/* ===== *
 	   Ships
@@ -274,8 +337,8 @@ function createContent() {
 	ship.addSlot("engineFrontRight", [-10, -10]);
 	ship.addSlot("engineFrontLeft", [10, -10]);
 	ship.addSlot("engineBack", [0, 10]);
-	ship.addSlot("engineFrontSideRight", [-13, -7]);
-	ship.addSlot("engineFrontSideLeft", [13, -7]);
+	ship.addSlot("engineFrontSideRight", [-13, 0]);
+	ship.addSlot("engineFrontSideLeft", [13, 0]);
 	ship.addSoftwareSlot("engineComputer", engineComputer);
 	
 	
