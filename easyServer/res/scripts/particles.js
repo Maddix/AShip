@@ -13,6 +13,7 @@ function particles(easyFrame) {
 			alive: true,
 			life: 1000,
 			remainingLife: 0,
+			lifeDec: 60,
 			velocity: [0, 0]
 		}
 		//this.easy.base.newObject(this.easy.base.atom, local);
@@ -23,6 +24,7 @@ function particles(easyFrame) {
 		
 		local.update = function(frame) {
 			this.remainingLife -= frame.updateTime;
+
 			if (this.remainingLife < 0) {
 				this.alive = false;
 			} else {
@@ -40,12 +42,14 @@ function particles(easyFrame) {
 			borderStyle:"miter",
 			borderWidth: 0,
 			borderColor: "white",
-			//colorObj: {red:140, green:0, blue:0, alpha:2.5},
+			//colorObj: {red:92, green:42, blue:141, alpha:1.5},
 			//colorObj: {red:0, green:179, blue:255, alpha:2.5},
-			colorObj: {red:255, green:239, blue:66, alpha:2.5},
 			//colorObj: {red:255, green:239, blue:66, alpha:2.5},
+			
+			colorObj: {red:255, green:239, blue:66, alpha:2.5},
 			endColor: {red:180, green:0, blue:0, alpha:0}
-			//endColor: {red:255, green:239, blue:66, alpha:2.5}
+			
+			//endColor: {red:91, green:239, blue:66, alpha:0}
 		};
 		this.easy.base.newObject(this.particle(), local);
 		local.updateParticle = local.update;

@@ -19,6 +19,7 @@
 	<script src="res/scripts/minimap.js"></script>
 	<script src="res/scripts/easyFrame.js"></script>
 	<script src="res/scripts/createContent.js"></script>
+	<script src="res/scripts/menuEditWindow.js"></script>
 	<script src="res/scripts/keyInput.js"></script>
 	<script src="res/scripts/loadImages.js"></script>
 	<script src="res/scripts/main.js"></script>

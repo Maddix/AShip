@@ -18,19 +18,46 @@ function components(easyFrame) {
 		local.setup = function(context) {
 			this.context = context;
 			this.calcInertia(2);
+			
+			for (var slotName in this.slots) {
+				var slot = this.slots[slotName];
+				if (slot.object) slot.object.setup(this.context, slot.offset)
+			}
+			
+			for (var softwareName in this.software) {
+				var program = this.software[softwareName];
+				if (program.object) program.object.setup(this);
+			}
 		};
 		
 		local.addSlot = function(name, offset) {
 			this.slots[name] = {offset:offset, object:null};
 		};
 		
+		local.isSlotEmpty = function(name) {
+			if (this.slots[name]) return !this.slots[name].object;
+		};
+		
 		local.addSoftwareSlot = function(name) {
 			this.software[name] = {object:null};
+		};
+		
+		local.isSoftwareSlotEmpty = function(name) {
+			if (this.software[name]) return !this.software[name].object;
 		};
 		
 		local.addObject = function(name, object) {
 			this.slots[name].object = object;
 			object.setup(this.context, this.slots[name].offset);
+		};
+		
+		local.removeObject = function(name) {
+			var object = undefined;
+			if (this.slots[name] && this.slots[name].object != null) {
+				object = this.slots[name].object;
+				this.slots[name].object = null;
+			}
+			return object;
 		};
 		
 		local.addSoftware = function(name, object) {
@@ -44,11 +71,6 @@ function components(easyFrame) {
 			this.pos[1] += this.velocity[1]*frame.delta;
 			this.rotation += this.angularVelocity*frame.delta;
 			this.updateImage();
-			
-			// Update software
-			//for (var softwareName in this.software) {
-			//	this.software[softwareName].update(frame, this);
-			//};
 			
 			// Update objects
 			for (var slotName in this.slots) {
@@ -204,7 +226,7 @@ function components(easyFrame) {
 		local.activate = function(parentRotation, parentInertia, parentMass, power) {
 			var power = power ? power : this.power;
 			var velocity = getVelocityToAngle(power, parentRotation + this.localRotation);
-			var velocity = [velocity[0]/parentMass, velocity[1]/parentMass];
+			velocity = [velocity[0]/parentMass, velocity[1]/parentMass];
 			var staticForce = getVelocityToAngle(power, this.localRotation);
 			var newAngularVelocity = angularVelocity(this.localOffset, staticForce, parentInertia);
 			this.spawnParticle = true;

@@ -22,10 +22,63 @@ function easyFrame() {
 		};
 
 		// This will copy the object "from" to "to". If "to" isn't given, "to" will be set to a new object
+		// rename to shallowCopyObject or something if this is still used later on
 		localContainer.newObject = function(from, to) {
 			to = to ? to : {}; // to = if 'to' is false, replace 'to' with {}, else return 'to'
 			if (from) for (var key in from) to[key] = from[key];
 			return to;
+		};
+		
+		// Switch the names newObject should be copy and copy should be new
+		
+		// remove shallow?
+		localContainer.copyItem = function(item, shallow) {
+			var itemProto = Object.prototype.toString.call(item);
+			var newItem = item;
+			var getItem = function(child) { return !shallow ? localContainer.copyItem(child) : child; };
+			if (itemProto === Object.prototype.toString.call([])) {
+				newItem = [];
+				for (var itemIndex=0, len=item.length; itemIndex < len; itemIndex++) newItem.push(getItem(item[itemIndex]));
+			}
+			if (itemProto === Object.prototype.toString.call({})) {
+				newItem = {};
+				for (var itemIndex in item) newItem[itemIndex] = getItem(item[itemIndex])
+			}
+			return newItem;
+		};
+		
+		localContainer.orderedObject = function() {
+			var local = {
+				objects: {},
+				objectNames: []
+			};
+			
+			local.add = function(objectName, object) {
+				this.objects[objectName] = object;
+				this.objectNames.push(objectName);
+			};
+			
+			local.remove = function(objectName) {
+				var index = this.objectNames.indexOf(objectName);
+				if (index !== -1) {
+					delete this.objects[objectName];
+					this.objectNames.splice(index, 1);
+				}
+			};
+			
+			local.changePosition = function(objectName, newIndex) {
+				var index = this.objectNames.indexOf(objectName);
+				if (index !== -1) {
+					this.objectNames.splice(index, 1);
+					if (newIndex && newIndex >= 0 && newIndex < this.object.objectNames.length-1) {
+						this.objectNames.splice(newIndex, 0, objectName);
+					} else {
+						this.objectNames.push(objectName);
+					}
+				}
+			};
+			
+			return local;
 		};
 		
 		localContainer.clearScreen = function(context, width, height) {
@@ -207,7 +260,7 @@ function easyFrame() {
 			velocity: [0, 0],
 			angularVelocity: 0,
 			calcMass: function() {this.mass = this.size*this.density;},
-			calcInertia: function(scaler) {if (!this.mass) {this.calcMass();} this.inertia = this.mass*scaler}
+			calcInertia: function(scaler) {if (!this.mass) {this.calcMass();} this.inertia = this.mass*scaler;}
 		};
 		
 		localContainer.drawSimpleImage = function(context, image, pos, offpos, rotation) {
@@ -269,7 +322,7 @@ function easyFrame() {
 			// is this the right way of doing things? What does this really do?
 			local.changeAnimation = function(config) {
 				localContainer.newObject(config, local);
-				if (this.currentAnimation != "") {
+				if (this.currentAnimation !== "") {
 					this.currentLength = this.animationKeyFrames[this.currentAnimation].length-1;
 				}
 			};
@@ -347,6 +400,22 @@ function easyFrame() {
 			return local;
 		};
 
+		/*
+			var antiBlur;
+			if (lineThickness % 2) {
+				antiBlur = 0;
+			} else {
+				antiBlur = .5;
+			}
+			pos + antiBlur;
+			
+			Take 2:
+			
+			var antiBlur = 0;
+			if (lineThickness % 2) antiBlur = .5;
+			pos + antiBlur;
+		*/
+		
 		localContainer.getAtomShape = function() {
 			var local = {
 				ratio:[100, 100],
@@ -360,43 +429,8 @@ function easyFrame() {
 			return local;
 		};
 		
-		
-		// Note, this is slower due to the fact that context.rect was slower than just drawing a rect
-		localContainer.getAtomRectangle = function(config) {
-			var local = this.getAtomShape();
-			this.newObject(config, local);
-			local.update = function() {
-				// Rect
-				this.context.beginPath();
-				this.context.moveTo(this.pos[0], this.pos[1]);
-				this.context.lineTo(this.pos[0] + this.ratio[0], this.pos[1]);
-				this.context.lineTo(this.pos[0] + this.ratio[0], this.pos[1] + this.ratio[1]);
-				this.context.lineTo(this.pos[0], this.pos[1] + this.ratio[1]);
-				this.context.closePath();
-				// Fill Rect
-				
-				// TEST shadow
-				//this.context.shadowColor = "gray";
-				//this.context.shadowBlur = 1;
-				//this.context.shadowOffsetX = 10;
-				//this.context.shadowOffsetY = 10;
-				
-				this.context.globalAlpha = this.alpha;
-				this.context.fillStyle = this.color;
-				this.context.fill();
-				// Rect Border
-				this.context.globalAlpha = this.borderAlpha;
-				this.context.lineJoin = this.borderStyle;
-				this.context.lineWidth = this.borderWidth;
-				this.context.strokeStyle = this.borderColor;
-				this.context.stroke();
-				
-			};
-			return local;
-		};
-		
 		// About the same speed as the non simple function..
-		localContainer.getAtomRectangleSimple = function(config) {
+		localContainer.getAtomRectangle = function(config) {
 			var local = this.getAtomShape();
 			this.newObject(config, local);
 			local.update = function() {
@@ -534,7 +568,7 @@ function easyFrame() {
 					if (this.elapsedTime >= this.fps) {
 						var frame = {
 							rate: parseFloat((1000/this.elapsedTime).toFixed(1)),
-							updateTime: timeDifference*this.modifier, // Should I tie this in with this.modifier?
+							updateTime: this.elapsedTime*this.modifier, // Should I tie this in with this.modifier?
 							delta: (this.elapsedTime/1000)*this.modifier,
 							time: this.tick*this.modifier
 						};
@@ -568,7 +602,7 @@ function easyFrame() {
 	easy.components = components(easy);
 	easy.windowLib = windowLib(easy);
 	//easy.ai = ai(easy.base); // Not used atm
-	easy.inputHandler = inputHandler(easy.base);
+	easy.inputHandler = inputHandler(easy);
 	
 	easy.particles = particles(easy);
 	//easy.math = // Add math into this and update all the code to use it :S 

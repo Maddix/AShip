@@ -12,8 +12,18 @@ function setup(images) {
 	
 	// Create all the layers we are going to use, order matters
 	layerController.addLayer("backgroundLayer", easy.base.getLayer());
-	layerController.addLayer("particleLayer", easy.base.getLayer());
+	var temp = easy.base.getLayer();
+	/*
+	temp.update = function(frame) {
+		//localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
+		for (var objectIndex in this.objects) {
+			this.objects[objectIndex].update(frame);
+		}
+	};
+	*/
+	layerController.addLayer("particleLayer", temp);
 	layerController.addLayer("objectLayer", easy.base.getLayerCollision());
+	
 	layerController.addLayer("hud", easy.base.getLayer());
 	layerController.addLayer("menu", easy.base.getLayer());
 	layerController.addLayer("devOverlay", easy.base.getLayer());
@@ -22,7 +32,7 @@ function setup(images) {
 	var keyMouseController = easy.inputHandler.getKeyboardMouseController({
 		knownKeys: ["LMB", "MMB", "RMB", "w", "a", "s", "d", "q", "e", "r", "space", "enter"]
 	});
-	var inputController = easy.inputHandler.getInputController();
+	var inputController = easy.inputHandler.getProfileManager();
 	
 	// Create global static Data Object, it shouldn't be global should it. :/ "easyFrame.DATA" ?
 	DATA = {
@@ -55,7 +65,6 @@ function main() {
 	
 	// Make the loop
 	mainLoop = DATA.easyFrame.base.loop({func:function(frame) {
-		
 		// update keys
 		DATA.inputController.update(DATA.keyMouseController.update());
 		// update physics

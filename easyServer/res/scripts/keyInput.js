@@ -2,11 +2,11 @@
 // Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 // TODO: Add brackets, comma, ect. to the keyMap
 
-function inputHandler(easyFrameBase) {
+function inputHandler(easyFrame) {
 	var localContainer = {
 		version:"1.0",
 		requires: "Jquery 2.0.3+ and Jquery-mousewheel",
-		easyFrameBase:easyFrameBase
+		easy:easyFrame
 	};
 
 	localContainer.getKeyboardMouseController = function(config) {
@@ -18,7 +18,7 @@ function inputHandler(easyFrameBase) {
 			elementForKeys: "body",
 			elementForMouse: "canvas",
 			getScrollData: true,
-			keyMapReversed: { // Used! HA!
+			keyMapReversed: { // Used! HA! Wait..
 					"a":65, "b":66, "c":67, "d":68, "e":69, "f":70, "g":71,
 					"h":72, "i":73, "j":74, "k":75, "l":76, "m":77, "n":78,
 					"o":79, "p":80, "q":81, "r":82, "s":83, "t":84, "u":85,
@@ -42,11 +42,12 @@ function inputHandler(easyFrameBase) {
 					53:"5", 54:"6", 55:"7", 56:"8", 57:"9",
 					1:"LMB", 2:"MMB", 3:"RMB"
 			},
+			// Move away from this
 			keyMap:{} // set to default below, this is so we can modify keyMap and still 
 						// be able to set it back to the default mapping
 		};
-		local.keyMap = this.easyFrameBase.newObject(local.keyMapDefault);
-		this.easyFrameBase.newObject(config, local);
+		local.keyMap = this.easy.base.newObject(local.keyMapDefault);
+		this.easy.base.newObject(config, local);
 
 		local.addKeyEvent = function(key) {
 			if (this.keyEvent[key] === undefined && this.knownKeys.indexOf(key) != -1) {
@@ -54,23 +55,22 @@ function inputHandler(easyFrameBase) {
 			}
 		};
 		
-		// Never tested fyi
 		local.changeKeyMapping = function(newMapping) {
 			for (var newKey in newMapping) {
-				delete this.keyMap[this.keyMapReversed[newMapping[newKey]]];
-				this.keyMap[this.keyMapReversed[newKey]] = newMapping[newKey];
+				delete this.keyMapDefault[this.keyMapReversed[newMapping[newKey]]];
+				this.keyMapDefault[this.keyMapReversed[newKey]] = newMapping[newKey];
 			}
 		};
 		
 		local.resetKeyMapping = function() {
-			this.keyMap = easyFrameBase.newObject(this.keyMapDefault);
+			this.keyMapDefault = localContainer.easy.base.newObject(this.keyMapDefault);
 		};
 		
 		// this will update the keys that are being held
 		local.update = function() {			
 			// get a snapshot of the key/mouse events
-			var newKeyMouse = {keys:localContainer.easyFrameBase.newObject(this.keyEvent), 
-								mouse:localContainer.easyFrameBase.newObject(this.mouseEvent)};
+			var newKeyMouse = {keys:localContainer.easy.base.newObject(this.keyEvent), 
+								mouse:localContainer.easy.base.newObject(this.mouseEvent)};
 			
 			// set the keys to "held" - works well, don't need it now, and it just slows things down \_(._.)_/
 			//for (var keyIndex in this.keyEvent) {
@@ -90,12 +90,12 @@ function inputHandler(easyFrameBase) {
 			
 			// return the snapshot
 			return newKeyMouse;
-		}
+		};
 		
 		// I should create a function that removes all the listeners ?
 		local.setupListeners = function() {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
-				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
 				local.addKeyEvent(convertedKey);
 				if (local.keyEvent[convertedKey] === false) {
 					local.keyEvent[convertedKey] = true;
@@ -104,7 +104,7 @@ function inputHandler(easyFrameBase) {
 			});
 			
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
-				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
 				if (local.keyEvent[convertedKey]) {
 					local.keyEvent[convertedKey] = false;
 					local.removeKeyEvent.push(convertedKey);
@@ -135,14 +135,14 @@ function inputHandler(easyFrameBase) {
 			
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 			$(this.elementForMouse).mousedown(function(jqueryKeyEvent) {
-				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
 				local.keyEvent[convertedKey] = true; // Might need to pass or prevent repeating
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});		
 
 			$(this.elementForMouse).mouseup(function(jqueryKeyEvent) {
-				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
 				local.keyEvent[convertedKey] = false; // Might need to pass or prevent repeating
 				local.removeKeyEvent.push(convertedKey);
 				jqueryKeyEvent.stopPropagation();
@@ -153,137 +153,43 @@ function inputHandler(easyFrameBase) {
 		
 		return local;
 	};
-
-	// /////////////////////////////////////////
-	// InputController - Handles input contexts
-	// ---------------
 	
-	localContainer.getInputController = function() {
-		var local = {
-			contextGroup:{}, // [group:{keys, contexts}, ..]
-			groupKeys: []
-		};
-		
-		local.addContext = function(contextGroupName, contextName, context) {
-			// If no contextGroup is found, then make one
-			if (!this.contextGroup[contextGroupName]) {
-				this.contextGroup[contextGroupName] = {keys:[], contexts:{}};
-				this.groupKeys.push(contextGroupName);
-			}
-			this.contextGroup[contextGroupName].keys.push(contextName);
-			this.contextGroup[contextGroupName].contexts[contextName] = context;
-		};
-		
-		local.removeContext = function(contextGroupName, contextName) {
-			var index = this.contextGroup[contextGroupName].keys.indexOf(contextName);
-			if (index != -1) {
-				this.contextGroup[contextGroupName].keys.splice(index, 1);
-				delete this.contextGroup[contextGroupName].contexts[contextName];
-				
-				// remove the group if its unused
-				if (this.contextGroup[contextGroupName].keys.length <= 0) {
-					var groupIndex = this.groupKeys.indexOf(contextGroupName);
-					this.groupKeys.splice(groupIndex, 1);
-					delete this.contextGroup[contextGroupName];
-				}
-			}
-		};
-		
-		local.changeContextPosition = function(contextGroupName, contextName, newIndex) {
-			var contextIndex = this.contextGroup[contextGroupName].keys.indexOf(contextName);
-			if (contextIndex != -1 && newIndex < this.contextGroup[contextGroupName].keys.length) {
-				this.contextGroup[contextGroupName].keys.splice(contextIndex, 1);
-				this.contextGroup[contextGroupName].keys.splice(newIndex, 0, contextName);
-			}
-		};
-		
-		// not tested
-		local.getContextPosition = function(contextGroupName, contextName) {
-			return this.contextGroup[contextGroupName].keys.indexOf(contextName);
-		};
+	localContainer.getProfileManager = function(config) {
+		var local = this.easy.base.newObject(this.easy.base.orderedObject());
+		this.easy.base.newObject(config, local);
 		
 		local.update = function(newKeyList) {
-			
-			/*/ testing - remove when you can't remember why its here
-			if (newKeyList.keys["space"]) {
-				console.log(newKeyList.keys);
-			} else if (newKeyList.keys["space"] === false) {
-				console.log(newKeyList.keys);
-			}
-			*/
-			
 			var remainingKeys = newKeyList;
-			for (var groupIndex in this.groupKeys) {
-				var group = this.contextGroup[this.groupKeys[groupIndex]];
-				for (var contextIndex in group.keys) {
-					remainingKeys = group.contexts[group.keys[contextIndex]](remainingKeys);
-				}
+			for (var profileIndex in this.objectNames) {
+				var profile = this.objects[this.objectNames[profileIndex]];
+				if (remainingKeys) remainingKeys = profile.update(remainingKeys);
+				else break;
 			}
 		};
 		
 		return local;
 	};
 	
-	// Should change that..
-	// Warning - setActiveObject will put the object to 1st index, and not the 0th. The 0th being reserved for the MainContext
-	localContainer.getProfile = function(config) {
+	localContainer.profile = function(config) {
 		var local = {
-			userKeyMapping:{}, // {"t":"w"} - overrides the default keyList mapping
-			objectNames:[], // Object names
-			objects:{}, // {"objectName":object}
-			inputController:null,
-			keyMouseController:null,
-			inputContextGroup:""
+			userKeyMapping: {}, // Not used, make it work again
+			controlContext: null
 		};
-		easyFrameBase.newObject(config, local);
-		local.keyMouseController.changeKeyMapping(local.userKeyMapping);
+		this.easy.base.newObject(this.easy.base.orderedObject(), local);
+		this.easy.base.newObject(config, local);
 		
-		local.add = function(objectName, object) {
-			this.objectNames.push(objectName);
-			this.objects[objectName] = object;
-			if (object.inputContext != null) this.addContext(objectName);
-		};
-		
-		local.setActiveObject = function(objectName) {
-			var index = this.objectNames.indexOf(objectName);
-			if (index != -1) {
-				var pulled = this.objectNames.splice(index, 1);
-				this.objectNames.splice(0, 0, objectName);
-				
-				// Move the active object's context to the second item of the group
-				this.inputController.changeContextPosition(this.inputContextGroup, objectName + "Context", 1);
+		local.update = function(input) {
+			
+			var remainingKeys = input;
+			if (this.controlContext) var remainingKeys = this.controlContext(remainingKeys);
+			
+			for (var objectIndex in this.objectNames) {
+				var object = this.objects[this.objectNames[objectIndex]];
+				if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
+				else break;
 			}
-		};
-		
-		local.removeObject = function(objectName) {
-			var index = this.objectNames.indexOf(objectName);
-			if (index != -1) {
-				this.removeContext(objectName);
-				delete this.objects[this.objectNames.splice(index, 1)];
-			}
-		};
-		
-		// not tested
-		local.setMainContext = function(newMainContext) {
-			this.removeContext("MainContext"); // remove incase of older one
-			this.inputController.addContext(this.inputContextGroup, "MainContext", newMainContext);
-			this.inputController.changeContextPosition(this.inputContextGroup, "MainContext", 0);
-		};
-		
-		local.getObjectNames = function() {
-			return this.objectNames;
-		};
-		
-		local.addContext = function(objectName) {
-			var context = this.objects[objectName].inputContext
-			if (context) {
-				this.inputController.addContext(this.inputContextGroup, objectName + "Context", context);
-			}
-		};
-		
-		local.removeContext = function(objectName) {
-			this.inputController.removeContext(this.inputContextGroup, objectName + "Context");
-		};
+			return input;
+		}
 		
 		return local;
 	};

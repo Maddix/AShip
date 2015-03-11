@@ -60,7 +60,6 @@ function createContent() {
 	   Particles
 	*  ========= */
 	
-	
 	var particle = function() {
 		return easy.particles.getRectParticle({
 			life:300,
@@ -71,7 +70,6 @@ function createContent() {
 			color:"rgba(255, 255, 255, 255)"
 		});
 	}
-	
 	
 	var particleController = easy.particles.getParticleController({
 		particle:particle,
@@ -109,72 +107,59 @@ function createContent() {
 		particleController.pos = [this.pos[0], this.pos[1]];
 		cursor.updateImage();
 	};
-	devOverlay.add(cursor);
-	
-	var mouseContext = function(input){
+	cursor.inputContext = function(input) {
 		if (input.mouse["mousePosition"]) {
-			cursor.pos = input.mouse["mousePosition"];
+			this.pos = input.mouse["mousePosition"];
 		}
 		return input;
 	}
-	DATA.inputController.addContext("main", "mouseContext", mouseContext);
+	devOverlay.add(cursor);
 	
 	/* ============= *
 	   Input profile
 	*  ============= */
 	
+	/*
 	var profile = easy.inputHandler.getProfile({
 		//userKeyMapping:{}, // when I press 't' I want to fire 'w'
 		inputController:DATA.inputController,
 		keyMouseController:DATA.keyMouseController,
 		inputContextGroup:"test"
 	});
+	*/
+	
+	var profile = easy.inputHandler.profile({
+		// Broken I think
+		userKeyMapping: {"w":"upArrow", "a":"leftArrow", "s":"downArrow", "d":"rightArrow"}
+	});
+	
+	// add the mouse context
+	profile.add("mouse", cursor)
+	
+	DATA.inputController.add("main", profile);
 	
 	/* ======= *
 	   Windows
 	*  ======= */
-	
+
 	// Window manager
 	// ==============
 	
-	//var windowManager = easy.windowLib.getWindowManager();
-	
-	var windowManager = easy.windowLib.menuManager();
+	DATA.windowManager = easy.windowLib.getMenuManager();
+	var windowManager = DATA.windowManager;
 
 	// Create window
 	// =============
 	
-	//var titleWindow = easy.windowLib.getWindow({
-	//	pos:[200, 200],
-	//	ratio:[200, 240]
-	//});
-	
-	var testWindow = easy.windowLib.menuWindow({
+	var testWindow = easy.windowLib.getMenuWindow({
 		pos: [200, 200],
 		ratio: [150, 200]
 	});
 
 	// Create blocks
 	// =============
-	
-	/*
-	var blockEnhancement = easy.windowLib.getWindowBlock({
-		arrangeStyle:"free",
-		ratio:[100, 100]
-	});
-	
-	var blockBackground = easy.windowLib.getWindowBlock({
-		arrangeStyle:"free",
-		ratio:[100, 100]
-	});
-	
-	var blockContent = easy.windowLib.getWindowBlock({
-		arrangeStyle:"free",
-		ratio:[100, 10]
-	});
-	*/
 
-	var blockBackground = easy.windowLib.menuBlock({
+	var blockBackground = easy.windowLib.getMenuBlock({
 		arrangeStyle: "free"
 	});
 	
@@ -195,35 +180,26 @@ function createContent() {
 	var backgroundText = easy.windowLib.getTextWidget({
 		text:"Hello!",
 		baseline:"top",
-		align:"start"
+		align:"start",
+		color:"gray"
 	});
 	
 	var contentBar = easy.windowLib.getRectWidget({
 		color:"white",
 		alpha:1,
-		localRatio:[100, 30]
+		ratio:[100, 20],
+		localPos: [0, 0]
 	});
 
 	// Add widgets to the blocks
 	// =========================
 	
-	/*
-	blockEnhancement.add("drag", dragEnhancement);
-	blockBackground.add("background", backgroundRect);
-	blockBackground.add("text", backgroundText);
-	blockContent.add("bar", contentBar);
-	*/
-	
 	blockBackground.add("backgroundRect", backgroundRect);
+	blockBackground.add("bar", contentBar);
+	blockBackground.add("text", backgroundText);
 	
 	// Add blocks to the window
 	// ========================
-	
-	/*
-	titleWindow.add("enhancement", blockEnhancement);
-	titleWindow.add("background", blockBackground);
-	titleWindow.add("content", blockContent);
-	*/
 	
 	testWindow.add("blockBackground", blockBackground);
 	
@@ -231,9 +207,6 @@ function createContent() {
 
 	// Add window to the windowManager
 	// ===============================
-
-	//windowManager.add("title", titleWindow);
-	//menu.add(windowManager);
 	
 	windowManager.add("tempWindow", testWindow);
 	menu.add(windowManager);
@@ -241,9 +214,12 @@ function createContent() {
 	// Give the windowManager input
 	// ============================
 	
-	//profile.add("window", windowManager);
+	profile.add("window", windowManager);
 	
-	
+	// Create editWindow
+	var editWindow = createEditWindow(windowManager);
+	//profile.add("editWindow", editWindow
+
 	/* ===== *
 	   Ships
 	*  ===== */
@@ -295,8 +271,6 @@ function createContent() {
 		alive:true,
 		inputContext:function(input) {
 			
-			// The engines can be used for more than one action at a time, like go forward and turnRight :S
-			
 			if (input.keys["w"]) {
 				ship.software["engineComputer"].object.activate("forward", ship);
 			}
@@ -310,15 +284,14 @@ function createContent() {
 				ship.software["engineComputer"].object.activate("backward", ship);
 			}
 			if (input.keys["e"]) {
-				ship.software["engineComputer"].object.activate("strafeRight", ship);
+				ship.software["engineComputer"].object.activate("strafeLeft", ship);
 			}
 			if (input.keys["q"]) {
-				ship.software["engineComputer"].object.activate("strafeLeft", ship);
+				ship.software["engineComputer"].object.activate("strafeRight", ship);
 			}
 			if (input.keys["r"] === false) {
 				console.log("Recalc engines..");
 				ship.software["engineComputer"].object.setupEngines(ship.slots);
-				console.log(titleWindow);
 			}
 			if (input.keys["space"]) {
 				ship.velocity = [0, 0];
@@ -341,7 +314,6 @@ function createContent() {
 	ship.addSlot("engineFrontSideLeft", [13, 0]);
 	ship.addSoftwareSlot("engineComputer", engineComputer);
 	
-	
 	ship.addObject("engineBackRight", engineBackRightNew);
 	ship.addObject("engineBackLeft", engineBackLeftNew);
 	ship.addObject("engineFrontRight", engineFrontRightNew);
@@ -352,5 +324,8 @@ function createContent() {
 	
 	ship.addSoftware("engineComputer", engineComputer);
 	
-	profile.add("newShip", ship);	
+	windowManager.objects["editWindow"].objects["display"].objects["view"].setObject(ship);
+	
+	profile.add("newShip", ship);
+
 }
