@@ -21,14 +21,14 @@ function createEditWindow(windowManager) {
 	
 	
 	var blockDisplay = easy.windowLib.getMenuBlock({
-		pos:[0, 0],
-		ratio:[100, 30],
+		localPos:[0, 0],
+		localRatio:[100, 30],
 		arrangeStyle:"free"
 	});
 	
 	var blockControls = easy.windowLib.getMenuBlock({
-		pos:[0, 30],
-		ratio:[100, 70],
+		localPos:[0, 30],
+		localRatio:[100, 70],
 		arrangeStyle:"free"
 	});
 	
@@ -41,13 +41,14 @@ function createEditWindow(windowManager) {
 		localRatio:[100, 100]
 	});
 	
+	/*
 	view.inputContext = function(input) {
 		console.log(input);
 		if (input.keys["LMB"]) {
 			console.log(input.mouse["mousePosition"]);
 		}
 	};
-	
+	*/
 	
 	var backgroundTrans = easy.windowLib.getBackgroundRectWidget({
 		color: "#9AC2E3",

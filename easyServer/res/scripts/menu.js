@@ -34,34 +34,41 @@ function windowLib(easyFrame) {
 			}
 		};
 		
-		local.reverseSearchForActiveObject = function(input) {
-			for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
-				var object = this.objects[this.objectNames[objectIndex]];
-				
-				//if (!object.active)
-				
-			}
-		};
-		
 		local.inputContext = function(input) {
+			
+			var processedInput = undefined;
 			
 			if (input.keys["LMB"]) {
 				if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
 					if (!this.active) {
-						
 						for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
-							var object = this.objects[this.objectNames[objectIndex]];
-							
+							var object = this.objects[this.objectNames[objectIndex]];	
+							if (object.inputContext) {
+								
+								processedInput = object.inputContext(input);
+								if (processedInput) {
+									this.active = true;
+									this.activeObject = object;
+									break;
+								}
+							}
 						}
-						
 					} else {
-					
+						if (this.activeObject) processedInput = this.activeObject.inputContext(input);
 					}
 				}
 			}
 			
+			if (input.keys["LMB"] === false) {
+				if (this.activeObject) {
+					console.log("Let Block go.");
+					processedInput = this.activeObject.inputContext(input);
+					this.activeObject = null;
+					this.active = false;
+				}
+			}
 			
-			return input
+			return processedInput;
 		}
 		
 		local.update = function(frame) {
@@ -77,7 +84,18 @@ function windowLib(easyFrame) {
 		this.easy.base.newObject(this.getMenuContainer(config), local);
 		
 		local.inputContext = function(input) {
-			var input = input;
+			
+			for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
+				var object = this.objects[this.objectNames[objectIndex]];
+				
+				if (object.inputContext) {
+					var returnedInput = object.inputContext(input);
+					if (returnedInput) {
+						input = returnedInput;
+						break;
+					}
+				}
+			}
 			
 			return input;
 		};
@@ -93,21 +111,15 @@ function windowLib(easyFrame) {
 		};
 		this.easy.base.newObject(this.getMenuContainer(config), local);
 		
-		if (!this.inputContext) {
-			local.inputContext = function(input) {
-				var input = input;
-				
-				return input;
-			};
-		}
-		
 		return local;
 	};
 	
 	localContainer.getMenuBlock = function(config) {
 		var local = {
-			pos: [0, 0], // This is a ratio, not a absolute value
-			ratio: [100, 100], // This is also a ratio
+			localPos: [0, 0],
+			localRatio: [100, 100],
+			pos: [0, 0],
+			ratio: [0, 0],
 			arrangeStyle: "",
 			arrangeAxis: 0, // 0 or 1 - x and y
 			arrangeFunctions: {}
@@ -127,28 +139,27 @@ function windowLib(easyFrame) {
 		};
 		local.arrangeFunctions["free"] = local.arrangeFree;
 		
-		if (!local.inputContext) {
-			local.inputContext = function(input) {
-				var input = input;
-				
-				
-				
-				return input;
-			};
-		}
+		local.update = function(frame, blockPos, blockRatio) {
 		
-		local.update = function(frame) {
-			var blockPos = [
-				this.parent.pos[0] + (this.parent.ratio[0] * (this.pos[0]/100)),
-				this.parent.pos[1] + (this.parent.ratio[1] * (this.pos[1]/100))
+			this.pos = [
+				this.parent.pos[0] + (this.parent.ratio[0] * (this.localPos[0]/100)),
+				this.parent.pos[1] + (this.parent.ratio[1] * (this.localPos[1]/100))
 			];
-			var blockRatio = [
-				this.parent.ratio[0] * (this.ratio[0]/100), 
-				this.parent.ratio[1] * (this.ratio[1]/100)
+			this.ratio = [
+				this.parent.ratio[0] * (this.localRatio[0]/100), 
+				this.parent.ratio[1] * (this.localRatio[1]/100)
 			];
 			
-			if (this.arrangeFunctions[this.arrangeStyle]) this.arrangeFunctions[this.arrangeStyle](
-				frame, this.objects, this.objectNames, blockPos, blockRatio, this.arrangeAxis);
+			if (this.arrangeFunctions[this.arrangeStyle]) {
+				this.arrangeFunctions[this.arrangeStyle](
+					frame, 
+					this.objects, 
+					this.objectNames, 
+					this.pos, 
+					this.ratio, 
+					this.arrangeAxis
+				);
+			}
 		};
 		
 		return local;
@@ -436,10 +447,22 @@ function windowLib(easyFrame) {
 				this.object.setup(context);
 			}
 		};
+		
+		local.inputContext = function(input) {
+			
+			if (input.keys["LMB"]) {
+				if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+					console.log("Clicked!");
+					return input;
+				}
+			}
+
+		};
 
 		local.setObject = function(object) {
 			this.object = localContainer.easy.base.copyItem(object);
 			this.objectOriginal = object;
+			this.ratio = [Math.abs(this.object.offset[0]*2), Math.abs(this.object.offset[1]*2)];
 			if (this.context) this.object.setup(this.context);
 		};
 		

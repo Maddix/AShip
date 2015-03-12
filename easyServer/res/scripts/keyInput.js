@@ -2,6 +2,12 @@
 // Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 // TODO: Add brackets, comma, ect. to the keyMap
 
+// Bubble up event input
+// First issue - what was clicked?
+// List of 
+// Second issue - Managing bubbling event.
+// 
+
 function inputHandler(easyFrame) {
 	var localContainer = {
 		version:"1.0",

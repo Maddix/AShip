@@ -134,7 +134,7 @@ function createContent() {
 	});
 	
 	// add the mouse context
-	profile.add("mouse", cursor)
+	profile.add("mouse", cursor);
 	
 	DATA.inputController.add("main", profile);
 	
@@ -145,9 +145,11 @@ function createContent() {
 	// Window manager
 	// ==============
 	
-	DATA.windowManager = easy.windowLib.getMenuManager();
-	var windowManager = DATA.windowManager;
-
+	var windowManager = easy.windowLib.getMenuManager();
+	DATA.windowManager = windowManager;
+	
+	profile.add("window", windowManager);
+	
 	// Create window
 	// =============
 	
@@ -214,11 +216,10 @@ function createContent() {
 	// Give the windowManager input
 	// ============================
 	
-	profile.add("window", windowManager);
+	
 	
 	// Create editWindow
 	var editWindow = createEditWindow(windowManager);
-	//profile.add("editWindow", editWindow
 
 	/* ===== *
 	   Ships
