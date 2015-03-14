@@ -83,10 +83,25 @@ function createContent() {
 	
 	//particleLayer.add(particleController);
 	
+	var rectParticleSprayer = easy.particles.getRectangleParticleSprayer({
+		startColor: {red:255, green:239, blue:66, alpha:2.5},
+		endColor: {red:180, green:0, blue:0, alpha:0},
+		ratio: [2, 2],
+		color: "orange",
+		pos: [100, 400],
+		spawnCone: Math.PI*2,
+		speedRatio: [50, 80],
+		lifeRatio: [80, 100],
+		life: 5,
+		spawnRate: 600
+	});
+	
+	//particleLayer.add(rectParticleSprayer);
+	
 	var particleCount = easy.base.getAtomText({text:"Particles: ", color:"white", ratio:[0, 12], pos:[0, 30]});
 	particleCount.updateText = particleCount.update;
 	particleCount.update = function() {
-		this.text = "Particles: " + particleController.totalParticles;
+		this.text = "Particles: " + rectParticleSprayer.totalParticles;
 		this.updateText();
 	};
 	devOverlay.add(particleCount);
@@ -234,7 +249,7 @@ function createContent() {
 	});
 	
 	var engineBackRightNew = easy.base.newObject({
-		//xlocalRotation:Math.PI/8
+		//localRotation:Math.PI/8
 	}, easy.base.newObject(engineDefault));
 	
 	var engineBackLeftNew = easy.base.newObject({

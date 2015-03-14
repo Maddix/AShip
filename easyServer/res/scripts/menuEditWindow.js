@@ -38,7 +38,8 @@ function createEditWindow(windowManager) {
 	
 	var view = easy.windowLib.getViewObject({
 		localPos:[50, 50],
-		localRatio:[100, 100]
+		localRatio:[100, 100],
+		ratio: [100, 64]
 	});
 	
 	/*

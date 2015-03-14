@@ -256,7 +256,7 @@ function easyFrame() {
 			size: 10,
 			density: 2,
 			mass: 0, // size*density, How this differs from inertia, I'm not sure
-			inertia: 20, // Shape*density ?
+			inertia: 20, // Shape*density ? (*shape?)
 			velocity: [0, 0],
 			angularVelocity: 0,
 			calcMass: function() {this.mass = this.size*this.density;},
@@ -416,6 +416,7 @@ function easyFrame() {
 			pos + antiBlur;
 		*/
 		
+		// Is this still useful? I think not.
 		localContainer.getAtomShape = function() {
 			var local = {
 				ratio:[100, 100],
@@ -450,6 +451,24 @@ function easyFrame() {
 			return local;
 		};
 
+		localContainer.getAtomRectangleSimple = function(config) {
+			var local = {
+				ratio: [100, 100],
+				color: "white"
+			};
+			this.newObject(this.atom, local);
+			this.newObject(config, local);
+			
+			local.update = function() {
+				this.context.beginPath();
+				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
+				this.globalAlpha = this.alpha;
+				this.context.fillStyle = this.color;
+				this.context.fill();
+			};
+			return local;
+		};
+		
 		localContainer.getAtomLine = function(config) {
 			var local = {
 				style:"round",
@@ -559,7 +578,7 @@ function easyFrame() {
 					var timeDifference = currentTime - this.lastTime;
 					this.lastTime = currentTime;		
 					this.elapsedTime += timeDifference;
-					this.tick += timeDifference;
+					this.tick += timeDifference; // If this grows to large will it cause problems?
 					
 					if (currentTime - this.lastTickTime >= 1000) { // Once per second
 						this.lastTickTime = currentTime;
@@ -568,6 +587,7 @@ function easyFrame() {
 					if (this.elapsedTime >= this.fps) {
 						var frame = {
 							rate: parseFloat((1000/this.elapsedTime).toFixed(1)),
+							// Remove this?
 							updateTime: this.elapsedTime*this.modifier, // Should I tie this in with this.modifier?
 							delta: (this.elapsedTime/1000)*this.modifier,
 							time: this.tick*this.modifier

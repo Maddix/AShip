@@ -33,6 +33,8 @@ function setup(images) {
 		knownKeys: ["LMB", "MMB", "RMB", "w", "a", "s", "d", "q", "e", "r", "space", "enter"]
 	});
 	var inputController = easy.inputHandler.getProfileManager();
+	// mousePosition is pre populated because functions depend on it at start
+	keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]},
 	
 	// Create global static Data Object, it shouldn't be global should it. :/ "easyFrame.DATA" ?
 	DATA = {

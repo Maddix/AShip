@@ -11,7 +11,6 @@ function windowLib(easyFrame) {
 		var local = {
 			activeObject: null,
 			context: null,
-			parent: null, // Should I set this to undefined?
 			active: false,
 			inputContext: undefined
 		};
@@ -19,9 +18,8 @@ function windowLib(easyFrame) {
 		local.addObject = local.add;
 		this.easy.base.newObject(config, local);
 		
-		local.setup = function(context, parent) {
+		local.setup = function(context) {
 			this.context = context;
-			this.parent = parent; // If parent isn't passed I think it gets set to undefined.. Hm
 			for (var objectIndex in this.objectNames) {
 				this.objects[this.objectNames[objectIndex]].setup(context, this);
 			}
@@ -35,39 +33,16 @@ function windowLib(easyFrame) {
 		};
 		
 		local.inputContext = function(input) {
-			
 			var processedInput = undefined;
-			
-			if (input.keys["LMB"]) {
-				if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
-					if (!this.active) {
-						for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
-							var object = this.objects[this.objectNames[objectIndex]];	
-							if (object.inputContext) {
-								
-								processedInput = object.inputContext(input);
-								if (processedInput) {
-									this.active = true;
-									this.activeObject = object;
-									break;
-								}
-							}
-						}
-					} else {
-						if (this.activeObject) processedInput = this.activeObject.inputContext(input);
+			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+				for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
+					var object = this.objects[this.objectNames[objectIndex]];	
+					if (object.inputContext) {
+						processedInput = object.inputContext(input);
+						if (processedInput) break;
 					}
 				}
 			}
-			
-			if (input.keys["LMB"] === false) {
-				if (this.activeObject) {
-					console.log("Let Block go.");
-					processedInput = this.activeObject.inputContext(input);
-					this.activeObject = null;
-					this.active = false;
-				}
-			}
-			
 			return processedInput;
 		}
 		
@@ -83,11 +58,9 @@ function windowLib(easyFrame) {
 		var local = {};
 		this.easy.base.newObject(this.getMenuContainer(config), local);
 		
-		local.inputContext = function(input) {
-			
+		local.inputContext = function(input) {	
 			for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
 				var object = this.objects[this.objectNames[objectIndex]];
-				
 				if (object.inputContext) {
 					var returnedInput = object.inputContext(input);
 					if (returnedInput) {
@@ -99,7 +72,7 @@ function windowLib(easyFrame) {
 			
 			return input;
 		};
-
+		
 		return local;
 	};
 	
@@ -110,6 +83,12 @@ function windowLib(easyFrame) {
 			mousePositionOffset: 0
 		};
 		this.easy.base.newObject(this.getMenuContainer(config), local);
+
+		local.update = function(frame) {
+			for (var objectIndex in this.objectNames) {
+				this.objects[this.objectNames[objectIndex]].update(frame, this.pos, this.ratio);
+			}
+		};
 		
 		return local;
 	};
@@ -127,7 +106,6 @@ function windowLib(easyFrame) {
 		this.easy.base.newObject(this.getMenuContainer(config), local);
 		
 		local.arrangeFree = function(frame, objects, objectNames, pos, ratio, axis) {
-			
 			for (var i=0; i<objectNames.length; i++) {
 				var widget = objects[objectNames[i]];
 				var newPos = [
@@ -140,14 +118,13 @@ function windowLib(easyFrame) {
 		local.arrangeFunctions["free"] = local.arrangeFree;
 		
 		local.update = function(frame, blockPos, blockRatio) {
-		
 			this.pos = [
-				this.parent.pos[0] + (this.parent.ratio[0] * (this.localPos[0]/100)),
-				this.parent.pos[1] + (this.parent.ratio[1] * (this.localPos[1]/100))
+				blockPos[0] + (blockRatio[0] * (this.localPos[0]/100)),
+				blockPos[1] + (blockRatio[1] * (this.localPos[1]/100))
 			];
 			this.ratio = [
-				this.parent.ratio[0] * (this.localRatio[0]/100), 
-				this.parent.ratio[1] * (this.localRatio[1]/100)
+				blockRatio[0] * (this.localRatio[0]/100), 
+				blockRatio[1] * (this.localRatio[1]/100)
 			];
 			
 			if (this.arrangeFunctions[this.arrangeStyle]) {
@@ -165,6 +142,8 @@ function windowLib(easyFrame) {
 		return local;
 	};
 	
+	
+	// Old, update it.
 	// Create some sort of window docking / Talk with the windowManager?
 	// This is a window enhancement, it lets you drag the window
 	// Rename?
@@ -388,7 +367,6 @@ function windowLib(easyFrame) {
 	
 	localContainer.getTextWidget = function(config) {
 		var local = this.easy.base.newObject(this.widget());
-		this.easy.base.newObject(this.getButtonEnhancement(), local);
 		this.easy.base.newObject(this.easy.base.getAtomText(config), local);
 		local.updateText = local.update;
 		local.setup = function(context) {
@@ -409,8 +387,6 @@ function windowLib(easyFrame) {
 		local.updateRect = local.update;
 		
 		local.update = function(frame, newPos, blockRatio) {
-			//this.ratio = blockRatio;
-			//console.log(newPos);
 			this.pos = newPos;
 			this.updateRect();
 		};
@@ -435,7 +411,8 @@ function windowLib(easyFrame) {
 			object: null,
 			objectOriginal: null,
 			ratio: [0, 0],
-			pos:[0,0]
+			pos:[0,0],
+			active: false
 		};
 		this.easy.base.newObject(this.widget(), local);
 		this.easy.base.newObject(this.easy.base.atom, local);
@@ -449,20 +426,78 @@ function windowLib(easyFrame) {
 		};
 		
 		local.inputContext = function(input) {
-			
 			if (input.keys["LMB"]) {
-				if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
-					console.log("Clicked!");
-					return input;
+				if (!this.active) {
+					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+						this.active = true;
+						var localMousePos = [
+							input.mouse["mousePosition"][0] - this.object.pos[0], 
+							input.mouse["mousePosition"][1] - this.object.pos[1], 
+						];
+						
+						var newSlotName = "slot_" + input.mouse["mousePosition"][0] + input.mouse["mousePosition"][1];
+						
+						this.object.addSlot(newSlotName, localMousePos);
+						this.objectOriginal.addSlot(newSlotName, localMousePos);
+						
+						console.log("Ship slot added at: " + localMousePos);
+						
+						return input;
+					}
 				}
 			}
-
+			
+			if (input.keys["LMB"] === false) {
+				this.active = false;
+			}
+			
+			if (input.keys["RMB"]) {
+				if (!this.active) {
+					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+						this.active = true;
+						var localMousePos = [
+							input.mouse["mousePosition"][0] - this.object.pos[0], 
+							input.mouse["mousePosition"][1] - this.object.pos[1], 
+						];
+						
+						for (var slotName in this.object.slots) {;
+							var slot = this.object.slots[slotName];
+							if (Math.abs(slot.offset[0] - localMousePos[0]) < 20 && Math.abs(slot.offset[1] - localMousePos[1]) < 20) {
+								if (this.object.isSlotEmpty(slotName)) {
+									
+									var newEngine = localContainer.easy.components.engineNew({
+										image:DATA.images["engine"],
+										offset:[DATA.images["engine"].width/2, DATA.images["engine"].height/2],
+										power: 10
+									});
+									
+									var newEngineDup = localContainer.easy.base.copyItem(newEngine);
+									
+									this.object.addObject(slotName, newEngine);
+									this.objectOriginal.addObject(slotName, newEngineDup);
+									console.log("Engine added to slot: " + slotName);
+									//this.object.software["engineComputer"].object.setupEngines(
+									this.objectOriginal.software["engineComputer"].object.setupEngines(this.objectOriginal.slots);
+									console.log("Recal engines..");
+									
+									return input
+								}
+							}
+						}
+						
+					}
+				}
+			}
+			
+			if (input.keys["RMB"] === false) {
+				this.active = false;
+			}
+			
 		};
 
 		local.setObject = function(object) {
 			this.object = localContainer.easy.base.copyItem(object);
 			this.objectOriginal = object;
-			this.ratio = [Math.abs(this.object.offset[0]*2), Math.abs(this.object.offset[1]*2)];
 			if (this.context) this.object.setup(this.context);
 		};
 		
@@ -472,42 +507,11 @@ function windowLib(easyFrame) {
 		};
 		
 		local.update = function(frame, newPos, blockRatio) {
-			this.pos = newPos;
+			this.pos = [newPos[0] - (this.ratio[0]/2), newPos[1] - (this.ratio[1]/2)];
 			if (this.object) {
-				this.object.pos = [newPos[0], newPos[1]];
+				this.object.pos = newPos;
 				this.object.update(frame);
 			}
-		};
-		
-		return local;
-	};
-	
-	// is that the right name for it? is it really a widget?
-	// Shouldn't display anything by itself... It should be an enhancement! :D Done?
-	// Not done, this doesn't use inputContext!
-	localContainer.getButtonEnhancement = function() {
-		var local = {
-			clicked:false,
-			buttonOffset:0
-		};
-		
-		local.click = function(input) {
-			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, this.buttonOffset)) {
-				if (!this.clicked) {
-					this.clicked = true;
-					console.log("Held.");
-				}
-				return true;
-			} else {
-				return false;
-			}
-		};
-		
-		local.release = function(input) {
-			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, this.buttonOffset)) {
-				console.log("Clicked!");
-			}
-			this.clicked = false;
 		};
 		
 		return local;

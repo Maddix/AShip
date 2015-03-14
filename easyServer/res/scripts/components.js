@@ -200,6 +200,7 @@ function components(easyFrame) {
 			this.context = context;
 			this.localOffset = offset;
 			
+			/*
 			this.particleController = localContainer.easy.particles.getParticleController({
 				particle:this.particle,
 				pos:[this.pos[0], this.pos[1]],
@@ -210,6 +211,21 @@ function components(easyFrame) {
 				lifeRatio:[50, 100]
 			});
 			this.particleControllerLayer.add(this.particleController);
+			*/
+			
+			this.particleController = localContainer.easy.particles.getRectangleParticleSprayer({
+				startColor: {red:255, green:239, blue:66, alpha:2.5},
+				endColor: {red:180, green:0, blue:0, alpha:0},
+				ratio: [4, 4],
+				active: false,
+				pos: [this.pos[0], this.pos[1]],
+				spawnCone: Math.PI/4,
+				speedRatio: [50, 80],
+				lifeRatio: [50, 100],
+				life: .5,
+				spawnRate: 50
+			});
+			DATA.layerController.getLayer("particleLayer").add(this.particleController);
 		};
 		
 		local.getInfo = function() {
@@ -243,7 +259,7 @@ function components(easyFrame) {
 			
 			this.particleController.pos = this.pos;
 			this.particleController.spawnRotation = this.rotation + Math.PI;
-			this.particleController.parentVelocity = parent.velocity;
+			//this.particleController.parentVelocity = parent.velocity;
 			if (this.spawnParticle) {
 				this.particleController.spawnParticles(frame);
 				this.spawnParticle = false;
