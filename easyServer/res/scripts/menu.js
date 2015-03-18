@@ -239,6 +239,32 @@ function windowLib(easyFrame) {
 		return local;
 	};
 	
+	localContainer.getResize = function(config) {
+		var local = {
+			minimumRatio: [100, 100],
+			dragOffset: 5 // px
+		};
+		this.easy.base.newObject(config, local);
+		
+	
+		
+		local.inputContext = function(input) {
+			
+			var mousePos = input.mouse["mousePosition"];
+			
+			if (input.keys["LMB"]) {
+				if (!this.active) {
+					if (checkWithinBounds(mousePos, this.pos, this.ratio, this.dragOffset)) {
+						// Am I touching any of the edges? if so than make the edge follow the mouse
+					}
+				}
+			}
+			
+		};
+		
+		return local;
+	};
+	
 	// This is a window enhancement, it lets you resize the window
 	// Rename?
 	localContainer.getWindowWidgetResize = function(config) {
@@ -476,8 +502,7 @@ function windowLib(easyFrame) {
 									this.object.addObject(slotName, newEngine);
 									this.objectOriginal.addObject(slotName, newEngineDup);
 									console.log("Engine added to slot: " + slotName);
-									//this.object.software["engineComputer"].object.setupEngines(
-									this.objectOriginal.software["engineComputer"].object.setupEngines(this.objectOriginal.slots);
+									this.objectOriginal.sortEngines();
 									console.log("Recal engines..");
 									
 									return input

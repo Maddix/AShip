@@ -8,10 +8,9 @@ function components(easyFrame) {
 	localContainer.ship = function(config) {
 		var local = {
 			slots: {}, // Slot:{"name":{"object":obj, }, ..}
-			software: {},
 			inputContext: null
 		};
-		this.easy.base.newObject(this.easy.base.getAtomImage(config), local);
+		this.easy.base.newObject(this.engineControl(this.easy.base.getAtomImage(config)), local);
 		this.easy.base.newObject(this.easy.base.atomPhysics, local);
 		local.updateImage = local.update;
 		
@@ -24,10 +23,14 @@ function components(easyFrame) {
 				if (slot.object) slot.object.setup(this.context, slot.offset)
 			}
 			
-			for (var softwareName in this.software) {
-				var program = this.software[softwareName];
-				if (program.object) program.object.setup(this);
-			}
+			// Recalculate engine groups
+			this.quedEvents["engine"] = [];
+			this.sortEngines();
+
+		};
+		
+		local.setupSlots = function() {
+			this.sortEngines();
 		};
 		
 		local.addSlot = function(name, offset) {
@@ -38,17 +41,12 @@ function components(easyFrame) {
 			if (this.slots[name]) return !this.slots[name].object;
 		};
 		
-		local.addSoftwareSlot = function(name) {
-			this.software[name] = {object:null};
-		};
-		
-		local.isSoftwareSlotEmpty = function(name) {
-			if (this.software[name]) return !this.software[name].object;
-		};
-		
 		local.addObject = function(name, object) {
-			this.slots[name].object = object;
-			object.setup(this.context, this.slots[name].offset);
+			if (this.slots[name]) this.slots[name].object = object;
+			if (this.context) {
+				object.setup(this.context, this.slots[name].offset);
+				this.setupSlots();
+			}
 		};
 		
 		local.removeObject = function(name) {
@@ -60,13 +58,23 @@ function components(easyFrame) {
 			return object;
 		};
 		
-		local.addSoftware = function(name, object) {
-			this.software[name].object = object;
-			object.setup(this);
+		local.activate = function(eventType, group) {
+			if (this.quedEvents[eventType]) this.quedEvents[eventType].push(group);
+		};
+		
+		local.handleEvents = function(frame) {
+			for (var eventType in this.quedEvents) {
+				var type = this.quedEvents[eventType]
+				if (eventType === "engine") {
+					for (var eventIndex=0; eventIndex < type.length; eventIndex++) {
+						this.fireThrusters(frame, type[eventIndex]);
+					}
+					this.quedEvents[eventType] = [];
+				}
+			}
 		};
 		
 		local.update = function(frame) {
-			//console.log(this.velocity[0]*frame.delta);
 			this.pos[0] += this.velocity[0]*frame.delta;
 			this.pos[1] += this.velocity[1]*frame.delta;
 			this.rotation += this.angularVelocity*frame.delta;
@@ -78,20 +86,14 @@ function components(easyFrame) {
 				if (slot.object) slot.object.update(frame, this);
 			}
 			
-			// Update software
-			for (var softName in this.software) {
-				var program = this.software[softName];
-				program.object.update(frame, this);
-			}
-			
+			this.handleEvents(frame);
 		};
 		
 		return local;
 	};
 
-	localContainer.engineComputer = function(config) {
+	localContainer.engineControl = function(config) {
 		var local = {
-			type:"computer",
 			engineSorting: {
 				"forward":{torque:0, rotation:0}, 
 				"strafeRight":{torque:0, rotation:Math.PI/2}, 
@@ -100,29 +102,25 @@ function components(easyFrame) {
 				"turnRight":{torque:-1},
 				"turnLeft":{torque:1}
 			},
+			engineSortingDefaultAngleOffset: Math.PI/8,
 			engineGroups: {},
-			quedEvents: [],
-			defaultAngleOffset: Math.PI/8
+			quedEvents: {}
 		};
+		this.easy.base.newObject(config, local);
 		
-		local.setup = function(parent) {
-			this.setupEngines(parent.slots);
-		};
-		
-		local.setupEngines = function(parentEngines) {
-			for (var movementName in this.engineSorting) {		
+		local.sortEngines = function() {
+			for (var movementName in this.engineSorting) {	
 				var movement = this.engineSorting[movementName];
 				var totalTorque = 0;
 				// I should worry about the x and y  ?
 				var possibleEngines = [];
-				for (var engineName in parentEngines) {
-					
-					var engine = parentEngines[engineName].object;
-					if (engine) {
-						var engineStats = engine.getInfo();
+				for (var engineName in this.slots) {
+					var object = this.slots[engineName].object;
+					if (object && object.type === "engine") {
+						var engineStats = object.getInfo();
 						var add = false;
 						
-						var angleOffset = movement.angleOffset ? movement.angleOffset : this.defaultAngleOffset
+						var angleOffset = movement.angleOffset ? movement.angleOffset : this.engineSortingDefaultAngleOffset;
 						var rotationCone = [
 							movement.rotation - angleOffset, 
 							movement.rotation + angleOffset
@@ -146,39 +144,25 @@ function components(easyFrame) {
 						// Add the engine
 						if (add) {
 							totalTorque += engineStats.torque;
-							possibleEngines.push(engine);
+							possibleEngines.push(object);
 						};	
 					}
 				}
-				//console.log("--- '" + movementName + "' Torque: " + totalTorque + " TotalEngines: " + possibleEngines.length + " ---");
 				this.engineGroups[movementName] = possibleEngines;
 			}
 		};
 		
-		local.fireThrusters = function(engineGroup, frame, parent) {
-			for (var engineIndex in this.engineGroups[engineGroup]) {
-				var engine = this.engineGroups[engineGroup][engineIndex];
-				if (!engine.activated) {
-					var engineOutput = this.engineGroups[engineGroup][engineIndex].activate(parent.rotation, parent.inertia, parent.mass);
+		local.fireThrusters = function(frame, group) {
+			for (var engineIndex in this.engineGroups[group]) {
+				var engine = this.engineGroups[group][engineIndex];
+				if (engine && !engine.activated) {
+					var engineOutput = engine.activate(this.rotation, this.inertia, this.mass);
 					engine.activated = true;
-					parent.angularVelocity += engineOutput.angularVelocity*frame.delta;
-					parent.velocity[0] += engineOutput.velocity[0];
-					parent.velocity[1] += engineOutput.velocity[1];
+					this.angularVelocity += engineOutput.angularVelocity*frame.delta;
+					this.velocity[0] += engineOutput.velocity[0];
+					this.velocity[1] += engineOutput.velocity[1];
 				}
 			}
-		}
-		
-		local.activate = function(engineGroup, parent) {
-			this.quedEvents.push([engineGroup, parent]);
-		};
-		
-		local.update = function(frame, parent) {
-			
-			for (var eventIndex in this.quedEvents) {
-				var action = this.quedEvents[eventIndex];
-				this.fireThrusters(action[0], frame, action[1]);
-			}
-			this.quedEvents = [];
 		};
 		
 		return local;
@@ -199,19 +183,6 @@ function components(easyFrame) {
 		local.setup = function(context, offset) {
 			this.context = context;
 			this.localOffset = offset;
-			
-			/*
-			this.particleController = localContainer.easy.particles.getParticleController({
-				particle:this.particle,
-				pos:[this.pos[0], this.pos[1]],
-				spawnAngle: Math.PI/4,
-				spawnRate:50,
-				spawnRotation:this.rotation,
-				speedRatio:[20, 90],
-				lifeRatio:[50, 100]
-			});
-			this.particleControllerLayer.add(this.particleController);
-			*/
 			
 			this.particleController = localContainer.easy.particles.getRectangleParticleSprayer({
 				startColor: {red:255, green:239, blue:66, alpha:2.5},
@@ -259,7 +230,6 @@ function components(easyFrame) {
 			
 			this.particleController.pos = this.pos;
 			this.particleController.spawnRotation = this.rotation + Math.PI;
-			//this.particleController.parentVelocity = parent.velocity;
 			if (this.spawnParticle) {
 				this.particleController.spawnParticles(frame);
 				this.spawnParticle = false;
@@ -270,102 +240,6 @@ function components(easyFrame) {
 		
 		return local;
 	};
-	
-	
-	/* #Pydoc
-		ship
-		Is a ship that can have modules
-	*/
-	localContainer.object = function(config) {
-		var local = {
-			inputContext: null,
-			velocity:[0, 0],
-			angularVelocity:0,
-			slots: {},
-			mass: 1
-		};
-		this.easy.base.newObject(this.easy.base.getAtomImage(config), local);
-		local.updateImage = local.update;
-		
-		local.setup = function(context) {
-			this.context = context;
-			for (var slotName in this.slots) {
-				this.slots[slotName].setup(context);
-			}
-		};
-		
-		local.addSlot = function(slotName, slot) {
-			if (this.context) slot.setup(context);
-			this.slots[slotName] = slot;
-		};
-		
-		local.giveCommand = function(command) {
-			for (var slotName in this.slots) {
-				this.slots[slotName].receiveCommand(command, this);
-			}
-		};
-		
-		local.update = function(frame) {
-			this.pos[0] += this.velocity[0]*frame.delta;
-			this.pos[1] += this.velocity[1]*frame.delta;
-			this.rotation += this.angularVelocity*frame.delta;
-			this.updateImage();
-			
-			for (var slotName in this.slots) {
-				this.slots[slotName].update(frame, this);
-			}
-		};
-		return local;
-	};
-	
-	localContainer.engine = function(config) {
-		var local = {
-			posOffset:[0, 0],
-			commandContext:null,
-			localRotation: 0,
-			thrustRotation: 1,
-			power: 1,
-			action: null
-		};
-		this.easy.base.newObject(this.easy.base.getAtomImage(config), local);
-		local.updateImage = local.update;
-		
-		local.receiveCommand = function(command, parent) {
-			this.commandContext(command, parent);
-		}
-		
-		if (!local.commandContext) {
-			local.commandContext = function(command, parent) {
-				
-				if (command["thrust"]) {
-					
-					local.action = function(frame, parent) {
-						var force = getVelocityToAngle(local.power, parent.rotation + local.localRotation);
-						var staticForce = getVelocityToAngle(local.power, local.localRotation);
-						var torque = crossProduct(local.posOffset, staticForce);
-						var acceleration = [force[0]/parent.mass, force[1]/parent.mass];
-						parent.velocity[0] += acceleration[0];
-						parent.velocity[1] += acceleration[1];
-						parent.angularVelocity += (torque/parent.inertia)*frame.delta;
-					};
-				}	
-			}
-		}
-		
-		local.update = function(frame, parent) {
-			var rotatedPos = rotatePoint(this.posOffset, parent.rotation);
-			this.pos[0] = parent.pos[0] + rotatedPos[0];
-			this.pos[1] = parent.pos[1] + rotatedPos[1];
-			this.rotation = parent.rotation + this.localRotation;
-			if (this.action) {
-				this.action(frame, parent);
-				this.action = null;
-			}
-			this.updateImage();
-		}
-		
-		return local;
-	}
 	
 	return localContainer;
 };

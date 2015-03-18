@@ -293,7 +293,7 @@ function easyFrame() {
 			local.update = function() {
 				var keyFrames = this.animationKeyFrames[this.currentAnimation];
 				var frame = this.currentFrame;
-				if (this.currentFrame >= keyFrames.length) console.log("Warning!!! -> Animation keyFrame is out of range");
+				if (this.currentFrame >= keyFrames.length) console.warn("Warning!!! -> Animation keyFrame is out of range");
 				this.context.globalAlpha = this.alpha;
 				localContainer.drawComplexImage(
 					this.context,
@@ -401,16 +401,6 @@ function easyFrame() {
 		};
 
 		/*
-			var antiBlur;
-			if (lineThickness % 2) {
-				antiBlur = 0;
-			} else {
-				antiBlur = .5;
-			}
-			pos + antiBlur;
-			
-			Take 2:
-			
 			var antiBlur = 0;
 			if (lineThickness % 2) antiBlur = .5;
 			pos + antiBlur;
@@ -502,13 +492,13 @@ function easyFrame() {
 			local.update = function() {
 				this.context.globalAlpha = this.alpha;
 				this.context.beginPath();
-				for (var lineIndex in this.shape) {
+				for (var lineIndex=0; lineIndex < this.shape.length; lineIndex++) {
+				//for (var lineIndex in this.shape) { // Shouldn't use for-in with arrays
 					for (var pointIndex=0; pointIndex < this.shape[lineIndex].length; pointIndex+=2) {
 						var line = this.shape[lineIndex];
 						if (pointIndex === 0) this.context.moveTo(this.pos[0] + line[pointIndex], this.pos[1] + line[pointIndex+1]);
 						else this.context.lineTo(this.pos[0] + line[pointIndex], this.pos[1] + line[pointIndex+1]);
 					}
-					//this.context.closePath();
 				}
 				this.context.lineJoin = this.style;
 				this.context.lineWidth = this.lineWidth;
@@ -551,7 +541,7 @@ function easyFrame() {
 				}
 
 			}; // Calling the function right after creating it (func{}();) will set the 'this' to the window
-			local.getCallbackFunction(); // Calling the function from 'local' insures that 'this' will be the window
+			local.getCallbackFunction(); // Calling the function from 'local' insures that 'this' will be the window // what? don't I mean will be the 'local' object?
 			
 			local.togglePause = function() {
 				this.pausedModifier = this.modifier;

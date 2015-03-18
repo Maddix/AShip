@@ -35,21 +35,12 @@ function createEditWindow(windowManager) {
 	/* ======= *
 	   Widgets
 	*  ======= */
-	
+
 	var view = easy.windowLib.getViewObject({
 		localPos:[50, 50],
 		localRatio:[100, 100],
 		ratio: [100, 64]
 	});
-	
-	/*
-	view.inputContext = function(input) {
-		console.log(input);
-		if (input.keys["LMB"]) {
-			console.log(input.mouse["mousePosition"]);
-		}
-	};
-	*/
 	
 	var backgroundTrans = easy.windowLib.getBackgroundRectWidget({
 		color: "#9AC2E3",

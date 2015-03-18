@@ -60,29 +60,6 @@ function createContent() {
 	   Particles
 	*  ========= */
 	
-	var particle = function() {
-		return easy.particles.getRectParticle({
-			life:300,
-			ratio:[4, 4],
-			borderWidth:0,
-			borderColor:"white",
-			borderAlpha: 0,
-			color:"rgba(255, 255, 255, 255)"
-		});
-	}
-	
-	var particleController = easy.particles.getParticleController({
-		particle:particle,
-		pos:[540, 300],
-		spawnRate:50,
-		spawnAngle: Math.PI/16,
-		spawnRotation: 0,
-		speedRatio:[20, 40],
-		lifeRatio:[80, 100]
-	});
-	
-	//particleLayer.add(particleController);
-	
 	var rectParticleSprayer = easy.particles.getRectangleParticleSprayer({
 		startColor: {red:255, green:239, blue:66, alpha:2.5},
 		endColor: {red:180, green:0, blue:0, alpha:0},
@@ -106,6 +83,16 @@ function createContent() {
 	};
 	devOverlay.add(particleCount);
 	
+	/* ============= *
+	   Input profile
+	*  ============= */
+	
+	var profile = easy.inputHandler.profile({
+		// Broken I think
+		userKeyMapping: {"w":"upArrow", "a":"leftArrow", "s":"downArrow", "d":"rightArrow"}
+	});
+	
+	DATA.inputController.add("main", profile);
 	
 	/* ============ *
 	   Mouse Cursor
@@ -119,7 +106,6 @@ function createContent() {
 	cursor.updateImage = cursor.update;
 	cursor.update = function(frame) {
 		this.rotation += Math.PI/1.6*frame.delta;
-		particleController.pos = [this.pos[0], this.pos[1]];
 		cursor.updateImage();
 	};
 	cursor.inputContext = function(input) {
@@ -130,28 +116,8 @@ function createContent() {
 	}
 	devOverlay.add(cursor);
 	
-	/* ============= *
-	   Input profile
-	*  ============= */
-	
-	/*
-	var profile = easy.inputHandler.getProfile({
-		//userKeyMapping:{}, // when I press 't' I want to fire 'w'
-		inputController:DATA.inputController,
-		keyMouseController:DATA.keyMouseController,
-		inputContextGroup:"test"
-	});
-	*/
-	
-	var profile = easy.inputHandler.profile({
-		// Broken I think
-		userKeyMapping: {"w":"upArrow", "a":"leftArrow", "s":"downArrow", "d":"rightArrow"}
-	});
-	
 	// add the mouse context
 	profile.add("mouse", cursor);
-	
-	DATA.inputController.add("main", profile);
 	
 	/* ======= *
 	   Windows
@@ -163,79 +129,30 @@ function createContent() {
 	var windowManager = easy.windowLib.getMenuManager();
 	DATA.windowManager = windowManager;
 	
-	profile.add("window", windowManager);
-	
-	// Create window
-	// =============
-	
-	var testWindow = easy.windowLib.getMenuWindow({
-		pos: [200, 200],
-		ratio: [150, 200]
-	});
-
-	// Create blocks
-	// =============
-
-	var blockBackground = easy.windowLib.getMenuBlock({
-		arrangeStyle: "free"
-	});
-	
-	// Create widgets
-	// ==============
-	
-	//var dragEnhancement = easy.windowLib.getWindowWidgetDrag({
-		//parent:titleWindow,
-		//localRatio:[100, 30]
-	//});
-	
-	var backgroundRect = easy.windowLib.getRectWidget({
-		color:"gray",
-		alpha:1,
-		localRatio:[50, 50]
-	});
-	
-	var backgroundText = easy.windowLib.getTextWidget({
-		text:"Hello!",
-		baseline:"top",
-		align:"start",
-		color:"gray"
-	});
-	
-	var contentBar = easy.windowLib.getRectWidget({
-		color:"white",
-		alpha:1,
-		ratio:[100, 20],
-		localPos: [0, 0]
-	});
-
-	// Add widgets to the blocks
-	// =========================
-	
-	blockBackground.add("backgroundRect", backgroundRect);
-	blockBackground.add("bar", contentBar);
-	blockBackground.add("text", backgroundText);
-	
-	// Add blocks to the window
-	// ========================
-	
-	testWindow.add("blockBackground", blockBackground);
-	
-	// Create some window Enhancements for testing
-
-	// Add window to the windowManager
-	// ===============================
-	
-	windowManager.add("tempWindow", testWindow);
 	menu.add(windowManager);
 	
-	// Give the windowManager input
-	// ============================
-	
-	
+	// Add the windowManager to the profile
+	profile.add("window", windowManager);
 	
 	// Create editWindow
 	var editWindow = createEditWindow(windowManager);
 
+	
+	/* ========== *
+	   Ship Parts
+	*  ========== */
+	
+	var engine = easy.components.engineNew({
+		image:DATA.images["engine"],
+		offset:[DATA.images["engine"].width/2, DATA.images["engine"].height/2],
+		power: 10
+	});
+	
+	//var engineComputerNew = easy.components.engineComputer({
+		
+	//});
+	
+	
 	/* ===== *
 	   Ships
 	*  ===== */
@@ -243,9 +160,9 @@ function createContent() {
 	var engineDefault = easy.components.engineNew({
 		image:DATA.images["engine"],
 		offset:[DATA.images["engine"].width/2, DATA.images["engine"].height/2],
-		power: 10,
-		particle: particle,
-		particleControllerLayer: particleLayer
+		power: 10
+		//particle: particle,
+		//particleControllerLayer: particleLayer
 	});
 	
 	var engineBackRightNew = easy.base.newObject({
@@ -276,9 +193,9 @@ function createContent() {
 		localRotation: Math.PI*3/2
 	}, easy.base.newObject(engineDefault));
 	
-	var engineComputer = easy.components.engineComputer({
+	//var engineComputer = easy.components.engineComputer({
 		
-	});
+	//});
 	
 	var ship = easy.components.ship({
 		image:DATA.images["playera"],
@@ -286,34 +203,29 @@ function createContent() {
 		pos:[DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10],
 		alive:true,
 		inputContext:function(input) {
-			
 			if (input.keys["w"]) {
-				ship.software["engineComputer"].object.activate("forward", ship);
+				this.activate("engine", "forward");
 			}
 			if (input.keys["a"]) {
-				ship.software["engineComputer"].object.activate("turnLeft", ship);
+				this.activate("engine", "turnLeft");
 			}
 			if (input.keys["d"]) {
-				ship.software["engineComputer"].object.activate("turnRight", ship);
+				this.activate("engine", "turnRight");
 			}
 			if (input.keys["s"]) {
-				ship.software["engineComputer"].object.activate("backward", ship);
+				this.activate("engine", "backward");
 			}
 			if (input.keys["e"]) {
-				ship.software["engineComputer"].object.activate("strafeLeft", ship);
+				this.activate("engine", "strafeLeft");
 			}
 			if (input.keys["q"]) {
-				ship.software["engineComputer"].object.activate("strafeRight", ship);
-			}
-			if (input.keys["r"] === false) {
-				console.log("Recalc engines..");
-				ship.software["engineComputer"].object.setupEngines(ship.slots);
+				this.activate("engine", "strafeRight");
 			}
 			if (input.keys["space"]) {
-				ship.velocity = [0, 0];
-				ship.angularVelocity = 0;
-				ship.pos = [DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10];
-				ship.rotation = 0;
+				this.velocity = [0, 0];
+				this.angularVelocity = 0;
+				this.pos = [DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10];
+				this.rotation = 0;
 			};
 		
 			return input;
@@ -328,7 +240,7 @@ function createContent() {
 	ship.addSlot("engineBack", [0, 10]);
 	ship.addSlot("engineFrontSideRight", [-13, 0]);
 	ship.addSlot("engineFrontSideLeft", [13, 0]);
-	ship.addSoftwareSlot("engineComputer", engineComputer);
+	//ship.addSoftwareSlot("engineComputer", engineComputer);
 	
 	ship.addObject("engineBackRight", engineBackRightNew);
 	ship.addObject("engineBackLeft", engineBackLeftNew);
@@ -338,10 +250,10 @@ function createContent() {
 	ship.addObject("engineFrontSideRight", engineFrontSideRight);
 	ship.addObject("engineFrontSideLeft", engineFrontSideLeft);
 	
-	ship.addSoftware("engineComputer", engineComputer);
+	//ship.addSoftware("engineComputer", engineComputer);
 	
 	windowManager.objects["editWindow"].objects["display"].objects["view"].setObject(ship);
 	
 	profile.add("newShip", ship);
-
+	//console.log("Passed creation phase!");
 }
