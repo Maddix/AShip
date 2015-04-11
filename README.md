@@ -1,4 +1,4 @@
-# AShip
+# About
 AShip is a HTML5 Javascipt game engine that I am building from scratch.
 
 This is my attempt at building a game engine. I originally started out using 
