@@ -1,5 +1,5 @@
-# AShip - A Seriously Huge Implementation Project
-AShip is a simple HTML5 Javascipt game engine.
+# AShip
+AShip is a HTML5 Javascipt game engine that I am building from scratch.
 
 This is my attempt at building a game engine. I originally started out using 
 <a href="https://github.com/ericdrowell/KineticJS/">KineticJS</a> for rendering with canvas, but due to a number of factors I decided to write my own rendering code. The project was started back in October 2013 and is still ongoing.
