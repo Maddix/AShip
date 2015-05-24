@@ -21,8 +21,12 @@ function easyFrame() {
 			version:"1.0"
 		};
 
+		// Create console logging functions?
+		
 		// This will copy the object "from" to "to". If "to" isn't given, "to" will be set to a new object
 		// rename to shallowCopyObject or something if this is still used later on
+		// rename to copyItem
+		// Have one function to copy items? 
 		localContainer.newObject = function(from, to) {
 			to = to ? to : {}; // to = if 'to' is false, replace 'to' with {}, else return 'to'
 			if (from) for (var key in from) to[key] = from[key];
@@ -47,6 +51,7 @@ function easyFrame() {
 			return newItem;
 		};
 		
+		// Why not just use an Array?
 		localContainer.orderedObject = function() {
 			var local = {
 				objects: {},
@@ -60,7 +65,7 @@ function easyFrame() {
 			
 			local.remove = function(objectName) {
 				var index = this.objectNames.indexOf(objectName);
-				if (index !== -1) {
+				if (index != -1) {
 					delete this.objects[objectName];
 					this.objectNames.splice(index, 1);
 				}
@@ -68,7 +73,7 @@ function easyFrame() {
 			
 			local.changePosition = function(objectName, newIndex) {
 				var index = this.objectNames.indexOf(objectName);
-				if (index !== -1) {
+				if (index != -1) {
 					this.objectNames.splice(index, 1);
 					if (newIndex && newIndex >= 0 && newIndex < this.object.objectNames.length-1) {
 						this.objectNames.splice(newIndex, 0, objectName);
@@ -253,28 +258,45 @@ function easyFrame() {
 		};
 		
 		localContainer.atomPhysics = {
+			shape: 2,
 			size: 10,
 			density: 2,
 			mass: 0, // size*density, How this differs from inertia, I'm not sure
 			inertia: 20, // Shape*density ? (*shape?)
 			velocity: [0, 0],
 			angularVelocity: 0,
-			calcMass: function() {this.mass = this.size*this.density;},
-			calcInertia: function(scaler) {if (!this.mass) {this.calcMass();} this.inertia = this.mass*scaler;}
+			calcMass: function(scale) {
+				this.mass = this.size*this.density;
+				if (scale) this.mass = this.mass*scale;
+			},
+			calcInertia: function(scale) {
+				if (!this.mass) {this.calcMass(scale);} 
+				this.inertia = this.mass*this.shape
+				if (scale) this.inertia = this.inertia*scale;
+			}
 		};
 		
-		localContainer.drawSimpleImage = function(context, image, pos, offpos, rotation) {
-			context.translate(pos[0], pos[1]); // Why translate? Because you rotate around [0, 0]. Translating changes your [0, 0]
-			context.rotate(rotation);
-			context.drawImage(image, -offpos[0], -offpos[1]);
-			localContainer.reset(context);
+		localContainer.drawImage = function(context, image, imageOffset, position, rotation) {
+			this.translateRotate(context, position, rotation);
+			context.drawImage(image, -imageOffset[0], -imageOffset[1]);
+			this.reset(context);
 		};
-
-		localContainer.drawComplexImage = function(context, image, pos, rotation, clipPos, clipRatio, offset, sizeRatio) {
-			context.translate(pos[0], pos[1]);
+		
+		localContainer.drawImageScale = function(context, image, imageOffset, position, rotation, scale) {
+			this.translateRotate(context, position, rotation);
+			context.drawImage(image, -imageOffset[0]*scale, -imageOffset[1]*scale, image.width*scale, image.height*scale);
+			this.reset(context);
+		};
+		
+		localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, clipPosition, clipRatio, scale) {
+			this.translateRotate(context, position, rotation);
+			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], -imageOffset[0]*scale, -imageOffset[1]*scale, image.width*scale, image.height*scale);
+			this.reset(context);
+		};
+		
+		localContainer.translateRotate = function(context, position, rotation) {
+			context.translate(position[0], position[1]);
 			context.rotate(rotation);
-			context.drawImage(image, clipPos[0], clipPos[1], clipRatio[0], clipRatio[1], -offset[0], -offset[1], sizeRatio[0], sizeRatio[1]);
-			localContainer.reset(context);
 		};
 		
 		localContainer.getAtomAnimationManual = function(config) {
@@ -282,7 +304,7 @@ function easyFrame() {
 				animationKeyFrames:{}, // {"AnimationName":[x, y, width, height, ..], "Idle":[0, 0, 32, 32], ..}
 				currentAnimation:"",
 				currentFrame:0,
-				imageSize:[32, 32] // set to 0?
+				imageScale:1 // set to 0?
 			};
 			this.newObject(this.getAtomImage(config), local);
 			
@@ -303,7 +325,7 @@ function easyFrame() {
 					keyFrames[frame].slice(0, 2), // ImageCut [x, y]
 					keyFrames[frame].slice(2, 4), // ImageCut [width, height]
 					this.offset, // Image offset
-					this.imageSize // Image size, used to stretch or reduce
+					this.imageScale // Image size, used to stretch or reduce
 				);
 			};
 			return local;
@@ -358,19 +380,46 @@ function easyFrame() {
 		
 		localContainer.getAtomImage = function(config) {
 			var local = {
-				image:null,
-				rotation:0,
-				offset:[0,0]
+				image: null,
+				rotation: 0,
+				offset: [0, 0]
 			};
 			this.newObject(this.atom, local);
 			this.newObject(config, local);
 			local.update = function() {
 				this.context.globalAlpha = this.alpha;
-				localContainer.drawSimpleImage(this.context, this.image, this.pos, this.offset, this.rotation);
+				localContainer.drawImage(this.context, this.image, this.offset, this.pos, this.rotation);
 			};
 			return local;
 		};
 
+		localContainer.getImageResize = function(config) {
+			var local = {
+				scale: 1,
+				originalOffset: config.offset,
+				imageSmoothing: true
+			};
+			this.newObject(config, local);
+			
+			local.setScale = function(newScale, imageSmoothing) {
+				this.scale = newScale;
+				if (imageSmoothing != undefined) {
+					if (imageSmoothing) this.imageSmoothing = true;
+					else this.imageSmoothing = false;
+				}
+				if (!this.originalOffset) this.originalOffset = this.offset;
+				this.offset = [this.originalOffset[0]*newScale, this.originalOffset[1]*newScale];
+			};
+			
+			local.update = function() {
+				this.context.globalAlpha = this.alpha;
+				this.context.imageSmoothingEnabled = this.imageSmoothing;
+				localContainer.drawImageScale(this.context, this.image, this.offset, this.pos, this.rotation, this.scale);
+			};
+			
+			return local;
+		};
+		
 		localContainer.getAtomText = function(config) {
 			var local = {
 				text: "null",
@@ -406,31 +455,47 @@ function easyFrame() {
 			pos + antiBlur;
 		*/
 		
-		// Is this still useful? I think not.
-		localContainer.getAtomShape = function() {
-			var local = {
+		// What should this be called?
+		localContainer.getBaseShape = function() {
+			return this.newObject(this.atom, {
 				ratio:[100, 100],
-				color:"white",
+				color:"white"
+			});
+		};
+		
+		localContainer.getBaseBorder = function() {
+			return {
 				borderWidth:1,
 				borderColor:"black",
 				borderStyle:"round", // bevel, round, miter
-				borderAlpha: 1
+				borderAlpha:1
 			};
-			this.newObject(this.atom, local);
+		};
+
+		// No border FYI
+		localContainer.getAtomRectangleSimple = function(config) {
+			var local = this.getBaseShape();
+			this.newObject(config, local);
+			
+			local.update = function() {
+				this.context.beginPath();
+				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
+				this.context.globalAlpha = this.alpha;
+				this.context.fillStyle = this.color;
+				this.context.fill();
+			};
 			return local;
 		};
 		
 		// About the same speed as the non simple function..
 		localContainer.getAtomRectangle = function(config) {
-			var local = this.getAtomShape();
-			this.newObject(config, local);
+			var local = this.getBaseBorder();
+			this.newObject(this.getAtomRectangleSimple(config), local);
+			// This system isn't fool proof, I might need another.
+			local.updateRectangleColor = local.update;
+			
 			local.update = function() {
-				// Rect
-				this.context.beginPath(); // This really made a difference
-				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
-				this.context.globalAlpha = this.alpha;
-				this.context.fillStyle = this.color;
-				this.context.fill();
+				this.updateRectangleColor();
 				// Rect border
 				this.context.globalAlpha = this.borderAlpha;
 				this.context.lineJoin = this.borderStyle;
@@ -440,31 +505,13 @@ function easyFrame() {
 			};
 			return local;
 		};
-
-		localContainer.getAtomRectangleSimple = function(config) {
-			var local = {
-				ratio: [100, 100],
-				color: "white"
-			};
-			this.newObject(this.atom, local);
-			this.newObject(config, local);
-			
-			local.update = function() {
-				this.context.beginPath();
-				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
-				this.globalAlpha = this.alpha;
-				this.context.fillStyle = this.color;
-				this.context.fill();
-			};
-			return local;
-		};
 		
 		localContainer.getAtomLine = function(config) {
 			var local = {
 				style:"round",
 				lineWidth: 1
 			};
-			this.newObject(this.getAtomShape(), local);
+			this.newObject(this.getBaseShape(), local);
 			this.newObject(config, local);
 			local.update = function() {
 				this.context.globalAlpha = this.alpha;
@@ -486,7 +533,7 @@ function easyFrame() {
 				lineWidth:1,
 				shape: [] // Holds lists of points, each new list is a new line -> [[startX,startY, x,y, ..], [startX,startY, x,y]]
 			};
-			this.newObject(this.getAtomShape(), local);
+			this.newObject(this.getBaseShape(), local);
 			this.newObject(config, local);
 			
 			local.update = function() {

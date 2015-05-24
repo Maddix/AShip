@@ -7,6 +7,8 @@ function windowLib(easyFrame) {
 		easy: easyFrame
 	};
 	
+	// Write test to make sure that objects getting pushed though the pipeline have the required stuff
+	
 	localContainer.getMenuContainer = function(config) {
 		var local = {
 			activeObject: null,
@@ -39,9 +41,16 @@ function windowLib(easyFrame) {
 					var object = this.objects[this.objectNames[objectIndex]];	
 					if (object.inputContext) {
 						processedInput = object.inputContext(input);
-						if (processedInput) break;
+						if (processedInput) {
+							this.active = true;
+							break;
+						} else {
+							this.active = false;
+						}
 					}
 				}
+			} else {
+				if (this.active) return input;
 			}
 			return processedInput;
 		}
@@ -69,7 +78,6 @@ function windowLib(easyFrame) {
 					}
 				}
 			}
-			
 			return input;
 		};
 		
@@ -265,6 +273,26 @@ function windowLib(easyFrame) {
 		return local;
 	};
 	
+	
+	// Is this going to be used at all?
+	localContainer.getWindowResize = function(config) {
+		var local = {
+			localPos: [0, 0],
+			localRatio: [0, 0],
+		};
+		
+		local.inputContext = function(input) {
+			
+			if (input.keys["LMB"]) {
+				
+			}
+			
+			return input;
+		}
+		
+		return local;
+	}
+	
 	// This is a window enhancement, it lets you resize the window
 	// Rename?
 	localContainer.getWindowWidgetResize = function(config) {
@@ -380,14 +408,158 @@ function windowLib(easyFrame) {
 		return local;
 	};
 	
+	// Add pos and ratio to this with context?
 	localContainer.widget = function() {
-		var local = {
+		return {
+			pos: [0, 0],
 			localPos:[0, 0],
+			ratio: [100, 100],
 			localRatio:[0, 0],
+			context: null,
 			setup:function(context) {
 				this.context = context;
 			}
 		};
+	};
+	
+	localContainer.getLabelWidget = function(config) {
+		var local = {};
+		this.easy.base.newObject(this.widget, local);
+		this.easy.base.newObject(this.easy.base.getAtomText(config), local);
+		local.updateText = local.update;
+		
+		local.update = function(frame, newPos, ratio) {
+			this.pos = newPos;
+			this.updateText();
+		};
+		
+		// rewrite the text.update to take into account active styles and non active
+		
+		return local;
+	};
+	
+	localContainer.getRectangleWidget = function(config) {
+		var local = {
+			activeStyle: "default",
+			styles: {
+				"default": {
+					alpha: 1,
+					color: "gray",
+					borderAlpha: 1,
+					borderColor: "black",
+					borderWidth: 1,
+					borderStyle: "round"
+				}
+			}
+		};
+		this.easy.base.newObject(this.widget(), local);
+		local.styles["default"] = this.easy.base.newObject(config.styles["default"], local.styles["default"]);		
+		for (key in config.styles) {
+			if (key != "default") {
+				local.styles[key] = this.easy.base.newObject(config.styles[key], this.easy.base.newObject(local.styles["default"]));
+			}
+		}
+		delete config.styles;
+		this.easy.base.newObject(config, local);
+		
+		
+		local.changeStyle = function(newStyle) {
+			if (this.styles[newStyle]) this.activeStyle = newStyle;
+			else console.warn("RectangleWidget doesn't have style '" + newStyle + "'");
+		};
+		
+		local.update = function(frame, newPos, ratio) {
+			this.context.beginPath();
+			this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
+			this.context.globalAlpha = this.styles[this.activeStyle].alpha;
+			this.context.fillStyle = this.styles[this.activeStyle].color;
+			this.context.fill();
+			
+			// Rect border
+			this.context.globalAlpha = this.styles[this.activeStyle].borderAlpha;
+			this.context.lineJoin = this.styles[this.activeStyle].borderStyle;
+			this.context.lineWidth = this.styles[this.activeStyle].borderWidth;
+			this.context.strokeStyle = this.styles[this.activeStyle].borderColor;
+			this.context.stroke();
+			
+		};
+		
+		return local;
+	};
+	
+	// Make a widget rectangle and rewrite the update to have a active styles
+	
+	localContainer.getButtonWidget = function(config) {
+		var local = {
+			func: null,
+			altFunc: null,
+			label: null,
+			active: false,
+			clickedStyle: "default",
+			clicked: false // This is to work-around 'input.keys["LMB"]' not having a pressed status
+		};
+		this.easy.base.newObject(this.widget(), local);
+		this.easy.base.newObject(this.getRectangleWidget(config), local);
+		local.updateRect = local.update;
+		
+		local.setup = function(context) {
+			this.context = context;
+			if (this.label) this.label.setup(context);
+		};
+		
+		local.setText = function(text) {
+			if (this.label) this.label.text = text;
+			else console.warn("Cannot set text, label is null");
+		};
+		
+		local.setLabel = function(label) {
+			this.label = label;
+		};
+		
+		local.inputContext = function(input) {
+			if (input.keys["LMB"] || input.keys["RMB"]) {
+				if (!this.clicked) {
+					this.clicked = true;
+					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+						this.active = true;
+						this.changeStyle(this.clickedStyle);
+					}
+				}
+			}
+			
+			// TODO: Compress into one function
+			if (input.keys["LMB"] == false) {
+				if (this.active && this.func) {
+					this.active = false;
+					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+						if (this.func) this.func();
+					}
+				}
+				this.clicked = false;
+				this.changeStyle("default");
+				delete input.keys["LMB"];
+			
+			} else if (input.keys["RMB"] == false) {
+				if (this.active && this.altFunc) {
+					this.active = false;
+					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+						if (this.altFunc) this.altFunc();
+					}
+				}
+				this.clicked = false;
+				this.changeStyle("default");
+				delete input.keys["RMB"];
+			}
+			
+			if (this.clicked) return input;
+		};
+		
+		local.update = function(frame, newPos, ratio) {
+			this.pos = newPos;
+			this.updateRect();
+			if (this.label) this.label.update(frame, [newPos[0] + (this.ratio[0]/2), newPos[1] + (this.ratio[1]/2)], this.ratio);
+		};
+		
 		return local;
 	};
 	
@@ -429,6 +601,40 @@ function windowLib(easyFrame) {
 			this.updateRect();
 		};
 
+		return local;
+	};
+	
+	// Really needed?
+	localContainer.getGrid = function(config) {
+		var local = {
+			ratio: [50, 50],
+			gridSize: [5, 5]
+		};
+		this.easy.base.newObject(this.widget, local);
+		this.easy.base.newObject(this.easy.base.getAtomCustomLines(config), local);
+		
+		local.setup = function(context) {
+			this.context = context;
+			
+			for (var index=0; index < this.ratio.length; index++) {
+				
+				var offset = 0;
+				
+				for (; offset <= this.ratio[index]; ) {
+					
+					// Make a mesh
+					this.shape.push();
+					
+				}
+				
+			}
+			
+		};
+		
+		local.update = function(frame) {
+		
+		};
+		
 		return local;
 	};
 	
@@ -522,6 +728,8 @@ function windowLib(easyFrame) {
 
 		local.setObject = function(object) {
 			this.object = localContainer.easy.base.copyItem(object);
+			this.object.setScale(1);
+			this.object.imageSmoothing = false;
 			this.objectOriginal = object;
 			if (this.context) this.object.setup(this.context);
 		};

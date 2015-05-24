@@ -8,19 +8,20 @@ function components(easyFrame) {
 	localContainer.ship = function(config) {
 		var local = {
 			slots: {}, // Slot:{"name":{"object":obj, }, ..}
-			inputContext: null
+			inputContext: null,
+			imageSmoothing: false
 		};
-		this.easy.base.newObject(this.engineControl(this.easy.base.getAtomImage(config)), local);
+		this.easy.base.newObject(this.engineControl(this.easy.base.getImageResize(this.easy.base.getAtomImage(config))), local);
 		this.easy.base.newObject(this.easy.base.atomPhysics, local);
 		local.updateImage = local.update;
 		
 		local.setup = function(context) {
 			this.context = context;
-			this.calcInertia(2);
+			this.calcInertia();
 			
 			for (var slotName in this.slots) {
 				var slot = this.slots[slotName];
-				if (slot.object) slot.object.setup(this.context, slot.offset)
+				if (slot.object) slot.object.setup(this.context, [slot.offset[0]*this.scale, slot.offset[1]*this.scale]);
 			}
 			
 			// Recalculate engine groups
@@ -28,6 +29,16 @@ function components(easyFrame) {
 			this.sortEngines();
 
 		};
+		
+		local.setScale = function(newScale) {
+			this.scale = newScale;
+			
+			for (var slotName in this.slots) {
+				var slot = this.slots[slotName];
+				if (slot.object) this.addObject(slotName, slot.object);
+			}
+			
+		}
 		
 		local.setupSlots = function() {
 			this.sortEngines();
@@ -43,8 +54,10 @@ function components(easyFrame) {
 		
 		local.addObject = function(name, object) {
 			if (this.slots[name]) this.slots[name].object = object;
+			object.scale = this.scale;
+			object.imageSmoothing = this.imageSmoothing;
 			if (this.context) {
-				object.setup(this.context, this.slots[name].offset);
+				object.setup(this.context, [this.slots[name].offset[0]*this.scale, this.slots[name].offset[1]*this.scale]);
 				this.setupSlots();
 			}
 		};
@@ -177,31 +190,37 @@ function components(easyFrame) {
 			spawnParticle: false,
 			activated: false
 		};
-		this.easy.base.newObject(this.easy.base.getAtomImage(config), local);
+		this.easy.base.newObject(this.easy.base.getImageResize(this.easy.base.getAtomImage(config)), local);
 		local.updateImage = local.update;
 		
 		local.setup = function(context, offset) {
 			this.context = context;
 			this.localOffset = offset;
+			// This makes sense, yet it feels off..
+			//this.power = this.power*this.scale;
 			
 			this.particleController = localContainer.easy.particles.getRectangleParticleSprayer({
 				startColor: {red:255, green:239, blue:66, alpha:2.5},
 				endColor: {red:180, green:0, blue:0, alpha:0},
-				ratio: [4, 4],
+				ratio: [4*this.scale, 4*this.scale],
 				active: false,
 				pos: [this.pos[0], this.pos[1]],
 				spawnCone: Math.PI/4,
-				speedRatio: [50, 80],
+				speedRatio: [50*this.scale, 80*this.scale],
 				lifeRatio: [50, 100],
-				life: .5,
+				life: .3,
 				spawnRate: 50
 			});
 			DATA.layerController.getLayer("particleLayer").add(this.particleController);
 		};
 		
+		//local.setScale = function(newScale) {
+			//this.power = this.power*this.scale;
+		//};
+		
 		local.getInfo = function() {
 			var velocity = getVelocityToAngle(this.power, this.localRotation);
-			var torque = crossProduct(this.localOffset, velocity);
+			var torque = crossProduct([this.localOffset[0]/this.scale, this.localOffset[1]/this.scale], velocity);
 			return {"torque": torque, "power": this.power, "rotation":this.localRotation};
 		};
 		
@@ -215,7 +234,7 @@ function components(easyFrame) {
 			var velocity = getVelocityToAngle(power, parentRotation + this.localRotation);
 			velocity = [velocity[0]/parentMass, velocity[1]/parentMass];
 			var staticForce = getVelocityToAngle(power, this.localRotation);
-			var newAngularVelocity = angularVelocity(this.localOffset, staticForce, parentInertia);
+			var newAngularVelocity = angularVelocity([this.localOffset[0]/this.scale, this.localOffset[1]/this.scale], staticForce, parentInertia);
 			this.spawnParticle = true;
 			return {"angularVelocity":newAngularVelocity, "velocity":velocity};
 		};

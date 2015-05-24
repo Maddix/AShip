@@ -63,14 +63,14 @@ function createContent() {
 	var rectParticleSprayer = easy.particles.getRectangleParticleSprayer({
 		startColor: {red:255, green:239, blue:66, alpha:2.5},
 		endColor: {red:180, green:0, blue:0, alpha:0},
-		ratio: [2, 2],
+		ratio: [4, 4],
 		color: "orange",
 		pos: [100, 400],
 		spawnCone: Math.PI*2,
 		speedRatio: [50, 80],
 		lifeRatio: [80, 100],
-		life: 5,
-		spawnRate: 600
+		life: .8,
+		spawnRate: 400
 	});
 	
 	//particleLayer.add(rectParticleSprayer);
@@ -102,6 +102,8 @@ function createContent() {
 		image:DATA.images["cursor"], 
 		pos:[DATA.screenRatio[0]/2, DATA.screenRatio[1]/2],
 		offset:[DATA.images["cursor"].width/2, DATA.images["cursor"].height/2],
+		imageScale: 4,
+		imageSmoothing: true
 	});
 	cursor.updateImage = cursor.update;
 	cursor.update = function(frame) {
@@ -148,11 +150,6 @@ function createContent() {
 		power: 10
 	});
 	
-	//var engineComputerNew = easy.components.engineComputer({
-		
-	//});
-	
-	
 	/* ===== *
 	   Ships
 	*  ===== */
@@ -161,8 +158,6 @@ function createContent() {
 		image:DATA.images["engine"],
 		offset:[DATA.images["engine"].width/2, DATA.images["engine"].height/2],
 		power: 10
-		//particle: particle,
-		//particleControllerLayer: particleLayer
 	});
 	
 	var engineBackRightNew = easy.base.newObject({
@@ -182,7 +177,7 @@ function createContent() {
 	}, easy.base.newObject(engineDefault));
 	
 	var engineBackNew = easy.base.newObject({
-		power: 20
+		power: 10
 	}, easy.base.newObject(engineDefault));
 	
 	var engineFrontSideRight = easy.base.newObject({
@@ -202,6 +197,8 @@ function createContent() {
 		offset:[DATA.images["playera"].width/2, DATA.images["playera"].height/2],
 		pos:[DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10],
 		alive:true,
+		scale: 1,
+		imageSmoothing: true,
 		inputContext:function(input) {
 			if (input.keys["w"]) {
 				this.activate("engine", "forward");
@@ -240,7 +237,6 @@ function createContent() {
 	ship.addSlot("engineBack", [0, 10]);
 	ship.addSlot("engineFrontSideRight", [-13, 0]);
 	ship.addSlot("engineFrontSideLeft", [13, 0]);
-	//ship.addSoftwareSlot("engineComputer", engineComputer);
 	
 	ship.addObject("engineBackRight", engineBackRightNew);
 	ship.addObject("engineBackLeft", engineBackLeftNew);
@@ -250,10 +246,7 @@ function createContent() {
 	ship.addObject("engineFrontSideRight", engineFrontSideRight);
 	ship.addObject("engineFrontSideLeft", engineFrontSideLeft);
 	
-	//ship.addSoftware("engineComputer", engineComputer);
-	
 	windowManager.objects["editWindow"].objects["display"].objects["view"].setObject(ship);
 	
 	profile.add("newShip", ship);
-	//console.log("Passed creation phase!");
 }

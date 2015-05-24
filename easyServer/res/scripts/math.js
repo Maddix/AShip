@@ -89,6 +89,7 @@ function dotProduct(vectorOne, vectorTwo) {
 	return vectorOne[0]*vectorTwo[0] + vectorOne[1]*vectorTwo[1];
 };
 
+// 2D cross product shortcut (Real cross is (A x B = ||A|| * ||B|| * sin(theta) * n) IDK what n stands for though..)
 function crossProduct(vectorOne, vectorTwo) {
 	return vectorOne[0]*vectorTwo[1] - vectorOne[1]*vectorTwo[0];
 };

@@ -17,25 +17,16 @@ function inputHandler(easyFrame) {
 
 	localContainer.getKeyboardMouseController = function(config) {
 		var local = {
-			keyEvent:{}, // Keep track of held down keys (key:bool) (true is down, false is up)
+			keyEvent:{}, // Keep track of held down keys (key:[bool, ID]) (true is down, false is up)
+			keyEventOrder: [], // Keep track of which key pressed first [[ID, key], ..]
 			mouseEvent:{}, // Keeps track of mouse movement and scrolling
 			removeKeyEvent:[],
 			knownKeys:[], // Needed to keep normal functionality on the page (F5, Ctrl-R, ect), fill with keys we want to know about
 			elementForKeys: "body",
 			elementForMouse: "canvas",
+			keyCount: 0,
 			getScrollData: true,
-			keyMapReversed: { // Used! HA! Wait..
-					"a":65, "b":66, "c":67, "d":68, "e":69, "f":70, "g":71,
-					"h":72, "i":73, "j":74, "k":75, "l":76, "m":77, "n":78,
-					"o":79, "p":80, "q":81, "r":82, "s":83, "t":84, "u":85,
-					"v":86, "w":87, "x":88, "y":89, "z":90, 
-					"upArrow":38, "leftArrow":37, "rightArrow":39, "downArrow":40, 
-					"backspace":8, "enter":13, "space":32, "escape":27,
-					"shift":16, "ctrl":17, "alt":18, "tab":9,
-					"0":48, "1":49,"2":50, "3":51, "4":52,
-					"5":53, "6":54, "7":55, "8":56, "9":57,
-					"LMB":1, "MMB":2, "RMB":3
-			},
+			keyMapReversed: {},
 			keyMapDefault: { // Keep in mind that the key-codes are from the Jquery event.which
 					65:"a", 66:"b", 67:"c", 68:"d", 69:"e", 70:"f", 71:"g",
 					72:"h", 73:"i", 74:"j", 75:"k", 76:"l", 77:"m", 78:"n",
@@ -50,14 +41,15 @@ function inputHandler(easyFrame) {
 			},
 			// Move away from this
 			keyMap:{} // set to default below, this is so we can modify keyMap and still 
-						// be able to set it back to the default mapping
+					  // be able to set it back to the default mapping
 		};
 		local.keyMap = this.easy.base.newObject(local.keyMapDefault);
 		this.easy.base.newObject(config, local);
 
 		local.addKeyEvent = function(key) {
 			if (this.keyEvent[key] === undefined && this.knownKeys.indexOf(key) != -1) {
-				this.keyEvent[key] = false;
+				this.keyEvent[key] = [false, ++this.keyCount];
+				this.keyEventOrder.push(this.keyCount);
 			}
 		};
 		
@@ -72,12 +64,22 @@ function inputHandler(easyFrame) {
 			this.keyMapDefault = localContainer.easy.base.newObject(this.keyMapDefault);
 		};
 		
+		local.createReversedKeyMap = function() {
+			this.keyMapReversed = {};
+			for (key in this.keyMapDefault) {
+				this.keyMapReversed[this.keyMapDefault[key]] = parseInt(key);
+			}
+		};
+		local.createReversedKeyMap(); // Call it here since we don't have a setup.
+		
 		// this will update the keys that are being held
-		local.update = function() {			
+		local.update = function() {
 			// get a snapshot of the key/mouse events
-			var newKeyMouse = {keys:localContainer.easy.base.newObject(this.keyEvent), 
-								mouse:localContainer.easy.base.newObject(this.mouseEvent)};
-			
+			var newKeyMouse = {
+				keys:localContainer.easy.base.newObject(this.keyEvent), 
+				mouse:localContainer.easy.base.newObject(this.mouseEvent),
+				keyOrder:localContainer.easy.base.copyItem(this.keyEventOrder)
+			};
 			// set the keys to "held" - works well, don't need it now, and it just slows things down \_(._.)_/
 			//for (var keyIndex in this.keyEvent) {
 			//	if (this.keyEvent[keyIndex] === true) this.keyEvent[keyIndex] = "held";
@@ -101,17 +103,20 @@ function inputHandler(easyFrame) {
 		// I should create a function that removes all the listeners ?
 		local.setupListeners = function() {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
-				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
+				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				local.addKeyEvent(convertedKey);
 				if (local.keyEvent[convertedKey] === false) {
-					local.keyEvent[convertedKey] = true;
+					local.keyEvent[convertedKey][0] = true;
 					return false;
 				}	
 			});
 			
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
-				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
+				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				if (local.keyEvent[convertedKey]) {
+					// This will remove the list of [true, ID] and replace it with false, this is so you can do 'input.keys["w"] === false'.
+					var indexID = local.keyEventOrder.indexOf(local.keyEvent[convertedKey][1]);
+					if (indexID != -1) local.keyEventOrder.splice(indexID, 1);
 					local.keyEvent[convertedKey] = false;
 					local.removeKeyEvent.push(convertedKey);
 					return false;
@@ -141,14 +146,14 @@ function inputHandler(easyFrame) {
 			
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 			$(this.elementForMouse).mousedown(function(jqueryKeyEvent) {
-				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
+				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				local.keyEvent[convertedKey] = true; // Might need to pass or prevent repeating
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});		
 
 			$(this.elementForMouse).mouseup(function(jqueryKeyEvent) {
-				var convertedKey = local.keyMapDefault[jqueryKeyEvent.which];
+				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				local.keyEvent[convertedKey] = false; // Might need to pass or prevent repeating
 				local.removeKeyEvent.push(convertedKey);
 				jqueryKeyEvent.stopPropagation();
@@ -178,11 +183,17 @@ function inputHandler(easyFrame) {
 	
 	localContainer.profile = function(config) {
 		var local = {
-			userKeyMapping: {}, // Not used, make it work again
+			userKeyMapping: {}, // Not used, make it work again. There will only be one global keyMapping.
 			controlContext: null
 		};
 		this.easy.base.newObject(this.easy.base.orderedObject(), local);
 		this.easy.base.newObject(config, local);
+		local.addObject = local.add;
+		
+		local.add = function(objectName, object) {
+			if (object.inputContext) this.addObject(objectName, object);
+			else return null; // or print something :o
+		};
 		
 		local.update = function(input) {
 			

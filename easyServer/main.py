@@ -1,4 +1,4 @@
-import bottle.bottle as bottle
+import bottle as bottle
 
 # Turn on debug
 bottle.debug(True)

@@ -26,7 +26,7 @@
 	
 	<script type="text/javascript">
 		$(function() {
-			'use strict'; // Used to turn on extra browser warnings?
+			//'use strict'; // Used to turn on extra browser warnings?
 			loadImage();
 		});
 	</script>
