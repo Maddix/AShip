@@ -546,6 +546,8 @@ function windowLib(easyFrame) {
 						} else {
 							if (this.keyBlacklist.indexOf(key[1]) === -1) {
 								delete input.keys[key[1]];
+							} else if (key[1] === "space") {
+								delete input.keys[key[1]];
 							}
 						}
 					}

@@ -22,6 +22,10 @@ function inputHandler(easyFrame) {
 			mouseEvent:{}, // Keeps track of mouse movement and scrolling
 			removeKeyEvent:[],
 			knownKeys:[], // Needed to keep normal functionality on the page (F5, Ctrl-R, ect), fill with keys we want to know about
+			
+			whitelistKeys: [],
+			blacklistKeys: [],
+			
 			elementForKeys: "body",
 			elementForMouse: "canvas",
 			keyCount: 0,
@@ -37,19 +41,43 @@ function inputHandler(easyFrame) {
 					16:"shift", 17:"ctrl", 18:"alt", 9:"tab",
 					48:"0", 49:"1", 50:"2", 51:"3", 52:"4", 
 					53:"5", 54:"6", 55:"7", 56:"8", 57:"9",
+					188:",", 190:".", 191:"/", 219:"[", 220:"\\", 221:"]", 192:"`",
+					186:";", 222:"'", 189: "-", 187:"=",
+					112:"f1", 113:"f2", 114:"f3", 115:"f4", 116:"f5", 117:"f6",
+					118:"f7", 119:"f8", 120:"f9", 121:"f10", 122:"f11", 123:"f12",
 					1:"LMB", 2:"MMB", 3:"RMB"
 			},
+			keyMapDefaultShift: {
+				49: "!", 50:"@", 51:"#", 52:"$", 53:"%", 54:"^", 
+				55:"&", 56:"*", 57:"(", 58:")", 189:"_", 187:"+", 
+				219:"{", 221:"}", 220:"|", 186:":", 222:'"', 188:"<",
+				190:">", 191:"?", 192:"~"
+			},
+			shiftKeysHeld: [],
 			// Move away from this
-			keyMap:{} // set to default below, this is so we can modify keyMap and still 
+			keyMap:{}, // set to default below, this is so we can modify keyMap and still 
 					  // be able to set it back to the default mapping
+			
+			keyMapShift:{}
 		};
 		local.keyMap = this.easy.base.newObject(local.keyMapDefault);
+		local.keyMapShift = this.easy.base.newObject(local.keyMapDefaultShift);
 		this.easy.base.newObject(config, local);
 		
 		local.addKeyEvent = function(key) {
-			if (this.keyEvent[key] === undefined && this.knownKeys.indexOf(key) != -1) {
-				this.keyEvent[key] = [false, ++this.keyCount];
-				this.keyEventOrder.push([this.keyCount, key]);
+			if (this.keyEvent[key] === undefined) {
+				var use = false;
+				if (this.blacklistKeys.indexOf(key) === -1) {
+					use = true;
+				}
+				if (this.whitelistKeys.length && this.whitelistKeys.indexOf(key) != -1) {
+					use = true
+				}
+				
+				if (use) {
+					this.keyEvent[key] = [false, ++this.keyCount];
+					this.keyEventOrder.push([this.keyCount, key]);
+				}
 			}
 		};
 		
@@ -103,7 +131,18 @@ function inputHandler(easyFrame) {
 		// I should create a function that removes all the listeners ?
 		local.setupListeners = function() {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
-				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				
+				var convertedKey = undefined;
+				
+				if (local.keyEvent["shift"]) {
+					convertedKey = local.keyMapShift[jqueryKeyEvent.which];
+					if (convertedKey) local.shiftKeysHeld.push(convertedKey);
+				}
+				if (!convertedKey) {
+					convertedKey = local.keyMap[jqueryKeyEvent.which];
+					if (local.keyEvent["shift"] && convertedKey.length === 1) convertedKey = convertedKey.toUpperCase();
+				}
+
 				local.addKeyEvent(convertedKey);
 				if (local.keyEvent[convertedKey] && local.keyEvent[convertedKey][0] === false) {
 					local.keyEvent[convertedKey][0] = true;
@@ -114,10 +153,18 @@ function inputHandler(easyFrame) {
 			});
 			
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
-				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				var convertedKey = undefined;
+				
+				if (local.keyEvent["shift"]) {
+					convertedKey = local.keyMapShift[jqueryKeyEvent.which];
+				}
+				if (!convertedKey) {
+					convertedKey = local.keyMap[jqueryKeyEvent.which];
+					if (local.keyEvent["shift"] && convertedKey.length === 1) convertedKey = convertedKey.toUpperCase();
+				}
+				
 				if (local.keyEvent[convertedKey]) {
 					// This will remove the list of [true, ID] and replace it with false, this is so you can do 'input.keys["w"] === false'.
-					
 					for (var index=0; index < local.keyEventOrder.length; index++) {
 						var keyID = local.keyEventOrder[index][0];
 						if (keyID === local.keyEvent[convertedKey][1]) {
@@ -125,9 +172,6 @@ function inputHandler(easyFrame) {
 							break;
 						}
 					}
-					
-					//var indexID = local.keyEventOrder.indexOf(local.keyEvent[convertedKey][1]);
-					//if (indexID != -1) local.keyEventOrder.splice(indexID, 1);
 					local.keyEvent[convertedKey] = false;
 					local.removeKeyEvent.push(convertedKey);
 
