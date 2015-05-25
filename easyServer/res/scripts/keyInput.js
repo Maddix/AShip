@@ -21,11 +21,9 @@ function inputHandler(easyFrame) {
 			keyEventOrder: [], // Keep track of which key pressed first [[ID, key] ..]
 			mouseEvent:{}, // Keeps track of mouse movement and scrolling
 			removeKeyEvent:[],
-			knownKeys:[], // Needed to keep normal functionality on the page (F5, Ctrl-R, ect), fill with keys we want to know about
-			
+			removeMouseEvent:[],
 			whitelistKeys: [],
 			blacklistKeys: [],
-			
 			elementForKeys: "body",
 			elementForMouse: "canvas",
 			keyCount: 0,
@@ -53,7 +51,6 @@ function inputHandler(easyFrame) {
 				219:"{", 221:"}", 220:"|", 186:":", 222:'"', 188:"<",
 				190:">", 191:"?", 192:"~"
 			},
-			shiftKeysHeld: [],
 			// Move away from this
 			keyMap:{}, // set to default below, this is so we can modify keyMap and still 
 					  // be able to set it back to the default mapping
@@ -66,15 +63,7 @@ function inputHandler(easyFrame) {
 		
 		local.addKeyEvent = function(key) {
 			if (this.keyEvent[key] === undefined) {
-				var use = false;
-				if (this.blacklistKeys.indexOf(key) === -1) {
-					use = true;
-				}
-				if (this.whitelistKeys.length && this.whitelistKeys.indexOf(key) != -1) {
-					use = true
-				}
-				
-				if (use) {
+				if (this.whitelistKeys.length && this.whitelistKeys.indexOf(key) != -1 || this.blacklistKeys.indexOf(key) === -1) {
 					this.keyEvent[key] = [false, ++this.keyCount];
 					this.keyEventOrder.push([this.keyCount, key]);
 				}
@@ -108,10 +97,6 @@ function inputHandler(easyFrame) {
 				mouse:localContainer.easy.base.newObject(this.mouseEvent),
 				keyOrder:localContainer.easy.base.copyItem(this.keyEventOrder)
 			};
-			// set the keys to "held" - works well, don't need it now, and it just slows things down \_(._.)_/
-			//for (var keyIndex in this.keyEvent) {
-			//	if (this.keyEvent[keyIndex] === true) this.keyEvent[keyIndex] = "held";
-			//}
 			
 			// clear both key and mouse events
 			for (var keyIndex in this.removeKeyEvent) {
@@ -132,15 +117,15 @@ function inputHandler(easyFrame) {
 		local.setupListeners = function() {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
 				
-				var convertedKey = undefined;
+				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				
 				if (local.keyEvent["shift"]) {
-					convertedKey = local.keyMapShift[jqueryKeyEvent.which];
-					if (convertedKey) local.shiftKeysHeld.push(convertedKey);
-				}
-				if (!convertedKey) {
-					convertedKey = local.keyMap[jqueryKeyEvent.which];
-					if (local.keyEvent["shift"] && convertedKey.length === 1) convertedKey = convertedKey.toUpperCase();
+					var convertedShiftKey = local.keyMapShift[jqueryKeyEvent.which];
+					if (convertedShiftKey) {
+						convertedKey = convertedShiftKey;
+					} else if (convertedKey.length === 1) {
+						convertedKey = convertedKey.toUpperCase();
+					}
 				}
 
 				local.addKeyEvent(convertedKey);
@@ -153,18 +138,19 @@ function inputHandler(easyFrame) {
 			});
 			
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
-				var convertedKey = undefined;
 				
-				if (local.keyEvent["shift"]) {
-					convertedKey = local.keyMapShift[jqueryKeyEvent.which];
-				}
-				if (!convertedKey) {
-					convertedKey = local.keyMap[jqueryKeyEvent.which];
-					if (local.keyEvent["shift"] && convertedKey.length === 1) convertedKey = convertedKey.toUpperCase();
+				var convertedKey = local.keyMap[jqueryKeyEvent.which];
+				var shiftKey = local.keyMapShift[jqueryKeyEvent.which];
+				var upper = convertedKey.toUpperCase();
+				
+				if (local.keyEvent[shiftKey]) {
+					convertedKey = shiftKey;
+				} else if (local.keyEvent[upper]) {
+					convertedKey = upper;
 				}
 				
 				if (local.keyEvent[convertedKey]) {
-					// This will remove the list of [true, ID] and replace it with false, this is so you can do 'input.keys["w"] === false'.
+					// This will remove the list of [true, ID] and replace it with false
 					for (var index=0; index < local.keyEventOrder.length; index++) {
 						var keyID = local.keyEventOrder[index][0];
 						if (keyID === local.keyEvent[convertedKey][1]) {
@@ -174,7 +160,6 @@ function inputHandler(easyFrame) {
 					}
 					local.keyEvent[convertedKey] = false;
 					local.removeKeyEvent.push(convertedKey);
-
 					return false;
 				}
 			});
