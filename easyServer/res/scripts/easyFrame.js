@@ -71,11 +71,13 @@ function easyFrame() {
 				}
 			};
 			
+			// Leave newIndex blank if you want to move the object to the end
 			local.changePosition = function(objectName, newIndex) {
 				var index = this.objectNames.indexOf(objectName);
 				if (index != -1) {
 					this.objectNames.splice(index, 1);
-					if (newIndex && newIndex >= 0 && newIndex < this.object.objectNames.length-1) {
+					if (newIndex >= 0 && newIndex < this.objectNames.length) {
+						console.log('called');
 						this.objectNames.splice(newIndex, 0, objectName);
 					} else {
 						this.objectNames.push(objectName);
@@ -478,6 +480,10 @@ function easyFrame() {
 			this.newObject(config, local);
 			
 			local.update = function() {
+				// Blur, its really slow. Cash the object with the blur when in use.
+				//this.context.shadowBlur = 1;
+				//this.context.shadowColor = "black";
+				
 				this.context.beginPath();
 				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
 				this.context.globalAlpha = this.alpha;
@@ -496,6 +502,7 @@ function easyFrame() {
 			
 			local.update = function() {
 				this.updateRectangleColor();
+				
 				// Rect border
 				this.context.globalAlpha = this.borderAlpha;
 				this.context.lineJoin = this.borderStyle;

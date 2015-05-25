@@ -36,8 +36,9 @@ function windowLib(easyFrame) {
 		
 		local.inputContext = function(input) {
 			var processedInput = undefined;
-			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0) || this.active) {
 				for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
+					//console.log("> " + objectIndex);
 					var object = this.objects[this.objectNames[objectIndex]];	
 					if (object.inputContext) {
 						processedInput = object.inputContext(input);
@@ -45,15 +46,14 @@ function windowLib(easyFrame) {
 							this.active = true;
 							break;
 						} else {
-							this.active = false;
+							//this.acitve = false;
 						}
 					}
+					//console.log("< " + objectIndex);
 				}
-			} else {
-				if (this.active) return input;
-			}
+			} 
 			return processedInput;
-		}
+		};
 		
 		local.update = function(frame) {
 			for (var objectIndex in this.objectNames) {
@@ -114,7 +114,7 @@ function windowLib(easyFrame) {
 		this.easy.base.newObject(this.getMenuContainer(config), local);
 		
 		local.arrangeFree = function(frame, objects, objectNames, pos, ratio, axis) {
-			for (var i=0; i<objectNames.length; i++) {
+			for (var i=0; i < objectNames.length; i++) {
 				var widget = objects[objectNames[i]];
 				var newPos = [
 					pos[0] + (ratio[0] * (widget.localPos[0]/100)),
@@ -496,9 +496,9 @@ function windowLib(easyFrame) {
 			label: null,
 			active: false,
 			clickedStyle: "default",
+			defaultStyle: "default",
 			clicked: false // This is to work-around 'input.keys["LMB"]' not having a pressed status
 		};
-		this.easy.base.newObject(this.widget(), local);
 		this.easy.base.newObject(this.getRectangleWidget(config), local);
 		local.updateRect = local.update;
 		
@@ -517,41 +517,32 @@ function windowLib(easyFrame) {
 		};
 		
 		local.inputContext = function(input) {
-			if (input.keys["LMB"] || input.keys["RMB"]) {
+			
+			if (input.keys["LMB"]) {
+				// One time setup
 				if (!this.clicked) {
 					this.clicked = true;
 					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
-						this.active = true;
 						this.changeStyle(this.clickedStyle);
+						this.active = true;
 					}
 				}
 			}
 			
-			// TODO: Compress into one function
-			if (input.keys["LMB"] == false) {
-				if (this.active && this.func) {
-					this.active = false;
-					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
-						if (this.func) this.func();
-					}
+			if (input.keys["LMB"] === false) {
+				if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+					if (this.active && this.func) this.func();
+					delete input.keys["LMB"];
 				}
 				this.clicked = false;
-				this.changeStyle("default");
-				delete input.keys["LMB"];
-			
-			} else if (input.keys["RMB"] == false) {
-				if (this.active && this.altFunc) {
-					this.active = false;
-					if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
-						if (this.altFunc) this.altFunc();
-					}
-				}
-				this.clicked = false;
-				this.changeStyle("default");
-				delete input.keys["RMB"];
+				this.changeStyle(this.defaultStyle);
 			}
 			
-			if (this.clicked) return input;
+			
+			if (this.active) {
+				if (!this.clicked) this.active = false;
+				return input;
+			}
 		};
 		
 		local.update = function(frame, newPos, ratio) {

@@ -51,6 +51,8 @@ function createEditWindow(windowManager) {
 	var button = easy.windowLib.getButtonWidget({
 		func:function() {
 			console.log("Button pressed!");
+			//blockControls.changePosition("button", 0);
+			console.log(blockControls.objectNames);
 			//console.log(this.clickedStyle);
 		},
 		ratio: [40, 20],
@@ -68,7 +70,32 @@ function createEditWindow(windowManager) {
 		},
 		clickedStyle: "active",
 		label: btnLabel,
-		localPos: [50, 50]
+		localPos: [50, 50],
+		name: "one"
+	});
+	
+	var btnTwoLabel = easy.windowLib.getLabelWidget({
+		text:"PRESSME!",
+		ratio:[0, 7],
+		align: "center",
+		baseline: "middle"
+	});
+	
+	var buttonTwo = easy.windowLib.getButtonWidget({
+		func:function() {
+			console.log("Button two pressed!");
+		},
+		ratio: [40, 20],
+		styles: {
+			"active": {
+				color: "black",
+				borderColor: "gray"
+			}
+		},
+		clickedStyle: "active",
+		label: btnTwoLabel,
+		localPos:[50, 30],
+		name: "two"
 	});
 	
 	var backgroundTrans = easy.windowLib.getBackgroundRectWidget({
@@ -87,6 +114,7 @@ function createEditWindow(windowManager) {
 	blockDisplay.add("backgroundTransparent", backgroundTrans);
 	blockDisplay.add("view", view);
 	blockControls.add("background", background);
+	blockControls.add("buttonTwo", buttonTwo);
 	blockControls.add("button", button);
 	
 	
