@@ -468,7 +468,7 @@ function windowLib(easyFrame) {
 			else console.warn("RectangleWidget doesn't have style '" + newStyle + "'");
 		};
 		
-		local.update = function(frame, newPos, ratio) {
+		local.update = function() { // frame, newPos, ratio
 			this.context.beginPath();
 			this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
 			this.context.globalAlpha = this.styles[this.activeStyle].alpha;
@@ -487,7 +487,88 @@ function windowLib(easyFrame) {
 		return local;
 	};
 	
-	// Make a widget rectangle and rewrite the update to have a active styles
+	
+	localContainer.getInputfieldWidget = function(config) {
+		var local = {
+			label: null,
+			active: false,
+			clicked: false,
+			clickedStyle: "default",
+			defaultStyle: "default",
+			text: "",
+			keyCount: -1, // This way we can start the count at 0
+			keyBlacklist: ["LMB", "RMB", "MMB", "upArrow", "leftArrow", "rightArrow", "downArrow", "shift", "ctrl", "alt", "escape", "enter", "space", "backspace"],
+			//keyWhitelist: {"enter": "", "space":" "}
+		};
+		this.easy.base.newObject(this.getRectangleWidget(config), local);
+		local.updateRect = local.update;
+		
+		local.setup = function(context) {
+			this.context = context;
+			if (this.label) this.label.setup(context);
+		};
+		
+		// If clicked on then remain active, if click elsewhere then deactivate.
+		
+		local.inputContext = function(input) {
+			
+			if (input.keys["LMB"]) {					
+				if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+					this.clicked = true;
+					this.changeStyle(this.clickedStyle);
+					this.active = true;
+				} else {
+					this.clicked = false;
+					this.changeStyle(this.defaultStyle);
+				}
+			}
+			
+			// Scan keys
+			if (this.active) {
+				if (input.keyOrder) {
+					for (var index=0; index < input.keyOrder.length; index++) {
+						key = input.keyOrder[index];
+						if (key[0] > this.keyCount) {
+							this.keyCount = key[0];
+							if (this.keyBlacklist.indexOf(key[1]) === -1) {
+								this.text += key[1];
+								this.keyCount = key[0];
+								delete input.keys[key[1]];
+							} else if (key[1] === "space") {
+								this.text += " ";
+								this.keyCount = key[0];
+								delete input.keys["space"];
+							} else if (key[1] === "backspace") {
+								this.text = this.text.slice(0, -1);
+								this.keyCount = key[0];
+								delete input.keys["backspace"];
+							}
+						} else {
+							if (this.keyBlacklist.indexOf(key[1]) === -1) {
+								delete input.keys[key[1]];
+							}
+						}
+					}
+				}
+			}
+			
+			if (this.active) {
+				if (!this.clicked) this.active = false;
+				return input;
+			}
+		};
+		
+		local.update = function(frame, newPos, ratio) {
+			this.pos = newPos;
+			this.updateRect();
+			if (this.label) {
+				this.label.text = this.text;
+				this.label.update(frame, [newPos[0] + (this.ratio[0]/2), newPos[1] + (this.ratio[1]/2)], this.ratio);
+			}
+		};
+		
+		return local;
+	};
 	
 	localContainer.getButtonWidget = function(config) {
 		var local = {

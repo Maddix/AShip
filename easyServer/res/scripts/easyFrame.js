@@ -28,14 +28,14 @@ function easyFrame() {
 		// rename to copyItem
 		// Have one function to copy items? 
 		localContainer.newObject = function(from, to) {
-			to = to ? to : {}; // to = if 'to' is false, replace 'to' with {}, else return 'to'
+			to = to ? to : {}; // to = (boolean if true return else false return)
 			if (from) for (var key in from) to[key] = from[key];
 			return to;
 		};
 		
 		// Switch the names newObject should be copy and copy should be new
 		
-		// remove shallow?
+		// remove shallow? DOES NOT WORK FOR BUILDING OBJECTS!!!! Keep that in mind, and maybe fix it.
 		localContainer.copyItem = function(item, shallow) {
 			var itemProto = Object.prototype.toString.call(item);
 			var newItem = item;

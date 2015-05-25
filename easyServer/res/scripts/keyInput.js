@@ -18,7 +18,7 @@ function inputHandler(easyFrame) {
 	localContainer.getKeyboardMouseController = function(config) {
 		var local = {
 			keyEvent:{}, // Keep track of held down keys (key:[bool, ID]) (true is down, false is up)
-			keyEventOrder: [], // Keep track of which key pressed first [[ID, key], ..]
+			keyEventOrder: [], // Keep track of which key pressed first [[ID, key] ..]
 			mouseEvent:{}, // Keeps track of mouse movement and scrolling
 			removeKeyEvent:[],
 			knownKeys:[], // Needed to keep normal functionality on the page (F5, Ctrl-R, ect), fill with keys we want to know about
@@ -27,7 +27,7 @@ function inputHandler(easyFrame) {
 			keyCount: 0,
 			getScrollData: true,
 			keyMapReversed: {},
-			keyMapDefault: { // Keep in mind that the key-codes are from the Jquery event.which
+			keyMapDefault: { // Keep in mind that the key-codes are from the Jquery event.which, need to add in special characters
 					65:"a", 66:"b", 67:"c", 68:"d", 69:"e", 70:"f", 71:"g",
 					72:"h", 73:"i", 74:"j", 75:"k", 76:"l", 77:"m", 78:"n",
 					79:"o", 80:"p", 81:"q", 82:"r", 83:"s", 84:"t", 85:"u",
@@ -45,11 +45,11 @@ function inputHandler(easyFrame) {
 		};
 		local.keyMap = this.easy.base.newObject(local.keyMapDefault);
 		this.easy.base.newObject(config, local);
-
+		
 		local.addKeyEvent = function(key) {
 			if (this.keyEvent[key] === undefined && this.knownKeys.indexOf(key) != -1) {
 				this.keyEvent[key] = [false, ++this.keyCount];
-				this.keyEventOrder.push(this.keyCount);
+				this.keyEventOrder.push([this.keyCount, key]);
 			}
 		};
 		
@@ -105,20 +105,32 @@ function inputHandler(easyFrame) {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				local.addKeyEvent(convertedKey);
-				if (local.keyEvent[convertedKey] === false) {
+				if (local.keyEvent[convertedKey] && local.keyEvent[convertedKey][0] === false) {
 					local.keyEvent[convertedKey][0] = true;
 					return false;
-				}	
+				} else if (convertedKey === "backspace") {
+					return false;
+				}
 			});
 			
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				if (local.keyEvent[convertedKey]) {
 					// This will remove the list of [true, ID] and replace it with false, this is so you can do 'input.keys["w"] === false'.
-					var indexID = local.keyEventOrder.indexOf(local.keyEvent[convertedKey][1]);
-					if (indexID != -1) local.keyEventOrder.splice(indexID, 1);
+					
+					for (var index=0; index < local.keyEventOrder.length; index++) {
+						var keyID = local.keyEventOrder[index][0];
+						if (keyID === local.keyEvent[convertedKey][1]) {
+							local.keyEventOrder.splice(index, 1);
+							break;
+						}
+					}
+					
+					//var indexID = local.keyEventOrder.indexOf(local.keyEvent[convertedKey][1]);
+					//if (indexID != -1) local.keyEventOrder.splice(indexID, 1);
 					local.keyEvent[convertedKey] = false;
 					local.removeKeyEvent.push(convertedKey);
+
 					return false;
 				}
 			});

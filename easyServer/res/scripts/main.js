@@ -30,7 +30,7 @@ function setup(images) {
 	
 	// Create KeyboardMouseController & InputController
 	var keyMouseController = easy.inputHandler.getKeyboardMouseController({
-		knownKeys: ["LMB", "MMB", "RMB", "w", "a", "s", "d", "q", "e", "r", "space", "enter"]
+		knownKeys: ["LMB", "MMB", "RMB", "w", "a", "s", "d", "q", "e", "r", "space", "enter", "backspace"]
 	});
 	var inputController = easy.inputHandler.getProfileManager();
 	// mousePosition is pre populated because functions depend on it at start

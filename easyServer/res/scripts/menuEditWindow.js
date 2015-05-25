@@ -98,6 +98,30 @@ function createEditWindow(windowManager) {
 		name: "two"
 	});
 	
+	var inputLabel = easy.windowLib.getLabelWidget({
+		ratio: [0, 10],
+		align: "center",
+		baseline: "middle"
+	});
+	
+	var inputfield = easy.windowLib.getInputfieldWidget({
+		styles: {
+			"default": {
+				color: "black",
+				borderColor: "white"
+			},
+			"active": {
+				color: "gray",
+				borderColor: "white"
+			}
+		},
+		ratio: [100, 20],
+		localPos: [10, 5],
+		label: inputLabel,
+		clickedStyle: "active",
+		name: "inputfield"
+	});
+	
 	var backgroundTrans = easy.windowLib.getBackgroundRectWidget({
 		color: "#9AC2E3",
 		alpha: .5,
@@ -116,7 +140,7 @@ function createEditWindow(windowManager) {
 	blockControls.add("background", background);
 	blockControls.add("buttonTwo", buttonTwo);
 	blockControls.add("button", button);
-	
+	blockControls.add("inputfield", inputfield);
 	
 	mainWindow.add("display", blockDisplay);
 	mainWindow.add("controls", blockControls);
