@@ -30,7 +30,7 @@ function setup(images) {
 	
 	// Create KeyboardMouseController & InputController
 	var keyMouseController = easy.inputHandler.getKeyboardMouseController({
-		blacklistKeys: ["upArrow", "leftArrow", "rightArrow", "escape", "tab", "alt", "f5"]
+		blacklistKeys: ["upArrow", "leftArrow", "rightArrow", "tab", "escape", "alt", "f5"]
 	});
 	var inputController = easy.inputHandler.getProfileManager();
 	// mousePosition is pre populated because functions depend on it at start
@@ -45,8 +45,17 @@ function setup(images) {
 				"forward":[[156, 0, 52, 64], [208, 0, 52, 64], [260, 0, 52, 64]],
 				"left":[[312, 0, 52, 64]],
 				"right":[[364, 0, 52, 64]]
-				}
 			},
+			// Ping_sprite_small.png
+			"bouy": {
+				"idle":[
+					[0, 0, 11, 11], [11, 0, 11, 11], [11*2, 0, 11, 11], [11*3, 0, 11, 11],
+					[11*4, 0, 11, 11], [11*5, 0, 11, 11], [11*6, 0, 11, 11],
+					[11*7, 0, 11, 11], [11*8, 0, 11, 11], [11*9, 0, 11, 11],
+					[11*10, 0, 11, 11], [11*11, 0, 11, 11], [11*12, 0, 11, 11]
+				]
+			}
+		},
 		layerController:layerController,
 		screenRatio:layerController.ratio,
 		keyMouseController:keyMouseController,
@@ -62,6 +71,10 @@ function setup(images) {
 
 function main() {
 	
+	var world = {
+		screenPosition: [0, 0]
+	};
+	
 	// Create all the content
 	createContent();
 	
@@ -72,7 +85,7 @@ function main() {
 		// update physics
 		// TODO: add in a physics controller ~ same thing for projectiles
 		// Update all the layers in the layerController
-		DATA.layerController.update(frame);
+		DATA.layerController.update(frame, world);
 		
 	}, fps:80, useRAF:true, modifier:1}); // opera won't do 60 FPS (canvas max) if set to 60, to get around that set it to 80.
 	

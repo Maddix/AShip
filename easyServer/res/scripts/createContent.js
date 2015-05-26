@@ -9,6 +9,7 @@ function createContent() {
 	var devOverlay = DATA.layerController.getLayer("devOverlay");
 	var easy = DATA.easyFrame;
 	
+	var screenSpace = [0, 0];
 	
 	// This tells canvas to draw with image smoothing (Its on by default)
 	//objectLayer.context.imageSmoothingEnabled = true;
@@ -77,8 +78,8 @@ function createContent() {
 	
 	var particleCount = easy.base.getAtomText({text:"Particles: ", color:"white", ratio:[0, 12], pos:[0, 30]});
 	particleCount.updateText = particleCount.update;
-	particleCount.update = function() {
-		this.text = "Particles: " + rectParticleSprayer.totalParticles;
+	particleCount.update = function(frame) {
+		this.text = "Particles: " + frame.time;//rectParticleSprayer.totalParticles;
 		this.updateText();
 	};
 	devOverlay.add(particleCount);
@@ -128,16 +129,16 @@ function createContent() {
 	// Window manager
 	// ==============
 	
-	var windowManager = easy.windowLib.getMenuManager();
-	DATA.windowManager = windowManager;
+	//var windowManager = easy.windowLib.getMenuManager();
+	//DATA.windowManager = windowManager;
 	
-	menu.add(windowManager);
+	//menu.add(windowManager);
 	
 	// Add the windowManager to the profile
-	profile.add("window", windowManager);
+	//profile.add("window", windowManager);
 	
 	// Create editWindow
-	var editWindow = createEditWindow(windowManager);
+	//var editWindow = createEditWindow(windowManager);
 
 	
 	/* ========== *
@@ -149,6 +150,38 @@ function createContent() {
 		offset:[DATA.images["engine"].width/2, DATA.images["engine"].height/2],
 		power: 10
 	});
+	
+	
+	/* ===== *
+	   buoy
+	*  ===== */
+	console.log(DATA.imageFrames);
+	var bouy = easy.base.getAtomAnimation({
+		alive: true,
+		animationSpeed: 5,
+		currentFrame: 6,
+		animate: true,
+		image: DATA.images["bouy_sprite"],
+		offset: [11, 11],
+		currentAnimation: "idle",
+		animationKeyFrames: DATA.imageFrames["bouy"],
+		pos: [400, 600],
+		worldPos: [400, 600]
+	});
+	
+	bouy.updateAnimation = bouy.update;
+	
+	bouy.update = function(frame, world) {
+		this.pos[0] = this.worldPos[0] - world.screenPosition[0];
+		this.pos[1] = this.worldPos[1] - world.screenPosition[1];
+		this.updateAnimation(frame);
+	};
+	
+	
+	
+	objectLayer.add(bouy);
+	console.log(bouy);
+	//bouy.update()
 	
 	/* ===== *
 	   Ships
@@ -195,9 +228,10 @@ function createContent() {
 	var ship = easy.components.ship({
 		image:DATA.images["playera"],
 		offset:[DATA.images["playera"].width/2, DATA.images["playera"].height/2],
-		pos:[DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10],
+		pos:[0, 0],
 		alive:true,
 		scale: 1,
+		worldPos: [DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10],
 		imageSmoothing: true,
 		inputContext:function(input) {
 			if (input.keys["w"]) {
@@ -221,14 +255,42 @@ function createContent() {
 			if (input.keys["space"]) {
 				this.velocity = [0, 0];
 				this.angularVelocity = 0;
-				this.pos = [DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10];
+				this.worldPos = [500, 500];
 				this.rotation = 0;
 			};
 		
 			return input;
 		}
 	});
+	
+	ship.update = function(frame, world) {
+		//this.worldPos[0] += this.velocity[0]*frame.delta;
+		//this.worldPos[1] += this.velocity[1]*frame.delta;
+		
+		//console.log(this.worldPos);
+		
+		world.screenPosition[0] += this.velocity[0]*frame.delta;
+		world.screenPosition[1] += this.velocity[1]*frame.delta;
+		
+		
+		this.pos[0] = this.worldPos[0]; // - world.screenPosition[0];
+		this.pos[1] = this.worldPos[1]; // - world.screenPosition[1];
+		
+		this.rotation += this.angularVelocity*frame.delta;
+		this.updateImage();
+		
+		// Update objects
+		for (var slotName in this.slots) {
+			var slot = this.slots[slotName];
+			if (slot.object) slot.object.update(frame, this);
+		}
+		
+		this.handleEvents(frame);	
+	};
 	objectLayer.add(ship);
+	
+	
+	
 	
 	ship.addSlot("engineBackRight", [-10, 10]);
 	ship.addSlot("engineBackLeft", [10, 10]);
@@ -246,7 +308,7 @@ function createContent() {
 	ship.addObject("engineFrontSideRight", engineFrontSideRight);
 	ship.addObject("engineFrontSideLeft", engineFrontSideLeft);
 	
-	windowManager.objects["editWindow"].objects["display"].objects["view"].setObject(ship);
+	//windowManager.objects["editWindow"].objects["display"].objects["view"].setObject(ship);
 	
 	profile.add("newShip", ship);
 }

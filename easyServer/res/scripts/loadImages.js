@@ -15,7 +15,8 @@ function loadImage(){
 		"starSmall":"starSmall.png",
 		"starLarge":"starLarge.png",
 		"starHuge":"starHuge.png",
-		"engine":"engine.png"
+		"engine":"engine.png",
+		"bouy_sprite":"Ping_sprite_small.png"
 	};
 	
 	var totalImages = 0;

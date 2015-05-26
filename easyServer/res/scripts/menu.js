@@ -496,12 +496,19 @@ function windowLib(easyFrame) {
 			clickedStyle: "default",
 			defaultStyle: "default",
 			text: "",
+			maxTextLength: 0,
+			maxTextChars: -1,
 			keyCount: -1, // This way we can start the count at 0
-			keyBlacklist: ["LMB", "RMB", "MMB", "upArrow", "leftArrow", "rightArrow", "downArrow", "shift", "ctrl", "alt", "escape", "enter", "space", "backspace"],
-			//keyWhitelist: {"enter": "", "space":" "}
+			keyBlacklist: [
+				"LMB", "RMB", "MMB", "upArrow", "leftArrow", 
+				"rightArrow", "downArrow", "shift", "ctrl", 
+				"alt", "escape", "enter", "space", "backspace"
+			]
 		};
 		this.easy.base.newObject(this.getRectangleWidget(config), local);
 		local.updateRect = local.update;
+		
+		if (!local.maxTextLength) local.maxTextLength = local.ratio[0]-15;
 		
 		local.setup = function(context) {
 			this.context = context;

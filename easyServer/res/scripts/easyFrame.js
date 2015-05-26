@@ -112,7 +112,7 @@ function easyFrame() {
 				this.projectiles.push(projectile);
 			};
 			
-			local.update = function(frame) {
+			local.update = function(frame, world) {
 				
 				// Clear the screen
 				localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
@@ -145,7 +145,7 @@ function easyFrame() {
 				
 				// Update the remaining ships
 				for (var objectIndex in this.objects) {
-					this.objects[objectIndex].update(frame);
+					this.objects[objectIndex].update(frame, world);
 				}
 				
 				// Clear dead projectiles
@@ -190,10 +190,10 @@ function easyFrame() {
 				this.objects.push(obj);
 			};
 			
-			local.update = function(frame) {
+			local.update = function(frame, world) {
 				localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
 				for (var objectIndex in this.objects) {
-					this.objects[objectIndex].update(frame);
+					this.objects[objectIndex].update(frame, world);
 				}
 			};
 
@@ -243,8 +243,8 @@ function easyFrame() {
 				this.div = div;
 			};
 			
-			local.update = function(frame) {
-				for (var layer in this.layers) this.layers[layer].update(frame);
+			local.update = function(frame, world) {
+				for (var layer in this.layers) this.layers[layer].update(frame, world);
 			};
 			
 			return local;
@@ -292,7 +292,7 @@ function easyFrame() {
 		
 		localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, clipPosition, clipRatio, scale) {
 			this.translateRotate(context, position, rotation);
-			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], -imageOffset[0]*scale, -imageOffset[1]*scale, image.width*scale, image.height*scale);
+			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], (-imageOffset[0]/2)*scale, (-imageOffset[1]/2)*scale, imageOffset[0]*scale, imageOffset[1]*scale);
 			this.reset(context);
 		};
 		
@@ -319,14 +319,14 @@ function easyFrame() {
 				var frame = this.currentFrame;
 				if (this.currentFrame >= keyFrames.length) console.warn("Warning!!! -> Animation keyFrame is out of range");
 				this.context.globalAlpha = this.alpha;
-				localContainer.drawComplexImage(
+				localContainer.drawImageClip(
 					this.context,
-					this.image, 
+					this.image,
+					this.offset, // Image offset
 					this.pos,
 					this.rotation,
 					keyFrames[frame].slice(0, 2), // ImageCut [x, y]
 					keyFrames[frame].slice(2, 4), // ImageCut [width, height]
-					this.offset, // Image offset
 					this.imageScale // Image size, used to stretch or reduce
 				);
 			};
