@@ -1,5 +1,5 @@
 
-function createEditWindow(windowManager) {
+function CreateEditWindow(windowManager, DATA) {
 
 	//var menu = DATA.layerController.getLayer("menu");
 	var easy = DATA.easyFrame;

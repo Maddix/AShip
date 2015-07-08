@@ -1,5 +1,5 @@
 
-function particles(easyFrame) {
+function Particles(easyFrame) {
 	var localContainer = {
 		version:"1.0",
 		easy:easyFrame
@@ -100,7 +100,7 @@ function particles(easyFrame) {
 			}
 		};
 		
-		local.update = function(frame) {
+		local.updateGraphics = function(frame) {
 			// Create new particles!
 			if (this.active) this.spawnParticles(frame);
 			
@@ -139,7 +139,7 @@ function particles(easyFrame) {
 			this.context.fill();
 		};
 		
-		local.update = function(frame) {
+		local.updateGraphics = function(frame) {
 			
 			// Since we aren't using the globalAlpha lets set it back to 1
 			this.globalAlpha = 1;

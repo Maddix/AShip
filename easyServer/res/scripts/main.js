@@ -1,19 +1,24 @@
 
 function setup(images) {
 	
-	var easy = easyFrame(); // This shouldn't be added to DATA should be added to this
+	var easy = EasyFrame(); // This shouldn't be added to DATA should be added to this
 	
-	// Create the layerController	
-	var layerController = easy.base.getLayerController({
-			container:"container",
-			ratio:[1080, 720] // 720, 640
+	// Create the layerController (AKA - Graphic controller)
+	var layerController = easy.graphics.getLayerController({
+		container:"container",
+		ratio:[1080, 720] // 720, 640
 	});
 	layerController.createDiv();
 	
+	// Create Logic controller
+	var logicController = easy.base.getLogicController({
+		offset: [layerController.ratio[0]/2, layerController.ratio[1]/2]
+	});
+	
 	// Create all the layers we are going to use, order matters
-	layerController.addLayer("backgroundLayer", easy.base.getLayer());
-	var temp = easy.base.getLayer();
-	/*
+	layerController.addLayer("backgroundLayer", easy.graphics.getLayer());
+	var temp = easy.graphics.getLayer();
+	/* This removes the clear-screen call, cool effect
 	temp.update = function(frame) {
 		//localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
 		for (var objectIndex in this.objects) {
@@ -22,11 +27,10 @@ function setup(images) {
 	};
 	*/
 	layerController.addLayer("particleLayer", temp);
-	layerController.addLayer("objectLayer", easy.base.getLayerCollision());
-	
-	layerController.addLayer("hud", easy.base.getLayer());
-	layerController.addLayer("menu", easy.base.getLayer());
-	layerController.addLayer("devOverlay", easy.base.getLayer());
+	layerController.addLayer("objectLayer", easy.graphics.getLayerCollision());	
+	layerController.addLayer("hud", easy.graphics.getLayer());
+	layerController.addLayer("menu", easy.graphics.getLayer());
+	layerController.addLayer("devOverlay", easy.graphics.getLayer());
 	
 	// Create KeyboardMouseController & InputController
 	var keyMouseController = easy.inputHandler.getKeyboardMouseController({
@@ -34,10 +38,11 @@ function setup(images) {
 	});
 	var inputController = easy.inputHandler.getProfileManager();
 	// mousePosition is pre populated because functions depend on it at start
-	keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]},
+	keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]};
 	
 	// Create global static Data Object, it shouldn't be global should it. :/ "easyFrame.DATA" ?
-	DATA = {
+	// Get away from global values!
+	var DATA = {
 		images: images,
 		imageFrames:{
 			"spritePlayer":{
@@ -47,7 +52,7 @@ function setup(images) {
 				"right":[[364, 0, 52, 64]]
 			},
 			// Ping_sprite_small.png
-			"bouy": {
+			"buoy": {
 				"idle":[
 					[0, 0, 11, 11], [11, 0, 11, 11], [11*2, 0, 11, 11], [11*3, 0, 11, 11],
 					[11*4, 0, 11, 11], [11*5, 0, 11, 11], [11*6, 0, 11, 11],
@@ -57,6 +62,7 @@ function setup(images) {
 			}
 		},
 		layerController:layerController,
+		logicController:logicController,
 		screenRatio:layerController.ratio,
 		keyMouseController:keyMouseController,
 		inputController:inputController,
@@ -66,26 +72,23 @@ function setup(images) {
 	};
 
 	// Start main
-	main();
+	main(DATA);
 }
 
-function main() {
-	
-	var world = {
-		screenPosition: [0, 0]
-	};
+function main(DATA) {
 	
 	// Create all the content
-	createContent();
+	createContent(DATA);
 	
 	// Make the loop
 	mainLoop = DATA.easyFrame.base.loop({func:function(frame) {
 		// update keys
 		DATA.inputController.update(DATA.keyMouseController.update());
-		// update physics
-		// TODO: add in a physics controller ~ same thing for projectiles
+		// Add project/collision layer
+		// update logic
+		DATA.logicController.update(frame);
 		// Update all the layers in the layerController
-		DATA.layerController.update(frame, world);
+		DATA.layerController.updateGraphics();
 		
 	}, fps:80, useRAF:true, modifier:1}); // opera won't do 60 FPS (canvas max) if set to 60, to get around that set it to 80.
 	

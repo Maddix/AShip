@@ -1,7 +1,7 @@
 // /////////////
 // Window system
 
-function windowLib(easyFrame) {
+function WindowLib(easyFrame) {
 	var localContainer = {
 		version:"1.0",
 		easy: easyFrame
@@ -14,71 +14,79 @@ function windowLib(easyFrame) {
 			activeObject: null,
 			context: null,
 			active: false,
-			inputContext: undefined
+			inputContext: undefined,
+			validate: function(object) {
+				if (object.updateGraphics && object.setup && object.inputContext) return true;
+			}
 		};
-		this.easy.base.newObject(this.easy.base.orderedObject(), local);
-		local.addObject = local.add;
-		this.easy.base.newObject(config, local);
+		this.easy.base.inherit(this.easy.base.orderedObject(), local, true);
+		local.orderedObject_add = local.add;
+		this.easy.base.inherit(config, local);
 		
 		local.setup = function(context) {
 			this.context = context;
 			for (var objectIndex in this.objectNames) {
-				this.objects[this.objectNames[objectIndex]].setup(context, this);
+				this.objects[this.objectNames[objectIndex]].setup(context);
 			}
 		};
 		
 		local.add = function(objectName, object) {
-			this.addObject(objectName, object);
-			if (object.setup && this.context) {
-				object.setup(this.context, this);
-			}
+			this.orderedObject_add(objectName, object);
+			if (this.context) object.setup(this.context);
 		};
 		
 		local.inputContext = function(input) {
 			var processedInput = undefined;
 			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0) || this.active) {
 				for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
-					//console.log("> " + objectIndex);
 					var object = this.objects[this.objectNames[objectIndex]];	
-					if (object.inputContext) {
-						processedInput = object.inputContext(input);
-						if (processedInput) {
-							this.active = true;
-							break;
-						} else {
-							//this.acitve = false;
-						}
+					processedInput = object.inputContext(input);
+					if (processedInput) {
+						this.active = true;
+						break;
+					} else {
+						//this.acitve = false;
 					}
-					//console.log("< " + objectIndex);
 				}
 			} 
 			return processedInput;
 		};
 		
-		local.update = function(frame) {
+		local.updateGraphics = function() {
 			for (var objectIndex in this.objectNames) {
-				this.objects[this.objectNames[objectIndex]].update(frame);
+				this.objects[this.objectNames[objectIndex]].updateGraphics();
 			}
 		};
 		return local;
 	};
-	
+		
 	localContainer.getMenuManager = function(config) {
-		var local = {};
-		this.easy.base.newObject(this.getMenuContainer(config), local);
+		var local = {
+			eventController: this.easy.base.eventController()
+		};
+		this.easy.base.inherit(this.getMenuContainer(config), local);
+		
+		local.setup = function(context) {
+			this.context = context;
+			for (var objectIndex in this.objectNames) {
+				this.objects[this.objectNames[objectIndex]].setup(context, eventController);
+			}
+		};
 		
 		local.inputContext = function(input) {	
 			for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
 				var object = this.objects[this.objectNames[objectIndex]];
-				if (object.inputContext) {
-					var returnedInput = object.inputContext(input);
-					if (returnedInput) {
-						input = returnedInput;
-						break;
-					}
+				var returnedInput = object.inputContext(input);
+				if (returnedInput) {
+					input = returnedInput;
+					break;
 				}
 			}
 			return input;
+		};
+		
+		local.updateLogic = function() {
+			eventController.updateLogic();
 		};
 		
 		return local;
@@ -88,73 +96,61 @@ function windowLib(easyFrame) {
 		var local = {
 			pos: [0, 0],
 			ratio: [10, 10],
-			mousePositionOffset: 0
-		};
-		this.easy.base.newObject(this.getMenuContainer(config), local);
-
-		local.update = function(frame) {
-			for (var objectIndex in this.objectNames) {
-				this.objects[this.objectNames[objectIndex]].update(frame, this.pos, this.ratio);
-			}
-		};
-		
-		return local;
-	};
-	
-	localContainer.getMenuBlock = function(config) {
-		var local = {
-			localPos: [0, 0],
-			localRatio: [100, 100],
-			pos: [0, 0],
-			ratio: [0, 0],
 			arrangeStyle: "",
-			arrangeAxis: 0, // 0 or 1 - x and y
-			arrangeFunctions: {}
+			arrangeFunctions: {},
+			eventController: null
 		};
-		this.easy.base.newObject(this.getMenuContainer(config), local);
-		
-		local.arrangeFree = function(frame, objects, objectNames, pos, ratio, axis) {
-			for (var i=0; i < objectNames.length; i++) {
-				var widget = objects[objectNames[i]];
+		this.easy.base.inherit(this.getMenuContainer(config), local);
+
+		local.arrangeFree = function(objects, objectNames, pos, ratio) {
+			for (var nameIndex in objectNames) {
+				var object = objects[objectNames[nameIndex]];
 				var newPos = [
-					pos[0] + (ratio[0] * (widget.localPos[0]/100)),
-					pos[1] + (ratio[1] * (widget.localPos[1]/100))
+					pos[0] + (ratio[0] * (object.localPos[0]/100)),
+					pos[1] + (ratio[1] * (object.localPos[1]/100))
 				];
-				if (widget.update) widget.update(frame, newPos, ratio);
+				object.updateGraphics(newPos, ratio);
 			}
 		};
-		local.arrangeFunctions["free"] = local.arrangeFree;
+		if (local.arrangeFunctions["free"]) local.arrangeFunctions["free"] = local.arrangeFree;
 		
-		local.update = function(frame, blockPos, blockRatio) {
-			this.pos = [
-				blockPos[0] + (blockRatio[0] * (this.localPos[0]/100)),
-				blockPos[1] + (blockRatio[1] * (this.localPos[1]/100))
+		local.setup = function(context, eventController) {
+			this.context = context;
+			this.eventController = eventController;
+			//eventController.
+			for (var objectIndex in this.objectNames) {
+				this.objects[this.objectNames[objectIndex]].setup(context, eventController);
+			}
+		};
+		
+		local.updateGraphics = function(parentPos, parentRatio) {
+			var pos = [
+				parentPos[0] + (parentRatio[0] * (this.pos[0]/100)),
+				parentPos[1] + (parentRatio[1] * (this.pos[1]/100))
 			];
-			this.ratio = [
-				blockRatio[0] * (this.localRatio[0]/100), 
-				blockRatio[1] * (this.localRatio[1]/100)
+			var ratio = [
+				parentRatio[0] * (this.ratio[0]/100), 
+				parentRatio[1] * (this.ratio[1]/100)
 			];
 			
 			if (this.arrangeFunctions[this.arrangeStyle]) {
-				this.arrangeFunctions[this.arrangeStyle](
-					frame, 
-					this.objects, 
-					this.objectNames, 
-					this.pos, 
-					this.ratio, 
-					this.arrangeAxis
-				);
+				this.arrangeFunctions[this.arrangeStyle](this.objects, this.objectNames, pos, ratio);
 			}
 		};
 		
 		return local;
 	};
 	
-	
-	// Old, update it.
-	// Create some sort of window docking / Talk with the windowManager?
-	// This is a window enhancement, it lets you drag the window
-	// Rename?
+	localContainer.widgetDrag = function(config) {
+		var local = {
+			pos: [0, 0],
+			ratio: [0, 0],
+			
+		};
+		
+		return local;
+	}
+
 	localContainer.getWindowWidgetDrag = function(config) {
 		var local = {
 			pos: [0, 0],
@@ -169,7 +165,7 @@ function windowLib(easyFrame) {
 			active: false,
 			inputContext: null
 		};
-		this.easy.base.newObject(config, local);
+		this.easy.base.inherit(config, local);
 		
 		local.setup = function(context, parent) {
 			this.parent = parent;
@@ -252,7 +248,7 @@ function windowLib(easyFrame) {
 			minimumRatio: [100, 100],
 			dragOffset: 5 // px
 		};
-		this.easy.base.newObject(config, local);
+		this.easy.base.inherit(config, local);
 		
 	
 		
@@ -272,26 +268,6 @@ function windowLib(easyFrame) {
 		
 		return local;
 	};
-	
-	
-	// Is this going to be used at all?
-	localContainer.getWindowResize = function(config) {
-		var local = {
-			localPos: [0, 0],
-			localRatio: [0, 0],
-		};
-		
-		local.inputContext = function(input) {
-			
-			if (input.keys["LMB"]) {
-				
-			}
-			
-			return input;
-		}
-		
-		return local;
-	}
 	
 	// This is a window enhancement, it lets you resize the window
 	// Rename?
@@ -424,8 +400,8 @@ function windowLib(easyFrame) {
 	
 	localContainer.getLabelWidget = function(config) {
 		var local = {};
-		this.easy.base.newObject(this.widget, local);
-		this.easy.base.newObject(this.easy.base.getAtomText(config), local);
+		this.easy.base.inherit(this.widget, local);
+		this.easy.base.inherit(this.easy.base.getAtomText(config), local);
 		local.updateText = local.update;
 		
 		local.update = function(frame, newPos, ratio) {
@@ -452,15 +428,15 @@ function windowLib(easyFrame) {
 				}
 			}
 		};
-		this.easy.base.newObject(this.widget(), local);
-		local.styles["default"] = this.easy.base.newObject(config.styles["default"], local.styles["default"]);		
+		this.easy.base.inherit(this.widget(), local);
+		local.styles["default"] = this.easy.base.inherit(config.styles["default"], local.styles["default"]);		
 		for (key in config.styles) {
 			if (key != "default") {
-				local.styles[key] = this.easy.base.newObject(config.styles[key], this.easy.base.newObject(local.styles["default"]));
+				local.styles[key] = this.easy.base.inherit(config.styles[key], this.easy.base.inherit(local.styles["default"]));
 			}
 		}
 		delete config.styles;
-		this.easy.base.newObject(config, local);
+		this.easy.base.inherit(config, local);
 		
 		
 		local.changeStyle = function(newStyle) {
@@ -505,7 +481,7 @@ function windowLib(easyFrame) {
 				"alt", "escape", "enter", "space", "backspace"
 			]
 		};
-		this.easy.base.newObject(this.getRectangleWidget(config), local);
+		this.easy.base.inherit(this.getRectangleWidget(config), local);
 		local.updateRect = local.update;
 		
 		if (!local.maxTextLength) local.maxTextLength = local.ratio[0]-15;
@@ -589,7 +565,7 @@ function windowLib(easyFrame) {
 			defaultStyle: "default",
 			clicked: false // This is to work-around 'input.keys["LMB"]' not having a pressed status
 		};
-		this.easy.base.newObject(this.getRectangleWidget(config), local);
+		this.easy.base.inherit(this.getRectangleWidget(config), local);
 		local.updateRect = local.update;
 		
 		local.setup = function(context) {
@@ -645,8 +621,8 @@ function windowLib(easyFrame) {
 	};
 	
 	localContainer.getTextWidget = function(config) {
-		var local = this.easy.base.newObject(this.widget());
-		this.easy.base.newObject(this.easy.base.getAtomText(config), local);
+		var local = this.easy.base.inherit(this.widget());
+		this.easy.base.inherit(this.easy.base.getAtomText(config), local);
 		local.updateText = local.update;
 		local.setup = function(context) {
 			this.context = context;
@@ -660,8 +636,8 @@ function windowLib(easyFrame) {
 	};
 
 	localContainer.getRectWidget = function(config) {
-		var local = this.easy.base.newObject(this.widget());
-		this.easy.base.newObject(this.easy.base.getAtomRectangle(config), local);
+		var local = this.easy.base.inherit(this.widget());
+		this.easy.base.inherit(this.easy.base.getAtomRectangle(config), local);
 		
 		local.updateRect = local.update;
 		
@@ -674,7 +650,7 @@ function windowLib(easyFrame) {
 	
 	localContainer.getBackgroundRectWidget = function(config) {
 		var local = {};
-		this.easy.base.newObject(this.getRectWidget(config), local);
+		this.easy.base.inherit(this.getRectWidget(config), local);
 		
 		local.update = function(frame, newPos, blockRatio) {
 			this.pos = newPos;
@@ -682,40 +658,6 @@ function windowLib(easyFrame) {
 			this.updateRect();
 		};
 
-		return local;
-	};
-	
-	// Really needed?
-	localContainer.getGrid = function(config) {
-		var local = {
-			ratio: [50, 50],
-			gridSize: [5, 5]
-		};
-		this.easy.base.newObject(this.widget, local);
-		this.easy.base.newObject(this.easy.base.getAtomCustomLines(config), local);
-		
-		local.setup = function(context) {
-			this.context = context;
-			
-			for (var index=0; index < this.ratio.length; index++) {
-				
-				var offset = 0;
-				
-				for (; offset <= this.ratio[index]; ) {
-					
-					// Make a mesh
-					this.shape.push();
-					
-				}
-				
-			}
-			
-		};
-		
-		local.update = function(frame) {
-		
-		};
-		
 		return local;
 	};
 	
@@ -727,9 +669,9 @@ function windowLib(easyFrame) {
 			pos:[0,0],
 			active: false
 		};
-		this.easy.base.newObject(this.widget(), local);
-		this.easy.base.newObject(this.easy.base.atom, local);
-		this.easy.base.newObject(config, local);
+		this.easy.base.inherit(this.widget(), local);
+		this.easy.base.inherit(this.easy.base.atom, local);
+		this.easy.base.inherit(config, local);
 		
 		local.setup = function(context) {
 			this.context = context;

@@ -1,4 +1,6 @@
 
+// Work is on hold till I work out physics, graphics, and object messaging.
+
 function components(easyFrame) {
 	var localContainer = {
 		version:"1.0",
@@ -13,7 +15,7 @@ function components(easyFrame) {
 		};
 		this.easy.base.newObject(this.engineControl(this.easy.base.getImageResize(this.easy.base.getAtomImage(config))), local);
 		this.easy.base.newObject(this.easy.base.atomPhysics, local);
-		local.updateImage = local.update;
+		local.updateImage = local.updateGraphics;
 		
 		local.setup = function(context) {
 			this.context = context;
@@ -87,19 +89,25 @@ function components(easyFrame) {
 			}
 		};
 		
-		local.update = function(frame) {
-			this.pos[0] += this.velocity[0]*frame.delta;
-			this.pos[1] += this.velocity[1]*frame.delta;
+		local.updateLogic = function(frame, world) {
 			this.rotation += this.angularVelocity*frame.delta;
+			this.worldPos[0] += this.velocity[0]*frame.delta;
+			this.worldPos[1] += this.velocity[1]*frame.delta;
+			
+			this.pos[0] = this.worldPos[0] - world.screenPosition[0];
+			this.pos[1] = this.worldPos[1] - world.screenPosition[1];
+			
+			this.handleEvents(frame);
+		}
+		
+		local.updateGraphics = function() {
 			this.updateImage();
 			
 			// Update objects
 			for (var slotName in this.slots) {
 				var slot = this.slots[slotName];
-				if (slot.object) slot.object.update(frame, this);
+				if (slot.object) slot.object.updateGraphics(this);
 			}
-			
-			this.handleEvents(frame);
 		};
 		
 		return local;
@@ -191,7 +199,7 @@ function components(easyFrame) {
 			activated: false
 		};
 		this.easy.base.newObject(this.easy.base.getImageResize(this.easy.base.getAtomImage(config)), local);
-		local.updateImage = local.update;
+		local.updateImage = local.updateGraphics;
 		
 		local.setup = function(context, offset) {
 			this.context = context;
@@ -239,7 +247,7 @@ function components(easyFrame) {
 			return {"angularVelocity":newAngularVelocity, "velocity":velocity};
 		};
 		
-		local.update = function(frame, parent) {
+		local.updateGraphics = function(frame, parent) {
 			var rotatedPos = rotatePoint(this.localOffset, parent.rotation);
 			this.pos[0] = parent.pos[0] + rotatedPos[0];
 			this.pos[1] = parent.pos[1] + rotatedPos[1];
@@ -253,7 +261,7 @@ function components(easyFrame) {
 				this.particleController.spawnParticles(frame);
 				this.spawnParticle = false;
 			}
-			this.particleController.update(frame);
+			this.particleController.updateGraphics(frame);
 			this.updateImage();
 		};
 		

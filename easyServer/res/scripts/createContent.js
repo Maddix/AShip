@@ -1,5 +1,5 @@
 
-function createContent() {
+function createContent(DATA) {
 // Define common layers from the layerController
 	var backgroundLayer = DATA.layerController.getLayer("backgroundLayer");
 	var particleLayer = DATA.layerController.getLayer("particleLayer");
@@ -7,6 +7,7 @@ function createContent() {
 	var hud = DATA.layerController.getLayer("hud");
 	var menu = DATA.layerController.getLayer("menu");
 	var devOverlay = DATA.layerController.getLayer("devOverlay");
+	var logic = DATA.logicController;
 	var easy = DATA.easyFrame;
 	
 	var screenSpace = [0, 0];
@@ -29,15 +30,15 @@ function createContent() {
 	
 	// Create text objects - Not sure if I need to create them here
 	var fps = easy.base.getAtomText({text:"FPS", color:"white", ratio:[0, 12], pos:[0, 10]});
-	fps.updateText = fps.update;
-	fps.update = function(frame) {
+	fps.updateText = fps.updateGraphics;
+	fps.updateGraphics = function(frame) {
 		this.text = "FPS: " + frame.rate;
 		this.updateText();
 	}
 	
 	var delta = easy.base.getAtomText({text:"Delta Time", color:"white", ratio:[0, 12], pos:[0, 20]});
-	delta.updateText = delta.update;
-	delta.update = function(frame) {
+	delta.updateText = delta.updateGraphics;
+	delta.updateGraphics = function(frame) {
 		this.text = "Delta Time: " + frame.delta;
 		this.updateText();
 	}
@@ -56,33 +57,6 @@ function createContent() {
 		devOverlay.add(fps);
 		devOverlay.add(delta);
 	}
-	
-	/* ========= *
-	   Particles
-	*  ========= */
-	
-	var rectParticleSprayer = easy.particles.getRectangleParticleSprayer({
-		startColor: {red:255, green:239, blue:66, alpha:2.5},
-		endColor: {red:180, green:0, blue:0, alpha:0},
-		ratio: [4, 4],
-		color: "orange",
-		pos: [100, 400],
-		spawnCone: Math.PI*2,
-		speedRatio: [50, 80],
-		lifeRatio: [80, 100],
-		life: .8,
-		spawnRate: 400
-	});
-	
-	//particleLayer.add(rectParticleSprayer);
-	
-	var particleCount = easy.base.getAtomText({text:"Particles: ", color:"white", ratio:[0, 12], pos:[0, 30]});
-	particleCount.updateText = particleCount.update;
-	particleCount.update = function(frame) {
-		this.text = "Particles: " + frame.time;//rectParticleSprayer.totalParticles;
-		this.updateText();
-	};
-	devOverlay.add(particleCount);
 	
 	/* ============= *
 	   Input profile
@@ -106,8 +80,8 @@ function createContent() {
 		imageScale: 4,
 		imageSmoothing: true
 	});
-	cursor.updateImage = cursor.update;
-	cursor.update = function(frame) {
+	cursor.updateImage = cursor.updateGraphics;
+	cursor.updateGraphics = function(frame) {
 		this.rotation += Math.PI/1.6*frame.delta;
 		cursor.updateImage();
 	};
@@ -129,59 +103,47 @@ function createContent() {
 	// Window manager
 	// ==============
 	
-	//var windowManager = easy.windowLib.getMenuManager();
-	//DATA.windowManager = windowManager;
 	
-	//menu.add(windowManager);
+	/*
+	var windowManager = easy.windowLib.getMenuManager();
+	DATA.windowManager = windowManager;
+	
+	menu.add(windowManager);
 	
 	// Add the windowManager to the profile
-	//profile.add("window", windowManager);
+	profile.add("window", windowManager);
 	
 	// Create editWindow
-	//var editWindow = createEditWindow(windowManager);
-
-	
-	/* ========== *
-	   Ship Parts
-	*  ========== */
-	
-	var engine = easy.components.engineNew({
-		image:DATA.images["engine"],
-		offset:[DATA.images["engine"].width/2, DATA.images["engine"].height/2],
-		power: 10
-	});
+	var editWindow = createEditWindow(windowManager, DATA);
+	*/
 	
 	
-	/* ===== *
+	/* ==== *
 	   buoy
-	*  ===== */
+	*  ==== */
 	console.log(DATA.imageFrames);
-	var bouy = easy.base.getAtomAnimation({
+	var buoy = easy.base.getAtomAnimation({
 		alive: true,
 		animationSpeed: 5,
 		currentFrame: 6,
 		animate: true,
-		image: DATA.images["bouy_sprite"],
+		image: DATA.images["buoy_sprite"],
 		offset: [11, 11],
 		currentAnimation: "idle",
-		animationKeyFrames: DATA.imageFrames["bouy"],
+		animationKeyFrames: DATA.imageFrames["buoy"],
 		pos: [400, 600],
 		worldPos: [400, 600]
 	});
 	
-	bouy.updateAnimation = bouy.update;
+	buoy.updateAnimation = buoy.updateGraphics;
 	
-	bouy.update = function(frame, world) {
+	buoy.updateGraphics = function(frame, world) {
 		this.pos[0] = this.worldPos[0] - world.screenPosition[0];
 		this.pos[1] = this.worldPos[1] - world.screenPosition[1];
 		this.updateAnimation(frame);
 	};
-	
-	
-	
-	objectLayer.add(bouy);
-	console.log(bouy);
-	//bouy.update()
+
+	//objectLayer.add(buoy);
 	
 	/* ===== *
 	   Ships
@@ -221,9 +183,15 @@ function createContent() {
 		localRotation: Math.PI*3/2
 	}, easy.base.newObject(engineDefault));
 	
-	//var engineComputer = easy.components.engineComputer({
-		
-	//});
+	// Make the world move
+	var tempWorld = {
+		setup: function(context){},
+		alive: true,
+		updateGraphics: function(frame, world) {
+			console.log("Running..");
+		}
+	}
+	//objectLayer.add(tempWorld);
 	
 	var ship = easy.components.ship({
 		image:DATA.images["playera"],
@@ -231,7 +199,7 @@ function createContent() {
 		pos:[0, 0],
 		alive:true,
 		scale: 1,
-		worldPos: [DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10],
+		worldPos: [500, 500],//[DATA.screenRatio[0]/2, DATA.screenRatio[1] - DATA.screenRatio[1]/10],
 		imageSmoothing: true,
 		inputContext:function(input) {
 			if (input.keys["w"]) {
@@ -255,43 +223,16 @@ function createContent() {
 			if (input.keys["space"]) {
 				this.velocity = [0, 0];
 				this.angularVelocity = 0;
-				this.worldPos = [500, 500];
+				//this.worldPos = [500, 500];
 				this.rotation = 0;
 			};
 		
 			return input;
 		}
 	});
-	
-	ship.update = function(frame, world) {
-		//this.worldPos[0] += this.velocity[0]*frame.delta;
-		//this.worldPos[1] += this.velocity[1]*frame.delta;
+	//if (!logic.add("ship", ship)) console.log("Ship failed to join the logic layer");
+	//objectLayer.add(ship);
 		
-		//console.log(this.worldPos);
-		
-		world.screenPosition[0] += this.velocity[0]*frame.delta;
-		world.screenPosition[1] += this.velocity[1]*frame.delta;
-		
-		
-		this.pos[0] = this.worldPos[0]; // - world.screenPosition[0];
-		this.pos[1] = this.worldPos[1]; // - world.screenPosition[1];
-		
-		this.rotation += this.angularVelocity*frame.delta;
-		this.updateImage();
-		
-		// Update objects
-		for (var slotName in this.slots) {
-			var slot = this.slots[slotName];
-			if (slot.object) slot.object.update(frame, this);
-		}
-		
-		this.handleEvents(frame);	
-	};
-	objectLayer.add(ship);
-	
-	
-	
-	
 	ship.addSlot("engineBackRight", [-10, 10]);
 	ship.addSlot("engineBackLeft", [10, 10]);
 	ship.addSlot("engineFrontRight", [-10, -10]);
@@ -309,6 +250,6 @@ function createContent() {
 	ship.addObject("engineFrontSideLeft", engineFrontSideLeft);
 	
 	//windowManager.objects["editWindow"].objects["display"].objects["view"].setObject(ship);
+	//profile.add("newShip", ship);
 	
-	profile.add("newShip", ship);
 }

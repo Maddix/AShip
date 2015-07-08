@@ -8,7 +8,7 @@
 // Second issue - Managing bubbling event.
 // 
 
-function inputHandler(easyFrame) {
+function InputHandler(easyFrame) {
 	var localContainer = {
 		version:"1.0",
 		requires: "Jquery 2.0.3+ and Jquery-mousewheel",
@@ -141,7 +141,7 @@ function inputHandler(easyFrame) {
 				
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				var shiftKey = local.keyMapShift[jqueryKeyEvent.which];
-				var upper = convertedKey.toUpperCase();
+				var upper = convertedKey.toUpperCase(); // Will fail when a key is undefined. ?
 				
 				if (local.keyEvent[shiftKey]) {
 					convertedKey = shiftKey;
