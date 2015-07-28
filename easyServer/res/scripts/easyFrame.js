@@ -450,7 +450,7 @@ function EasyFrame() {
 				if (inheritance) for (var item in inheritance) if (!heir[item] || !generous) heir[item] = inheritance[item];
 			} else {
 				heir = heir ? heir : [];
-				for (var index in inheritance) heir.push(inheritance[index]);				
+				for (var index=0; index < inheritance.length; index++) heir.push(inheritance[index]);				
 			}
 			return heir;
 		};

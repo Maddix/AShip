@@ -31,8 +31,8 @@ function GameMath() {
 		return total / averageList.length;
 	};
 
-		// Careful! 0 radians is straight up, Not to the left like normal! Add 90 degrees to fix it!
-		// http://math.rice.edu/~pcmi/sphere/drg_txt.html - radian tutorial. very good!
+	// Careful! 0 radians is straight up, Not to the left like normal! Add 90 degrees to fix it!
+	// http://math.rice.edu/~pcmi/sphere/drg_txt.html - radian tutorial. very good!
 	local.getAngle = function(from, to) {
 		return Math.atan2((to[1] - from[1]), (to[0] - from[0]));
 	};
@@ -57,6 +57,7 @@ function GameMath() {
 		return newAngle;
 	};
 
+	//Does this work?
 	// All angles given are assumed to be positive
 	// 0 <= startAngle < noPassAngle < PI*2
 	local.limitTurn = function(startAngle, noPassAngle, angleOffset, currentAngle) {

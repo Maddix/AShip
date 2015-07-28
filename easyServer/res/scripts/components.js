@@ -6,12 +6,37 @@ function components(easyFrame) {
 		version:"1.0",
 		easy:easyFrame
 	};
-
-	localContainer.scale = function(config) {
+	
+	// Requires orderedObject
+	localContainer.slots = function(config) {
 		var local = {
-			
+			slots: {}, // {slotName: {placement:[0, 0], objectName: Name}, ..}
+			slotNames: []
 		};
-		this.easy.base.inherit(this.easy.graphics.getImageResize(config), local);
+		
+		local.getSlots = function() {
+			return this.slotNames;
+		};
+		
+		local.getFreeSlots = function() {
+			var freeSlots = [];
+			for (var slotIndex in this.slots) {
+				var slot = this.slots[slotIndex];
+				if (slot.objectName === null) freeSlots.push(slot);
+			}
+			return freeSlots;
+		};
+		
+		// Not sure if this is the right name?
+		local.add = function(slotName, object) {
+			// Validation
+			this.slotNames.push(slotName);
+		};
+		
+		local.addSlot = function(slotName, posOffset) {
+			// Validation
+			// Addition
+		}
 		
 		return local;
 	};
@@ -27,7 +52,7 @@ function components(easyFrame) {
 		};
 		
 		// Different name from updateLogic so that you expect different parameters.
-		local.updateModule = function() {
+		local.updateModule = function(pos, rotation) {
 			
 		}
 		
@@ -59,6 +84,10 @@ function components(easyFrame) {
 			});
 		};
 		
+		local.addToSlot = function(name, slot) {
+			
+		};
+		
 		local.ordered_add = local.add;
 		local.add = function(objectName, object) {
 			// This disregards the normal way validation takes place, but it makes it easier. (Validation takes place twice.)
@@ -83,7 +112,7 @@ function components(easyFrame) {
 		local.updateLogic = function(frame, world) {
 			this.rotation += this.angularVelocity*frame.delta;
 			
-			
+			this.velocity[0] += Something*frame.delta*scale;
 			
 			this.iterateOverObjects(function(object) {
 				object.updateModule();
