@@ -7,7 +7,81 @@ function components(easyFrame) {
 		easy:easyFrame
 	};
 
+	localContainer.module = function(config) {
+		var local = {
+			
+		};
+		this.easy.base.inherit(config, local);
+		
+		local.updateModule = function() {
+			
+		}
+		
+		return local;
+	};
+	
 	localContainer.ship = function(config) {
+		var local = {
+			eventHandler: this.easy.base.eventHandler();
+			validate: function(object) {
+				if (object.resize) return true;
+			}
+		};
+		this.easy.base.inherit(
+			this.easy.graphics.getAtomImage(
+				this.easy.base.orderedObject(config)
+			), local);
+		this.easy.base.inherit(this.easy.base.atomPhysics, local);
+		
+		local.setup = function(context) {
+			this.context = context;
+			this.calcInerta();
+			this.eventHandler.add("Owner", this);
+			
+			this.iterateOverObjects(function(object) {
+				if (object.setup) object.setup(context);
+			});
+		};
+		
+		local.ordered_add = local.add;
+		local.add = function(objectName, object) {
+			// This disregards the normal way validation takes place, but it makes it easier. (Validation takes place twice.)
+			if (this.validate(object) && this.eventHandler.validate(object)) {
+				this.ordered_add(objectName, object);
+				this.eventHandler.add(objectName, object);
+			} else return false;
+		}
+		
+		local.ordered_remove = local.remove;
+		local.remove = function(objectName) {
+			// There shouldn't be a case where one and not both fails.
+			return this.ordered_remove(objectName) && this.eventHandler.remove(objectName);
+		};
+		
+		local.updateEvents = function(events) {
+			// Fill
+			
+			return newEvents;
+		};
+		
+		local.updateLogic = function(frame, world) {
+			
+			
+			
+		}
+		
+		local.atomImage_updateGraphics = local.updateGraphics;
+		local.updateGraphics = function() {
+			this.atomImage_updateGraphics();
+			this.iterateOverObjects(function(object) {
+				if (object.updateGraphics) object.updateGraphics();
+			});
+		}
+		
+		return local;
+	};
+	
+	localContainer.ship_old = function(config) {
 		var local = {
 			slots: {}, // Slot:{"name":{"object":obj, }, ..}
 			inputContext: null,

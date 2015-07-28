@@ -147,6 +147,7 @@ function EasyFrame() {
 			context.restore();
 		};
 		
+		// Condense this into one function? Isn't dry.
 		localContainer.drawImage = function(context, image, imageOffset, position, rotation) {
 			this.translateRotate(context, position, rotation);
 			context.drawImage(image, -imageOffset[0], -imageOffset[1]);
@@ -159,7 +160,7 @@ function EasyFrame() {
 			this.reset(context);
 		};
 
-		localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, clipPosition, clipRatio, scale) {
+		localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, scale, clipPosition, clipRatio) {
 			this.translateRotate(context, position, rotation);
 			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], (-imageOffset[0]/2)*scale, (-imageOffset[1]/2)*scale, imageOffset[0]*scale, imageOffset[1]*scale);
 			this.reset(context);
@@ -508,7 +509,14 @@ function EasyFrame() {
 					return true;
 				}
 			};
-
+			
+			// func takes an object.
+			local.iterateOverObjects = function(func) {
+				for (var nameIndex in this.objectNames) {
+					func(this.objects[this.objectNames[nameIndex]]);
+				}
+			}
+			
 			return local;
 		};
 
@@ -522,20 +530,11 @@ function EasyFrame() {
 			};
 			this.inherit(this.orderedObject(), local, true);
 			
-			// Should I call it event?
-			local.newEvent = function(senderName, eventName, event) {
-				this.newMessages.push({
-					"senderName": senderName,
-					"eventName": eventname,
-					"event": event
-				});
-			};
-			
 			local.updateLogic = function() {
 				this.events = this.newEvents;
 				this.newEvents = [];
 				for (var nameIndex in this.objectNames) {
-					this.objects[nameIndex].getMessage(this.events);
+					this.objects[nameIndex].updateEvents(this.events);
 				}
 			};
 			
