@@ -7,12 +7,26 @@ function components(easyFrame) {
 		easy:easyFrame
 	};
 
+	localContainer.scale = function(config) {
+		var local = {
+			
+		};
+		this.easy.base.inherit(this.easy.graphics.getImageResize(config), local);
+		
+		return local;
+	};
+	
 	localContainer.module = function(config) {
 		var local = {
 			
 		};
 		this.easy.base.inherit(config, local);
 		
+		local.setScale = function(newScale, smoothing) {
+			
+		};
+		
+		// Different name from updateLogic so that you expect different parameters.
 		local.updateModule = function() {
 			
 		}
@@ -24,19 +38,21 @@ function components(easyFrame) {
 		var local = {
 			eventHandler: this.easy.base.eventHandler();
 			validate: function(object) {
-				if (object.resize) return true;
+				if (object.setScale && object.updateModule) return true;
 			}
 		};
 		this.easy.base.inherit(
-			this.easy.graphics.getAtomImage(
-				this.easy.base.orderedObject(config)
-			), local);
+			this.easy.graphics.getImageResize(	
+				this.easy.graphics.getAtomImage(
+					this.easy.base.orderedObject(config)
+			), local));
 		this.easy.base.inherit(this.easy.base.atomPhysics, local);
 		
 		local.setup = function(context) {
 			this.context = context;
 			this.calcInerta();
 			this.eventHandler.add("Owner", this);
+			this.setScale(1, true);
 			
 			this.iterateOverObjects(function(object) {
 				if (object.setup) object.setup(context);
@@ -65,15 +81,20 @@ function components(easyFrame) {
 		};
 		
 		local.updateLogic = function(frame, world) {
+			this.rotation += this.angularVelocity*frame.delta;
 			
 			
 			
+			this.iterateOverObjects(function(object) {
+				object.updateModule();
+			});
 		}
 		
 		local.atomImage_updateGraphics = local.updateGraphics;
 		local.updateGraphics = function() {
 			this.atomImage_updateGraphics();
 			this.iterateOverObjects(function(object) {
+				// I should remove this check. Though not everything will display something.
 				if (object.updateGraphics) object.updateGraphics();
 			});
 		}

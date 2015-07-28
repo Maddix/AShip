@@ -207,10 +207,9 @@ function InputHandler(easyFrame) {
 	};
 	
 	localContainer.getProfileManager = function(config) {
-		var local = this.easy.base.newObject(this.easy.base.orderedObject());
-		this.easy.base.newObject(config, local);
+		var local = this.easy.base.inherit(this.easy.base.orderedObject(config));
 		
-		local.update = function(newKeyList) {
+		local.updateLogic = function(newKeyList) {
 			var remainingKeys = newKeyList;
 			for (var profileIndex in this.objectNames) {
 				var profile = this.objects[this.objectNames[profileIndex]];
@@ -224,28 +223,19 @@ function InputHandler(easyFrame) {
 	
 	localContainer.profile = function(config) {
 		var local = {
-			userKeyMapping: {}, // Not used, make it work again. There will only be one global keyMapping.
-			controlContext: null
+			controlContext: null,
+			validate: function(object) {
+				if (object.inputContext) return true;
 		};
-		this.easy.base.newObject(this.easy.base.orderedObject(), local);
-		this.easy.base.newObject(config, local);
-		local.addObject = local.add;
+		this.easy.base.inherit(this.easy.base.orderedObject(config), local);
 		
-		local.add = function(objectName, object) {
-			if (object.inputContext) this.addObject(objectName, object);
-			else return null; // or print something :o
-		};
-		
-		local.update = function(input) {
-			
+		local.updateLogic = function(input) {
 			var remainingKeys = input;
 			if (this.controlContext) var remainingKeys = this.controlContext(remainingKeys);
-			
-			for (var objectIndex in this.objectNames) {
-				var object = this.objects[this.objectNames[objectIndex]];
+			this.iterateOverObjects(function(object) {
 				if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
-				else break;
-			}
+				else return true;
+			};
 			return input;
 		}
 		

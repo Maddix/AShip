@@ -274,28 +274,26 @@ function EasyFrame() {
 			return local;
 		};
 
+		// This should be inherited after getAtomImage, otherwise updateGraphics won't be set to the correct one.
 		localContainer.getImageResize = function(config) {
 			var local = {
 				scale: 1,
-				originalOffset: config.offset,
+				imageScaledOffset: [0, 0],
 				imageSmoothing: true
 			};
 			this.inherit(config, local);
 
+			// This should be called at start in setup. Or should I just call it here so that it sets immediately?
 			local.setScale = function(newScale, imageSmoothing) {
 				this.scale = newScale;
-				if (imageSmoothing != undefined) {
-					if (imageSmoothing) this.imageSmoothing = true;
-					else this.imageSmoothing = false;
-				}
-				if (!this.originalOffset) this.originalOffset = this.offset;
-				this.offset = [this.originalOffset[0]*newScale, this.originalOffset[1]*newScale];
+				this.imageSmoothing = imageSmoothing ? true : false;
+				this.imageScaledOffset = [this.offset[0]*newScale, this.offset[1]*newScale];
 			};
 
 			local.updateGraphics = function() {
 				this.context.globalAlpha = this.alpha;
 				this.context.imageSmoothingEnabled = this.imageSmoothing;
-				localContainer.drawImageScale(this.context, this.image, this.offset, this.pos, this.rotation, this.scale);
+				localContainer.drawImageScale(this.context, this.image, this.imageScaledOffset, this.pos, this.rotation, this.scale);
 			};
 
 			return local;
@@ -444,6 +442,7 @@ function EasyFrame() {
 			version:"1" // Not really used. Heh
 		};
 		
+		// Should this be called extend? I can't seem to nail down a name for this.
 		// heir will inherit from inheritance. If generous is true then heir won't take items he already has.
 		localContainer.inherit = function(inheritance, heir, generous) {
 			heir = heir ? heir : {};
@@ -513,7 +512,8 @@ function EasyFrame() {
 			// func takes an object.
 			local.iterateOverObjects = function(func) {
 				for (var nameIndex in this.objectNames) {
-					func(this.objects[this.objectNames[nameIndex]]);
+					// Might not be completely clear. If you return true then we break.
+					if (func(this.objects[this.objectNames[nameIndex]])) break;
 				}
 			}
 			
