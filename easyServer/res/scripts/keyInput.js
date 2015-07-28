@@ -1,12 +1,5 @@
 // This uses Jquery 2.0.3 and Jquary-mousewheel(https://github.com/brandonaaron/jquery-mousewheel)
 // Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
-// TODO: Add brackets, comma, ect. to the keyMap
-
-// Bubble up event input
-// First issue - what was clicked?
-// List of 
-// Second issue - Managing bubbling event.
-// 
 
 function InputHandler(easyFrame) {
 	var localContainer = {
@@ -43,7 +36,7 @@ function InputHandler(easyFrame) {
 					186:";", 222:"'", 189: "-", 187:"=",
 					112:"f1", 113:"f2", 114:"f3", 115:"f4", 116:"f5", 117:"f6",
 					118:"f7", 119:"f8", 120:"f9", 121:"f10", 122:"f11", 123:"f12",
-					1:"LMB", 2:"MMB", 3:"RMB"
+					1:"LMB", 2:"MMB", 3:"RMB" // Not sure if having these in caps will throw people off.
 			},
 			keyMapDefaultShift: {
 				49: "!", 50:"@", 51:"#", 52:"$", 53:"%", 54:"^", 
@@ -51,15 +44,14 @@ function InputHandler(easyFrame) {
 				219:"{", 221:"}", 220:"|", 186:":", 222:'"', 188:"<",
 				190:">", 191:"?", 192:"~"
 			},
-			// Move away from this
+			// Move away from this - ? What?
 			keyMap:{}, // set to default below, this is so we can modify keyMap and still 
 					  // be able to set it back to the default mapping
-			
 			keyMapShift:{}
 		};
-		local.keyMap = this.easy.base.newObject(local.keyMapDefault);
-		local.keyMapShift = this.easy.base.newObject(local.keyMapDefaultShift);
-		this.easy.base.newObject(config, local);
+		local.keyMap = this.easy.base.inherit(local.keyMapDefault);
+		local.keyMapShift = this.easy.base.inherit(local.keyMapDefaultShift);
+		this.easy.base.inherit(config, local);
 		
 		local.addKeyEvent = function(key) {
 			if (this.keyEvent[key] === undefined) {
@@ -78,7 +70,7 @@ function InputHandler(easyFrame) {
 		};
 		
 		local.resetKeyMapping = function() {
-			this.keyMapDefault = localContainer.easy.base.newObject(this.keyMapDefault);
+			this.keyMapDefault = localContainer.easy.base.inherit(this.keyMapDefault);
 		};
 		
 		local.createReversedKeyMap = function() {
@@ -93,9 +85,9 @@ function InputHandler(easyFrame) {
 		local.update = function() {
 			// get a snapshot of the key/mouse events
 			var newKeyMouse = {
-				keys:localContainer.easy.base.newObject(this.keyEvent), 
-				mouse:localContainer.easy.base.newObject(this.mouseEvent),
-				keyOrder:localContainer.easy.base.copyItem(this.keyEventOrder)
+				keys:localContainer.easy.base.inherit(this.keyEvent), 
+				mouse:localContainer.easy.base.inherit(this.mouseEvent),
+				keyOrder:localContainer.easy.base.inherit(this.keyEventOrder)
 			};
 			
 			// clear both key and mouse events
@@ -116,9 +108,7 @@ function InputHandler(easyFrame) {
 		// I should create a function that removes all the listeners ?
 		local.setupListeners = function() {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
-				
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
-				
 				if (local.keyEvent["shift"]) {
 					var convertedShiftKey = local.keyMapShift[jqueryKeyEvent.which];
 					if (convertedShiftKey) {
@@ -138,10 +128,9 @@ function InputHandler(easyFrame) {
 			});
 			
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
-				
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				var shiftKey = local.keyMapShift[jqueryKeyEvent.which];
-				var upper = convertedKey.toUpperCase(); // Will fail when a key is undefined. ?
+				var upper = convertedKey ? convertedKey.toUpperCase() : "";
 				
 				if (local.keyEvent[shiftKey]) {
 					convertedKey = shiftKey;
@@ -209,7 +198,7 @@ function InputHandler(easyFrame) {
 	localContainer.getProfileManager = function(config) {
 		var local = this.easy.base.inherit(this.easy.base.orderedObject(config));
 		
-		local.updateLogic = function(newKeyList) {
+		local.update = function(newKeyList) {
 			var remainingKeys = newKeyList;
 			for (var profileIndex in this.objectNames) {
 				var profile = this.objects[this.objectNames[profileIndex]];
@@ -229,7 +218,7 @@ function InputHandler(easyFrame) {
 		};
 		this.easy.base.inherit(this.easy.base.orderedObject(config), local);
 		
-		local.updateLogic = function(input) {
+		local.update = function(input) {
 			var remainingKeys = input;
 			if (this.controlContext) var remainingKeys = this.controlContext(remainingKeys);
 			this.iterateOverObjects(function(object) {

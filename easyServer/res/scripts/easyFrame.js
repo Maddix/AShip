@@ -445,8 +445,13 @@ function EasyFrame() {
 		// Should this be called extend? I can't seem to nail down a name for this.
 		// heir will inherit from inheritance. If generous is true then heir won't take items he already has.
 		localContainer.inherit = function(inheritance, heir, generous) {
-			heir = heir ? heir : {};
-			if (inheritance) for (var item in inheritance) if (!heir[item] || !generous) heir[item] = inheritance[item];
+			if (Object.prototype.toString.call(inheritance) === Object.prototype.toString.call({})) {
+				heir = heir ? heir : {};
+				if (inheritance) for (var item in inheritance) if (!heir[item] || !generous) heir[item] = inheritance[item];
+			} else {
+				heir = heir ? heir : [];
+				for (var index in inheritance) heir.push(inheritance[index]);				
+			}
 			return heir;
 		};
 		
@@ -463,11 +468,6 @@ function EasyFrame() {
 				for (var itemIndex in item) newItem[itemIndex] = getItem(item[itemIndex])
 			}
 			return newItem;
-		};
-		
-		localContainer.copyList = function(from, to) {
-			for (var index in from) to.push(from[index]);
-			return to;
 		};
 
 		localContainer.orderedObject = function(config) {
