@@ -7,54 +7,150 @@ function components(easyFrame) {
 		easy:easyFrame
 	};
 	
+	localContainer.moduleEnumSizes = function() {
+		return {
+			MICRO: "micro", 
+			SMALL: "small", 
+			MEDIUM: "medium", 
+			LARGE: "large", 
+			HUGE: "huge", 
+			MASSIVE: "massive"
+		};
+	};
+	
+	localContainer.moduleEnumTypes = function() {
+		return {
+			ENGINE: "engine",
+			TURRET: "turret",
+			GUN: "gun",
+			LAUNCHER: "launcher",
+			RADAR: "radar",
+			SENSORS: "sensors"
+		};
+	};
+	
 	// Requires orderedObject
-	localContainer.slots = function(config) {
+	localContainer.slot = function(config) {
 		var local = {
-			slots: {}, // {slotName: {placement:[0, 0], objectName: Name}, ..}
-			slotNames: []
+			name: "Slot name needed.",
+			type: "Slot type needed.",
+			size: "Slot size needed.",
+			offset: [0, 0],
+			object: null,
+			validation: function(object) {
+				if (object.type === this.type && object.size === this.size) return true;
+			}
 		};
 		
+		local.add = function(object) {
+			if (!this.validation(object)) return false;
+			this.object = object;
+			return true;
+		};
+		
+		local.remove = function() {
+			if (this.object) {
+				var object = this.object;
+				this.object = null;
+				return object;
+			}
+		};
+		
+		local.updateModule = function(frame, world, pos, rotation) {
+			if (this.object) {
+				var rotatedOffset = this.easy.math.rotatePoint(this.offset, rotation);
+				var newPos = [pos[0] + rotatedOffset[0], pos[1] + rotatedOffset[1]];
+				this.object.updateModule(frame, world, newPos, rotation)	
+			}
+		};
+		
+		local.updateGraphics = function() {
+			if (this.object && this.object.updateGraphics) this.object.updateGraphics();
+		};
+		
+		return local;
+	};
+	
+	localContainer.slots = function(config) {
+		var local = {
+			validation: function(object) {
+				if (object.add && object.remove && object.updateModule && object.updateGraphics) return true;
+			}
+		};
+		this.easy.base.inherit(this.easy.base.orderedObject(config), local, true);
+		
 		local.getSlots = function() {
-			return this.slotNames;
+			return this.objectNames;
 		};
 		
 		local.getFreeSlots = function() {
 			var freeSlots = [];
-			for (var slotIndex in this.slots) {
-				var slot = this.slots[slotIndex];
-				if (slot.objectName === null) freeSlots.push(slot);
+			for (var nameIndex in this.objectNames) {
+				var slot = this.objects[this.objectNames[nameIndex]];
+				if (slot.object === null) freeSlots.push(this.objectNames[nameIndex]);
 			}
 			return freeSlots;
 		};
 		
-		// Not sure if this is the right name?
-		local.add = function(slotName, object) {
-			// Validation
-			this.slotNames.push(slotName);
+		local.hasSlot = function(slotName) {
+			if (this.objects[slotName]) return true;
 		};
 		
-		local.addSlot = function(slotName, posOffset) {
-			// Validation
-			// Addition
-		}
+		local.isSlotEmpty = function(slotName) {
+			if (this.objects[slotName] && this.objects[slotName].object === null) return true;
+			else return false;
+		};
+		
+		local.addSlot = local.add;
+		local.add = function(slotName, object) {
+			if (this.hasSlot(slotName) && this.isSlotEmpty(slotName)) {
+				this.objects[slotName].add(object)
+				return true;
+			}
+		};
+		
+		local.removeSlot = local.remove;
+		local.remove = function(slotName) {
+			if (this.objects[slotName]) return this.objects[slotName].remove();
+		};
+		
+		local.updateModule = function(frame, world, pos, rotation) {
+			this.iterateOverObjects(function(object) {
+				object.updateModule(frame, world, pos, rotation);
+			});
+		};
+		
+		local.updateGraphics = function() {
+			this.iterateOverObjects(function(object) {
+				object.updateGraphics();
+			});
+		};
 		
 		return local;
 	};
 	
 	localContainer.module = function(config) {
 		var local = {
-			
+			moduleName: "Module name needed!",
+			moduleType: "Module type needed!",
+			moduleSize: ""
 		};
-		this.easy.base.inherit(config, local);
-		
-		local.setScale = function(newScale, smoothing) {
-			
-		};
+		this.easy.base.inherit(this.easy.graphics.getImageResize(config), local);
 		
 		// Different name from updateLogic so that you expect different parameters.
-		local.updateModule = function(pos, rotation) {
+		local.updateModule = function(frame, world, pos, rotation) {
+			this.pos = pos;
+			this.rotation = rotation;
+		};
+		
+		return local;
+	};
+	
+	localContainer.moduleEngine = function(config) {
+		var local = {
 			
-		}
+		};
+		this.easy.base.extend(this.module(config), local);
 		
 		return local;
 	};
@@ -62,16 +158,12 @@ function components(easyFrame) {
 	localContainer.ship = function(config) {
 		var local = {
 			eventHandler: this.easy.base.eventHandler();
-			validate: function(object) {
-				if (object.setScale && object.updateModule) return true;
-			}
+			slots: this.slots()
 		};
 		this.easy.base.inherit(
 			this.easy.graphics.getImageResize(	
-				this.easy.graphics.getAtomImage(
-					this.easy.base.orderedObject(config)
-			), local));
-		this.easy.base.inherit(this.easy.base.atomPhysics, local);
+				this.easy.graphics.getAtomImage(config), local));
+		this.easy.base.inherit(this.easy.base.atomPhysics(), local);
 		
 		local.setup = function(context) {
 			this.context = context;
@@ -84,23 +176,24 @@ function components(easyFrame) {
 			});
 		};
 		
-		local.addToSlot = function(name, slot) {
-			
-		};
+		local.addSlot = local.slots.addSlot;
 		
-		local.ordered_add = local.add;
-		local.add = function(objectName, object) {
+		local.add = function(slotName, object) {
 			// This disregards the normal way validation takes place, but it makes it easier. (Validation takes place twice.)
-			if (this.validate(object) && this.eventHandler.validate(object)) {
-				this.ordered_add(objectName, object);
-				this.eventHandler.add(objectName, object);
-			} else return false;
+			if (this.eventHandler.validate(object) && this.slots.add(object)) {
+				this.eventHandler.add(object.name, object);
+				return true;
+			}
 		}
 		
-		local.ordered_remove = local.remove;
-		local.remove = function(objectName) {
-			// There shouldn't be a case where one and not both fails.
-			return this.ordered_remove(objectName) && this.eventHandler.remove(objectName);
+		local.removeSlot = local.slots.removeSlot;
+		
+		local.remove = function(slotName) {
+			var removed = this.slot.remove(slotName);
+			if (removed) {
+				this.eventHandler.remove(slotName);
+				return removed;
+			}
 		};
 		
 		local.updateEvents = function(events) {
@@ -111,21 +204,15 @@ function components(easyFrame) {
 		
 		local.updateLogic = function(frame, world) {
 			this.rotation += this.angularVelocity*frame.delta;
-			
-			this.velocity[0] += Something*frame.delta*scale;
-			
-			this.iterateOverObjects(function(object) {
-				object.updateModule();
-			});
+			this.pos[0] += this.velocity[0]*frame.delta*this.scale;
+			this.pos[1] += this.velocity[1]*frame.delta*this.scale;
+			this.slots.updateModule(frame, world, this.pos, this.rotation);
 		}
 		
 		local.atomImage_updateGraphics = local.updateGraphics;
 		local.updateGraphics = function() {
 			this.atomImage_updateGraphics();
-			this.iterateOverObjects(function(object) {
-				// I should remove this check. Though not everything will display something.
-				if (object.updateGraphics) object.updateGraphics();
-			});
+			this.slots.updateGraphics();
 		}
 		
 		return local;

@@ -212,6 +212,7 @@ function EasyFrame() {
 			return local;
 		};
 
+		// Integrate with get getImageResize
 		localContainer.getAtomAnimation = function(config) {
 			var local = {
 				animationSpeed:1, // Per second
@@ -281,7 +282,7 @@ function EasyFrame() {
 				imageScaledOffset: [0, 0],
 				imageSmoothing: true
 			};
-			this.inherit(config, local);
+			this.inherit(this.getAtomImage(config), local);
 
 			// This should be called at start in setup. Or should I just call it here so that it sets immediately?
 			local.setScale = function(newScale, imageSmoothing) {
@@ -409,7 +410,7 @@ function EasyFrame() {
 			var local = {
 				style:"round",
 				lineWidth:1,
-				shape: [] // Holds lists of points, each new list is a new line -> [[startX,startY, x,y, ..], [startX,startY, x,y]]
+				shape: [] // Holds lists of points, each new list is a new line -> [[startX,startY, x,y, ..], [startX,startY, x,y], ..]
 			};
 			this.inherit(this.getBaseShape(), local);
 			this.inherit(config, local);
@@ -418,7 +419,6 @@ function EasyFrame() {
 				this.context.globalAlpha = this.alpha;
 				this.context.beginPath();
 				for (var lineIndex=0; lineIndex < this.shape.length; lineIndex++) {
-				//for (var lineIndex in this.shape) { // Shouldn't use for-in with arrays
 					for (var pointIndex=0; pointIndex < this.shape[lineIndex].length; pointIndex+=2) {
 						var line = this.shape[lineIndex];
 						if (pointIndex === 0) this.context.moveTo(this.pos[0] + line[pointIndex], this.pos[1] + line[pointIndex+1]);
@@ -441,6 +441,20 @@ function EasyFrame() {
 		var localContainer = {
 			version:"1" // Not really used. Heh
 		};
+		
+		
+		// Better named and fits better I think.
+		// Note, only extend objects of the same type; piece and object must be the same type.
+		localContainer.extend = function(piece, object, overwrite) {
+			if (Object.prototype.toString.call(piece) === Object.prototype.toString.call({})) {
+				object = object ? object : {};
+				if (piece) for (var item in piece) if (!object[item] || !overwrite) object[item] = piece[item];
+			} else {
+				object = object ? object : [];
+				for (var index=0; index < piece.length; index++) object.push(piece[index]);				
+			}
+			return whole;
+		}
 		
 		// Should this be called extend? I can't seem to nail down a name for this.
 		// heir will inherit from inheritance. If generous is true then heir won't take items he already has.
@@ -470,6 +484,8 @@ function EasyFrame() {
 			return newItem;
 		};
 
+		
+		// Should I add hasObject, getObjectNames functions?
 		localContainer.orderedObject = function(config) {
 			var local = {
 				objects: {},
@@ -480,18 +496,20 @@ function EasyFrame() {
 			this.inherit(config, local);
 			
 			local.add = function(objectName, object) {
-				if (this.validate && !this.validate(object)) return false;
-				this.objects[objectName] = object;
-				this.objectNames.push(objectName);
-				return true;
+				if (this.validate && this.validate(object)) {
+					this.objects[objectName] = object;
+					this.objectNames.push(objectName);
+					return true;
+				}
 			};
 			
 			local.remove = function(objectName) {
 				var index = this.objectNames.indexOf(objectName);
 				if (index != -1) {
+					var object = this.objects[objectName];
 					delete this.objects[objectName];
 					this.objectNames.splice(index, 1);
-					return true;
+					return object;
 				}
 			};
 

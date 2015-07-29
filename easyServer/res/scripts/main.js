@@ -1,3 +1,4 @@
+// Still needs updating
 
 function setup(images) {
 	
@@ -18,14 +19,6 @@ function setup(images) {
 	// Create all the layers we are going to use, order matters
 	layerController.addLayer("backgroundLayer", easy.graphics.getLayer());
 	var temp = easy.graphics.getLayer();
-	/* This removes the clear-screen call, cool effect
-	temp.update = function(frame) {
-		//localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
-		for (var objectIndex in this.objects) {
-			this.objects[objectIndex].update(frame);
-		}
-	};
-	*/
 	layerController.addLayer("particleLayer", temp);
 	layerController.addLayer("objectLayer", easy.graphics.getLayerCollision());	
 	layerController.addLayer("hud", easy.graphics.getLayer());
