@@ -4,33 +4,28 @@ AShip is a HTML5 Javascipt game engine that I am building from scratch.
 This is my attempt at building a game engine. I originally started out using 
 <a href="https://github.com/ericdrowell/KineticJS/">KineticJS</a> for rendering with canvas, but due to a number of factors I decided to write my own rendering code. The project was started back in October 2013 and is still ongoing.
 
-Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of the engine.
+Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of the engine. (Outdated but shows progress.)
 
 # Libraries Used
 
-- <a href="https://github.com/bottlepy/bottle">Bottlepy</a> - Used to host a small server
+- <a href="https://github.com/bottlepy/bottle">Bottlepy</a> - Used to host the project on a small server
 - <a href="http://jquery.com">Jquery</a> - Cross-browser support
 - <a href="https://github.com/jquery/jquery-mousewheel/">Jquery-mousewheel</a> - Used to get mousewheel input
 
-Everything else is made from scratch on top of canvas.
+Everything else is made from scratch.
 
 # Features
-This is a incomplete list of all the current features.
-
-- Object management system
-- Keyboard and Mouse input system
-- Input profiles
-- Windowing system
+- Animations
+- Half finished windowing system complete with widgets
+- Advanced Input
 - Particles
+- Other great stuff
 
-I plan on adding the featrures below in the future.
-
-- Audio
-- Websockets
+I plan on adding audio, websockets, and other cool things.
 
 # Examples
 
-The example below creates a canvas with a green rectangle that moves to the lower right of the screen by 5px a second.
+The example below creates a canvas with a green rectangle that moves to the lower right of the screen by 5px a second. (This example is now outdated but still useful.)
 
 ```javascript
 function main() {
