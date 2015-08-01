@@ -9,12 +9,12 @@
 // - context is a Canvas.context("2d") object
 
 // I think I might need name-spaces.
-// Overhauling object inheritance with early and late code merging. I need to overhaul the way 
-// objects update too. I also need to fix the window system and start using that. I have one to 
-// many layers. (WindowController -> Window -> Block -> Widget) Window and Block serve the same 
+// Overhauling object extendance with early and late code merging. I need to overhaul the way
+// objects update too. I also need to fix the window system and start using that. I have one to
+// many layers. (WindowController -> Window -> Block -> Widget) Window and Block serve the same
 // purpose and as such makes things more confusing and error prone.
 
-// Objects need a way to communicate. Different systems need it too. I then need to handle world-space 
+// Objects need a way to communicate. Different systems need it too. I then need to handle world-space
 // and object-space which will tie into collision detection and objects interacting.
 
 // Split Objects from functions?
@@ -28,15 +28,15 @@ function EasyFrame() {
 		var localContainer = {
 			version:"1"
 		};
-	
+
 		return localContainer;
 	};
-	
-	function graphics(base) {
+
+	function Graphics(Base) {
 		var localContainer = {
 			version:"1"
 		};
-		
+
 		localContainer.getLayer = function() {
 			var local = {
 				canvas: undefined,
@@ -59,16 +59,16 @@ function EasyFrame() {
 				this.canvas = newCanvas;
 			};
 
-			local.add = function(obj) {
+			local.add = function(object) {
 				if (!object.updateGraphics && !object.setup) return false;
-				obj.setup(this.context);
-				this.objects.push(obj);
+				object.setup(this.context);
+				this.objects.push(object);
 				return true;
 			};
 
 			local.updateGraphics = function() {
 				localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
-				for (var objectIndex in this.objects) {
+				for (var objectIndex=0; objectIndex < this.objects.length; objectIndex++) {
 					this.objects[objectIndex].updateGraphics();
 				}
 			};
@@ -91,7 +91,7 @@ function EasyFrame() {
 				layers: [],
 				layerNames: []
 			};
-			base.inherit(config, local);
+			Base.extend(config, local);
 
 			// Set the container
 			local.container = document.getElementById(local.container);
@@ -118,14 +118,14 @@ function EasyFrame() {
 				if (this.container) this.container.appendChild(div);
 				this.div = div;
 			};
-			
+
 			local.update = function() {
-				for (var layer in this.layers) this.layers[layer].updateGraphics();
+				for (var layer=0; layer < this.layers.length; layer++) this.layers[layer].updateGraphics();
 			};
 
 			return local;
 		};
-		
+
 		// ////////////////////
 		// Basic object - Atom
 		localContainer.atom = function() {
@@ -133,20 +133,20 @@ function EasyFrame() {
 				pos: [0, 0],
 				alpha: 1,
 				context: null,
-				setup: function(context) {this.context = context;} 
+				setup: function(context) {this.context = context;}
 			}
 		};
-		
+
 		localContainer.clearScreen = function(context, width, height) {
 			context.clearRect(0, 0, width, height);
 		};
 
 		localContainer.reset = function(context) {
 			// Reset blur?
-			//context.setTransform(1, 0, 0, 1, 0, 0); // Only needed if we change setTransform
+			context.setTransform(1, 0, 0, 1, 0, 0); // Only needed if we change setTransform
 			context.restore();
 		};
-		
+
 		// Condense this into one function? Isn't dry.
 		localContainer.drawImage = function(context, image, imageOffset, position, rotation) {
 			this.translateRotate(context, position, rotation);
@@ -156,13 +156,13 @@ function EasyFrame() {
 
 		localContainer.drawImageScale = function(context, image, imageOffset, position, rotation, scale) {
 			this.translateRotate(context, position, rotation);
-			context.drawImage(image, -imageOffset[0]*scale, -imageOffset[1]*scale, image.width*scale, image.height*scale);
+			context.drawImage(image, position[0] - imageOffset[0]*scale, position[1] - imageOffset[1]*scale, image.width*scale, image.height*scale);
 			this.reset(context);
 		};
 
 		localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, scale, clipPosition, clipRatio) {
 			this.translateRotate(context, position, rotation);
-			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], (-imageOffset[0]/2)*scale, (-imageOffset[1]/2)*scale, imageOffset[0]*scale, imageOffset[1]*scale);
+			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], (position[0] - imageOffset[0]/2)*scale, (position[1] - imageOffset[1]/2)*scale, imageOffset[0]*scale, imageOffset[1]*scale);
 			this.reset(context);
 		};
 
@@ -174,7 +174,7 @@ function EasyFrame() {
 		// Scale X | Skew Y  | Displace X
 		// Skew X  | Scale Y | Displace Y
 		// 0	   | 0		 | 1
-		
+
 		localContainer.translateRotate = function(context, position, rotation) {
 			context.translate(position[0], position[1]);
 			context.rotate(rotation);
@@ -187,7 +187,7 @@ function EasyFrame() {
 				currentFrame:0,
 				imageScale:1 // set to 0?
 			};
-			this.inherit(this.getAtomImage(config), local);
+			Base(this.getAtomImage(config), local);
 
 			local.getCurrentAnimationLength = function() {
 				return this.animationKeyFrames[this.currentAnimation].length;
@@ -225,7 +225,7 @@ function EasyFrame() {
 
 			// is this the right way of doing things? What does this really do?
 			local.changeAnimation = function(config) {
-				localContainer.inherit(config, local);
+				localContainer.extend(config, local);
 				if (this.currentAnimation !== "") {
 					this.currentLength = this.animationKeyFrames[this.currentAnimation].length-1;
 				}
@@ -266,8 +266,8 @@ function EasyFrame() {
 				rotation: 0,
 				offset: [0, 0]
 			};
-			this.inherit(this.atom, local);
-			this.inherit(config, local);
+			Base.extend(this.atom(), local);
+			Base.extend(config, local);
 			local.updateGraphics = function() {
 				this.context.globalAlpha = this.alpha;
 				localContainer.drawImage(this.context, this.image, this.offset, this.pos, this.rotation);
@@ -275,14 +275,14 @@ function EasyFrame() {
 			return local;
 		};
 
-		// This should be inherited after getAtomImage, otherwise updateGraphics won't be set to the correct one.
+		// This should be extended after getAtomImage, otherwise updateGraphics won't be set to the correct one.
 		localContainer.getImageResize = function(config) {
 			var local = {
 				scale: 1,
 				imageScaledOffset: [0, 0],
 				imageSmoothing: true
 			};
-			this.inherit(this.getAtomImage(config), local);
+			Base(this.getAtomImage(config), local);
 
 			// This should be called at start in setup. Or should I just call it here so that it sets immediately?
 			local.setScale = function(newScale, imageSmoothing) {
@@ -292,6 +292,7 @@ function EasyFrame() {
 			};
 
 			local.updateGraphics = function() {
+				console.log("Updating");
 				this.context.globalAlpha = this.alpha;
 				this.context.imageSmoothingEnabled = this.imageSmoothing;
 				localContainer.drawImageScale(this.context, this.image, this.imageScaledOffset, this.pos, this.rotation, this.scale);
@@ -309,8 +310,8 @@ function EasyFrame() {
 				align: "start",
 				baseline: "alphabetic"
 			};
-			this.inherit(this.atom, local);
-			this.inherit(config, local);
+			Base.extend(this.atom(), local);
+			Base.extend(config, local);
 
 			local.setTextWidth = function() {
 				this.context.font = this.ratio[1] + "px " + this.font;
@@ -329,9 +330,9 @@ function EasyFrame() {
 			return local;
 		};
 
-		
+
 		localContainer.getBaseShape = function() {
-			return this.inherit(this.atom, {
+			return Base.extend(this.atom(), {
 				ratio:[100, 100],
 				color:"white"
 			});
@@ -349,7 +350,7 @@ function EasyFrame() {
 		// No border FYI
 		localContainer.getAtomRectangleSimple = function(config) {
 			var local = this.getBaseShape();
-			this.inherit(config, local);
+			Base.extend(config, local);
 
 			local.updateGraphics = function() {
 				// Blur, its really slow. Cash the object with the blur when in use.
@@ -368,10 +369,9 @@ function EasyFrame() {
 		// About the same speed as the non simple function..
 		localContainer.getAtomRectangle = function(config) {
 			var local = this.getBaseBorder();
-			this.inherit(this.getAtomRectangleSimple(config), local);
+			Base.extend(this.getAtomRectangleSimple(config), local);
 			// This system isn't fool proof, I might need another.
 			local.updateRectangleColor = local.updateGraphics;
-
 			local.updateGraphics = function() {
 				this.updateRectangleColor();
 
@@ -390,8 +390,8 @@ function EasyFrame() {
 				style:"round",
 				lineWidth: 1
 			};
-			this.inherit(this.getBaseShape(), local);
-			this.inherit(config, local);
+			Base(this.getBaseShape(), local);
+			Base(config, local);
 			local.updateGraphics = function() {
 				this.context.globalAlpha = this.alpha;
 				this.context.beginPath(); // ?
@@ -412,8 +412,8 @@ function EasyFrame() {
 				lineWidth:1,
 				shape: [] // Holds lists of points, each new list is a new line -> [[startX,startY, x,y, ..], [startX,startY, x,y], ..]
 			};
-			this.inherit(this.getBaseShape(), local);
-			this.inherit(config, local);
+			Base(this.getBaseShape(), local);
+			Base(config, local);
 
 			local.updateGraphics = function() {
 				this.context.globalAlpha = this.alpha;
@@ -433,42 +433,24 @@ function EasyFrame() {
 			};
 			return local;
 		};
-		
+
 		return localContainer;
 	};
-	
-	function base() {
+
+	function Base() {
 		var localContainer = {
 			version:"1" // Not really used. Heh
 		};
-		
-		
+
+
 		// Better named and fits better I think.
 		// Note, only extend objects of the same type; piece and object must be the same type.
 		localContainer.extend = function(piece, object, overwrite) {
-			if (Object.prototype.toString.call(piece) === Object.prototype.toString.call({})) {
-				object = object ? object : {};
-				if (piece) for (var item in piece) if (!object[item] || !overwrite) object[item] = piece[item];
-			} else {
-				object = object ? object : [];
-				for (var index=0; index < piece.length; index++) object.push(piece[index]);				
-			}
-			return whole;
+			object = object ? object : {};
+			if (piece) for (var item in piece) if (!object[item] || !overwrite) object[item] = piece[item];
+			return object;
 		}
-		
-		// Should this be called extend? I can't seem to nail down a name for this.
-		// heir will inherit from inheritance. If generous is true then heir won't take items he already has.
-		localContainer.inherit = function(inheritance, heir, generous) {
-			if (Object.prototype.toString.call(inheritance) === Object.prototype.toString.call({})) {
-				heir = heir ? heir : {};
-				if (inheritance) for (var item in inheritance) if (!heir[item] || !generous) heir[item] = inheritance[item];
-			} else {
-				heir = heir ? heir : [];
-				for (var index=0; index < inheritance.length; index++) heir.push(inheritance[index]);				
-			}
-			return heir;
-		};
-		
+
 		localContainer.deepCopy = function(item) {
 			var itemProto = Object.prototype.toString.call(item);
 			var newItem = item;
@@ -484,17 +466,20 @@ function EasyFrame() {
 			return newItem;
 		};
 
-		
+
 		// Should I add hasObject, getObjectNames functions?
 		localContainer.orderedObject = function(config) {
 			var local = {
 				objects: {},
 				objectNames: [],
 				// validate is a function that takes a object and returns a bool depending if the object has what you want.
-				validate: undefined 
+				// Ugh, need to fix this.
+				validate: function(object) {
+						return object;
+					}
 			};
-			this.inherit(config, local);
-			
+			this.extend(config, local);
+
 			local.add = function(objectName, object) {
 				if (this.validate && this.validate(object)) {
 					this.objects[objectName] = object;
@@ -502,7 +487,7 @@ function EasyFrame() {
 					return true;
 				}
 			};
-			
+
 			local.remove = function(objectName) {
 				var index = this.objectNames.indexOf(objectName);
 				if (index != -1) {
@@ -526,7 +511,7 @@ function EasyFrame() {
 					return true;
 				}
 			};
-			
+
 			// func takes an object.
 			local.iterateOverObjects = function(func) {
 				for (var nameIndex in this.objectNames) {
@@ -534,7 +519,7 @@ function EasyFrame() {
 					if (func(this.objects[this.objectNames[nameIndex]])) break;
 				}
 			}
-			
+
 			return local;
 		};
 
@@ -546,8 +531,8 @@ function EasyFrame() {
 					if (object.updateEvents) return true;
 				}
 			};
-			this.inherit(this.orderedObject(), local, true);
-			
+			this.extend(this.orderedObject(), local, true);
+
 			local.updateLogic = function() {
 				this.events = this.newEvents;
 				this.newEvents = [];
@@ -555,74 +540,46 @@ function EasyFrame() {
 					this.objects[nameIndex].updateEvents(this.events);
 				}
 			};
-			
+
 			return local;
 		};
 
-		localContainer.loadImages = function(loadObject, callWhenComplete) {
+		localContainer.loadImages = function(loadObject, callWhenComplete, folder) {
+			folder = folder ? folder : "";
 			var imageObjects = {};
 			var loadCount = 0;
 			var loaded = 0;
-			
-			function loaded() {
+
+			function loadedCallback() {
 				loaded++;
 				if (loaded == loadCount) {
-					callwhenComplete(imageObjects);
+					callWhenComplete(imageObjects);
 				}
 			};
-			
-			for (imageName in loadObject) {
+
+			for (var imageName in loadObject) {
 				loadCount++;
 				var image = new Image();
-				image.src = imageList[imageName];
-				image.onload = function() { loaded(); }
+				image.src = folder + loadObject[imageName];
+				image.onload = function() { loadedCallback(); }
 				imageObjects[imageName] = image;
 			}
 		};
-		
+
 		localContainer.getLogicController = function(config) {
 			var local = {
-				focusOnObject: undefined, // Will be a name to objects
 				validate: function(object) {
 					if (object.updateLogic) return true;
-				},
-				camera: [0, 0],
-				offset: [0, 0], // set when created
-				maxDistanceFromOffset: [10, 10]
-			};
-			local = this.inherit(local, this.orderedObject());
-			local.orderedObject_remove = local.remove;
-			this.inherit(config, local);
-			
-			local.setFocusOnObject = function(objectName) {
-				if (this.objects[objectName]) {
-					focusOnObject = objectName;
 				}
 			};
-			
-			local.remove = function(objectName) {
-				if (local.orderedObject_remove(objectName)) {
-					this.focusOnObject = undefined;
-					return true;
-				}
-				return false;
-			};
-			
+			local = this.extend(this.orderedObject(config), local, true);
+
 			local.update = function(frame) {
-				if (this.focusOnObject) {
-					this.camera[0] = this.focusOnObject.pos[0] - this.offset[0];
-					this.camera[0] = this.focusOnObject.pos[1] - this.offset[1];
-				}
-				
-				var world = {
-					camera: this.camera
-				}
-				
-				for (object in this.objects) {
-					this.objects[object].updateLogic(frame, world);
-				}
+				this.iterateOverObjects(function(object) {
+					object.updateLogic(frame);
+				});
 			};
-			
+
 			return local;
 		}
 
@@ -666,7 +623,7 @@ function EasyFrame() {
 					|| window.msRequestAnimationFrame;}()),
 				requestFunction: undefined
 			};
-			this.inherit(config, local);
+			this.extend(config, local);
 			local.fps = 1000/local.fps;
 
 			local.getCallbackFunction = function() {
@@ -745,12 +702,13 @@ function EasyFrame() {
 
 	var easy = {};
 	easy.auther = "Maddix";
-	easy.base = base();
-	easy.components = components(easy);
-	easy.windowLib = WindowLib(easy);
-	easy.inputHandler = InputHandler(easy);
-	easy.particles = Particles(easy);
-	easy.math = GameMath()// Add math into this and update all the code to use it :S
+	easy.Base = Base();
+	easy.Graphics = Graphics(easy.Base);
+	easy.Components = Components(easy);
+	easy.WindowLib = WindowLib(easy);
+	easy.InputHandler = InputHandler(easy);
+	easy.Particles = Particles(easy);
+	easy.Math = GameMath()// Add math into this and update all the code to use it :S
 
 	return easy;
 

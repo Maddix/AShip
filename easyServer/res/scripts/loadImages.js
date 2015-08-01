@@ -1,7 +1,7 @@
 // Rename file to LoadImages
 function loadImage(){
 	var images = {};
-	var folder = "res/images/";
+	var folder = "../res/images/";
 	// Could be a dynamic list..
 	var imageUrls = {
 		"player":"ship.png",
@@ -18,7 +18,7 @@ function loadImage(){
 		"engine":"engine.png",
 		"buoy_sprite":"Ping_sprite_small.png"
 	};
-	
+
 	var totalImages = 0;
 	var totalLoaded = 0;
 	// Image callback function
@@ -38,4 +38,3 @@ function loadImage(){
 		images[imageName] = image;
 	}
 }
-

@@ -23,36 +23,36 @@ function InputHandler(easyFrame) {
 			getScrollData: true,
 			keyMapReversed: {},
 			keyMapDefault: { // Keep in mind that the key-codes are from the Jquery event.which, need to add in special characters
-					65:"a", 66:"b", 67:"c", 68:"d", 69:"e", 70:"f", 71:"g",
-					72:"h", 73:"i", 74:"j", 75:"k", 76:"l", 77:"m", 78:"n",
-					79:"o", 80:"p", 81:"q", 82:"r", 83:"s", 84:"t", 85:"u",
-					86:"v", 87:"w", 88:"x", 89:"y", 90:"z",
-					38:"upArrow", 37:"leftArrow", 36:"rightArrow", 40:"downArrow",
-					8:"backspace", 13:"enter", 32:"space", 27:"escape",
-					16:"shift", 17:"ctrl", 18:"alt", 9:"tab",
-					48:"0", 49:"1", 50:"2", 51:"3", 52:"4", 
-					53:"5", 54:"6", 55:"7", 56:"8", 57:"9",
-					188:",", 190:".", 191:"/", 219:"[", 220:"\\", 221:"]", 192:"`",
-					186:";", 222:"'", 189: "-", 187:"=",
-					112:"f1", 113:"f2", 114:"f3", 115:"f4", 116:"f5", 117:"f6",
-					118:"f7", 119:"f8", 120:"f9", 121:"f10", 122:"f11", 123:"f12",
-					1:"LMB", 2:"MMB", 3:"RMB" // Not sure if having these in caps will throw people off.
+				65:"a", 66:"b", 67:"c", 68:"d", 69:"e", 70:"f", 71:"g",
+				72:"h", 73:"i", 74:"j", 75:"k", 76:"l", 77:"m", 78:"n",
+				79:"o", 80:"p", 81:"q", 82:"r", 83:"s", 84:"t", 85:"u",
+				86:"v", 87:"w", 88:"x", 89:"y", 90:"z",
+				38:"upArrow", 37:"leftArrow", 36:"rightArrow", 40:"downArrow",
+				8:"backspace", 13:"enter", 32:"space", 27:"escape",
+				16:"shift", 17:"ctrl", 18:"alt", 9:"tab",
+				48:"0", 49:"1", 50:"2", 51:"3", 52:"4",
+				53:"5", 54:"6", 55:"7", 56:"8", 57:"9",
+				188:",", 190:".", 191:"/", 219:"[", 220:"\\", 221:"]", 192:"`",
+				186:";", 222:"'", 189: "-", 187:"=",
+				112:"f1", 113:"f2", 114:"f3", 115:"f4", 116:"f5", 117:"f6",
+				118:"f7", 119:"f8", 120:"f9", 121:"f10", 122:"f11", 123:"f12",
+				1:"LMB", 2:"MMB", 3:"RMB" // Not sure if having these in caps will throw people off.
 			},
 			keyMapDefaultShift: {
-				49: "!", 50:"@", 51:"#", 52:"$", 53:"%", 54:"^", 
-				55:"&", 56:"*", 57:"(", 58:")", 189:"_", 187:"+", 
+				49: "!", 50:"@", 51:"#", 52:"$", 53:"%", 54:"^",
+				55:"&", 56:"*", 57:"(", 58:")", 189:"_", 187:"+",
 				219:"{", 221:"}", 220:"|", 186:":", 222:'"', 188:"<",
 				190:">", 191:"?", 192:"~"
 			},
 			// Move away from this - ? What?
-			keyMap:{}, // set to default below, this is so we can modify keyMap and still 
+			keyMap:{}, // set to default below, this is so we can modify keyMap and still
 					  // be able to set it back to the default mapping
 			keyMapShift:{}
 		};
-		local.keyMap = this.easy.base.inherit(local.keyMapDefault);
-		local.keyMapShift = this.easy.base.inherit(local.keyMapDefaultShift);
-		this.easy.base.inherit(config, local);
-		
+		local.keyMap = this.easy.Base.extend(local.keyMapDefault);
+		local.keyMapShift = this.easy.Base.extend(local.keyMapDefaultShift);
+		this.easy.Base.extend(config, local);
+
 		local.addKeyEvent = function(key) {
 			if (this.keyEvent[key] === undefined) {
 				if (this.whitelistKeys.length && this.whitelistKeys.indexOf(key) != -1 || this.blacklistKeys.indexOf(key) === -1) {
@@ -61,18 +61,18 @@ function InputHandler(easyFrame) {
 				}
 			}
 		};
-		
+
 		local.changeKeyMapping = function(newMapping) {
 			for (var newKey in newMapping) {
 				delete this.keyMapDefault[this.keyMapReversed[newMapping[newKey]]];
 				this.keyMapDefault[this.keyMapReversed[newKey]] = newMapping[newKey];
 			}
 		};
-		
+
 		local.resetKeyMapping = function() {
 			this.keyMapDefault = localContainer.easy.base.inherit(this.keyMapDefault);
 		};
-		
+
 		local.createReversedKeyMap = function() {
 			this.keyMapReversed = {};
 			for (key in this.keyMapDefault) {
@@ -80,31 +80,31 @@ function InputHandler(easyFrame) {
 			}
 		};
 		local.createReversedKeyMap(); // Call it here since we don't have a setup.
-		
+
 		// this will update the keys that are being held
 		local.update = function() {
 			// get a snapshot of the key/mouse events
 			var newKeyMouse = {
-				keys:localContainer.easy.base.inherit(this.keyEvent), 
-				mouse:localContainer.easy.base.inherit(this.mouseEvent),
-				keyOrder:localContainer.easy.base.inherit(this.keyEventOrder)
+				keys:localContainer.easy.Base.extend(this.keyEvent),
+				mouse:localContainer.easy.Base.extend(this.mouseEvent),
+				keyOrder:localContainer.easy.Base.extend(this.keyEventOrder)
 			};
-			
+
 			// clear both key and mouse events
 			for (var keyIndex in this.removeKeyEvent) {
 				delete this.keyEvent[this.removeKeyEvent[keyIndex]];
 			}
 			this.removeKeyEvent = []; // reset the removeKeyEvent
-			
+
 			for (var mouseIndex in this.removeMouseEvent) {
 				delete this.mouseEvent[this.removeMouseEvent[mouseIndex]];
 			}
 			this.removeMouseEvent = []; // reset the removeMouseEvent
-			
+
 			// return the snapshot
 			return newKeyMouse;
 		};
-		
+
 		// I should create a function that removes all the listeners ?
 		local.setupListeners = function() {
 			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
@@ -126,18 +126,18 @@ function InputHandler(easyFrame) {
 					return false;
 				}
 			});
-			
+
 			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				var shiftKey = local.keyMapShift[jqueryKeyEvent.which];
 				var upper = convertedKey ? convertedKey.toUpperCase() : "";
-				
+
 				if (local.keyEvent[shiftKey]) {
 					convertedKey = shiftKey;
 				} else if (local.keyEvent[upper]) {
 					convertedKey = upper;
 				}
-				
+
 				if (local.keyEvent[convertedKey]) {
 					// This will remove the list of [true, ID] and replace it with false
 					for (var index=0; index < local.keyEventOrder.length; index++) {
@@ -152,15 +152,15 @@ function InputHandler(easyFrame) {
 					return false;
 				}
 			});
-			
+
 			$(this.elementForMouse).on("mousemove", function(jqueryMouseEvent) {
 				local.mouseEvent["mousePosition"] = [
-					jqueryMouseEvent.pageX - $(local.elementForMouse).offset().left, 
+					jqueryMouseEvent.pageX - $(local.elementForMouse).offset().left,
 					jqueryMouseEvent.pageY - $(local.elementForMouse).offset().top
 				];
 			});
-			
-			if (this.getScrollData) {			
+
+			if (this.getScrollData) {
 				$(this.elementForMouse).on("mousewheel", function(jqueryMouseEvent) {
 						var delta = [jqueryMouseEvent.deltaX, jqueryMouseEvent.deltaY];
 						// normalize the scroll delta
@@ -173,14 +173,14 @@ function InputHandler(easyFrame) {
 					return false; // returning false prevents the default action (page scroll)
 				});
 			}
-			
+
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 			$(this.elementForMouse).mousedown(function(jqueryKeyEvent) {
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
 				local.keyEvent[convertedKey] = true; // Might need to pass or prevent repeating
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
-			});		
+			});
 
 			$(this.elementForMouse).mouseup(function(jqueryKeyEvent) {
 				var convertedKey = local.keyMap[jqueryKeyEvent.which];
@@ -191,13 +191,13 @@ function InputHandler(easyFrame) {
 			});
 		};
 		local.setupListeners();
-		
+
 		return local;
 	};
-	
+
 	localContainer.getProfileManager = function(config) {
-		var local = this.easy.base.inherit(this.easy.base.orderedObject(config));
-		
+		var local = this.easy.Base.extend(this.easy.Base.orderedObject(config));
+
 		local.update = function(newKeyList) {
 			var remainingKeys = newKeyList;
 			for (var profileIndex in this.objectNames) {
@@ -206,30 +206,31 @@ function InputHandler(easyFrame) {
 				else break;
 			}
 		};
-		
+
 		return local;
 	};
-	
+
 	localContainer.profile = function(config) {
 		var local = {
 			controlContext: null,
 			validate: function(object) {
 				if (object.inputContext) return true;
+			}
 		};
-		this.easy.base.inherit(this.easy.base.orderedObject(config), local);
-		
+		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
+
 		local.update = function(input) {
 			var remainingKeys = input;
 			if (this.controlContext) var remainingKeys = this.controlContext(remainingKeys);
 			this.iterateOverObjects(function(object) {
 				if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
 				else return true;
-			};
+			});
 			return input;
 		}
-		
+
 		return local;
 	};
-	
+
 	return localContainer;
 };
