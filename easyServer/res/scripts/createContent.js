@@ -75,7 +75,8 @@ function createContent(DATA) {
 	var statsWindow = easy.WindowLib.getMenuWindow({
 		pos: [150, 10],
 		ratio: [170, 60],
-		arrangeStyle: "free"
+		arrangeStyle: "free",
+		name: "statsWindow"
 	});
 	windowManager.add("stats", statsWindow);
 
@@ -120,11 +121,17 @@ function createContent(DATA) {
 	};
 	statsWindow.add("delta_display", deltaWidget);
 
-
+	var dragWidget = easy.WindowLib.widgetDrag({
+		localPos: [0, 0],
+		localRatio: [100, 100],
+		targetWindow: "statsWindow"
+	});
+	statsWindow.add("dragWidget", dragWidget);
 
 
 	menu.add(windowManager);
 	logic.add("windowManager", windowManager);
+	profile.add("windowManager",
 
 	/*
 

@@ -523,7 +523,7 @@ function EasyFrame() {
 			return local;
 		};
 
-		localContainer.eventController = function() {
+		localContainer.getEventController = function() {
 			var local = {
 				newEvents: [],
 				events: [],
@@ -549,11 +549,11 @@ function EasyFrame() {
 		localContainer.manageEvents = function(config) {
 			var local = this.extend(config, local);
 
-			this.createEvent = function(title, message) {
+			local.createEvent = function(title, message) {
 				return {title: title, message: message};
 			};
 
-			this.searchEvents = function(searchFor, events) {
+			local.searchEvents = function(searchFor, events) {
 				var matchingEvents = [];
 				for (var eventIndex=0; eventIndex < events.length; eventIndex++) {
 					var event = events[eventIndex];
@@ -561,7 +561,13 @@ function EasyFrame() {
 						matchingEvents.push(event);
 					};
 				}
-				return matchingEvents
+				return matchingEvents;
+			};
+
+			local.iterateOverEvents = function(events, func) {
+				for (var eventIndex=0; eventIndex < events.length; eventIndex++) {
+					if (func(events[eventIndex])) break;
+				}
 			};
 
 			return local;

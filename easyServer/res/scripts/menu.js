@@ -11,6 +11,7 @@ function WindowLib(easyFrame) {
 
 	localContainer.getMenuContainer = function(config) {
 		var local = {
+			name: "Name me FOOL!",
 			activeObject: null,
 			context: null,
 			active: false,
@@ -25,7 +26,7 @@ function WindowLib(easyFrame) {
 		local.setup = function(context) {
 			this.context = context;
 			this.iterateOverObjects(function(object) {
-				object.setup(context);
+				object.setup(context, local.name);
 			});
 		};
 
@@ -37,13 +38,13 @@ function WindowLib(easyFrame) {
 			}
 		};
 
+		// Left empty to be extended and filled in.
 		local.updateEvents = function(events) {
-
 		};
 
 		local.inputContext = function(input) {
 			var processedInput = undefined;
-			if (checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0) || this.active) {
+			if (localContainer.easy.Math.checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0) || this.active) {
 				for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
 					var object = this.objects[this.objectNames[objectIndex]];
 					processedInput = object.inputContext(input);
@@ -75,9 +76,17 @@ function WindowLib(easyFrame) {
 
 	localContainer.getMenuManager = function(config) {
 		var local = {
-			eventController: this.easy.Base.eventController()
+			eventController: this.easy.Base.getEventController()
 		};
 		this.easy.Base.extend(this.getMenuContainer(config), local);
+
+		local.setup = function(context, name) {
+			this.context = context;
+			this.iterateOverObjects(function(object) {
+				object.setup(context, local.name, this.eventController);
+			});
+
+		};
 
 		local.menuContainer_add = local.add;
 		local.add = function(objectName, object) {
@@ -116,7 +125,7 @@ function WindowLib(easyFrame) {
 			arrangeFunctions: {},
 			eventController: null
 		};
-		this.easy.Base.extend(this.getMenuContainer(config), local);
+		this.easy.Base.extend(this.getMenuContainer(this.easy.Base.manageEvents(config)), local);
 
 		local.arrangeFree = function(objects, objectNames, pos, ratio) {
 			for (var nameIndex in objectNames) {
@@ -130,12 +139,31 @@ function WindowLib(easyFrame) {
 		};
 		if (!local.arrangeFunctions["free"]) local.arrangeFunctions["free"] = local.arrangeFree;
 
-		local.setup = function(context, eventController) {
+		local.setup = function(context, name, eventController) {
 			this.context = context;
+			this.parentName = name;
 			this.eventController = eventController;
 
 			this.iterateOverObjects(function(object) {
 				object.setup(context, eventController);
+			});
+		};
+
+		console.log("TODO: You need to fix the eventController. Make sure it works whether you call setup or add.");
+
+		local.menuContainer_add = local.add;
+		local.add = function(objectName, object) {
+			if (this.menuContainer_add(objectName, object)){
+				if (this.eventController) this.eventController.add(objectName, object);
+				return true;
+			};
+		};
+
+		local.updateEvents = function(events) {
+			console.log("Processing events..");
+			this.iterateOverEvents(this.searchEvents(this.name + "_moveWindow", events), function(event) {
+				console.log("Event Found!");
+				if (event.message.pos) this.pos = event.message.pos;
 			});
 		};
 
@@ -162,9 +190,56 @@ function WindowLib(easyFrame) {
 
 	localContainer.widgetDrag = function(config) {
 		var local = {
-			pos: [0, 0],
-			ratio: [0, 0],
+			dragEvent: null,
+			disable: false,
+			inputActive: false,
+			clicked: false,
+			targetName: "Need a target name!"
+		};
+		this.easy.Base.extend(this.widget(), local, true);
+		this.easy.Base.extend(this.easy.Base.manageEvents(config), local);
 
+		local.updateEvents = function(events) {
+			if (this.dragEvent) {
+				var event = this.dragEvent;
+				this.dragEvent = null;
+				return event;
+			}
+		};
+
+		local.inputContext = function(input) {
+
+			// Setup
+			if (input.keys["LMB"]) {
+				if (!this.clicked) {
+					this.clicked = true;
+					if (localContainer.easy.Math.checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
+						this.inputActive = true;
+					}
+				}
+			}
+
+
+			if (this.inputActive) {
+				this.dragEvent = this.createEvent(this.targetName + "_moveWindow", {pos: input.mouse["mousePosition"]});
+				delete input.keys["LMB"];
+			}
+
+			if (input.keys["LMB"] === false) {
+				this.clicked = false;
+				this.inputActive = false;
+			}
+
+			if (this.inputActive) return input;
+		};
+
+		local.updateLogic = function(frame) {
+
+		};
+
+		local.updateGraphics = function(newPos, newRatio) {
+			this.pos = newPos;
+			this.ratio = newRatio;
 		};
 
 		return local;
@@ -320,8 +395,10 @@ function WindowLib(easyFrame) {
 			ratio: [100, 100],
 			localRatio:[0, 0],
 			context: null,
-			setup:function(context) {
+			parentName: "parent Name!",
+			setup:function(context, name) {
 				this.context = context;
+				this.parentName = name;
 			}
 		};
 	};
