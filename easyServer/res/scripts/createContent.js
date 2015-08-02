@@ -22,27 +22,6 @@ function createContent(DATA) {
 	});
 	backgroundLayer.add(background);
 
-	// Create text objects - Not sure if I need to create them here
-	var fps = easy.Graphics.getAtomText({text:"FPS", color:"white", ratio:[0, 12], pos:[0, 10]});
-	fps.updateText = fps.updateGraphics;
-	fps.updateGraphics = function() {
-		this.updateText();
-	};
-	fps.updateLogic = function(frame) {
-		this.text = "FPS: " + frame.rate;
-
-	};
-	devOverlay.add(fps);
-	logic.add("fps_counter", fps);
-
-	var delta = easy.Graphics.getAtomText({text:"Delta Time", color:"white", ratio:[0, 12], pos:[0, 20]});
-	delta.updateText = delta.updateGraphics;
-	delta.updateLogic = function(frame) {
-		this.text = "Delta Time: " + frame.delta;
-	};
-	devOverlay.add(delta);
-	logic.add("delta_display", delta);
-
 
 	// Directions
 	var up = easy.Graphics.getAtomText({text:"'W' to move forward", color:"white", ratio:[0, 15], pos:[10, 100]});
@@ -53,11 +32,6 @@ function createContent(DATA) {
 	devOverlay.add(back);
 	var space = easy.Graphics.getAtomText({text:"'Space' to reset position and velocity", color:"white", ratio:[0, 15], pos:[10, 190]});
 	devOverlay.add(space);
-
-	if (DATA.debug) {
-		devOverlay.add(fps);
-		devOverlay.add(delta);
-	}
 
 	// * ============= *
 	//    Input profile
@@ -116,13 +90,41 @@ function createContent(DATA) {
 			return input;
 		}
 	});
-	statsWindow.add("background", backgroundWidget);
+	backgroundWidget.updateEvents = function(events) {
+	};
 
+	if (!statsWindow.add("background", backgroundWidget)) console.log("Failed to add background");
+
+	var fpsWidget = easy.WindowLib.getLabelWidget({
+		localPos: [5, 60],
+		text: "FPS:",
+		color: "#3efa1d",
+		font: "Arial Bold",
+		ratio: [0, 12]
+	});
+	fpsWidget.updateLogic = function(frame) {
+		this.text = "FPS: " + frame.rate;
+	};
+	fpsWidget.updateEvents = function(events) {
+	};
+	statsWindow.add("fps_display", fpsWidget);
+
+
+	var deltaWidget = easy.Base.extend(easy.Base.deepCopy(fpsWidget), {
+		localPos: [60, 60],
+		text: "DELTA:",
+		color: "#60e6f4"
+	}, true);
+	deltaWidget.updateLogic = function(frame) {
+		this.text = "DELTA: " + frame.delta;
+	};
+	statsWindow.add("delta_display", deltaWidget);
 
 
 
 
 	menu.add(windowManager);
+	logic.add("windowManager", windowManager);
 
 	/*
 

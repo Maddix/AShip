@@ -454,7 +454,7 @@ function EasyFrame() {
 		localContainer.deepCopy = function(item) {
 			var itemProto = Object.prototype.toString.call(item);
 			var newItem = item;
-			var getItem = function(child) { return localContainer.copyItem(child); };
+			var getItem = function(child) { return localContainer.deepCopy(child); };
 			if (itemProto === Object.prototype.toString.call([])) {
 				newItem = [];
 				for (var itemIndex=0, len=item.length; itemIndex < len; itemIndex++) newItem.push(getItem(item[itemIndex]));
@@ -536,13 +536,36 @@ function EasyFrame() {
 			local.updateLogic = function() {
 				this.events = this.newEvents;
 				this.newEvents = [];
-				for (var nameIndex in this.objectNames) {
-					this.objects[nameIndex].updateEvents(this.events);
-				}
+
+				this.iterateOverObjects(function(object) {
+					var newEvent = object.updateEvents(local.events);
+					if (newEvent) local.newEvents.push(newEvent);
+				});
 			};
 
 			return local;
 		};
+
+		localContainer.manageEvents = function(config) {
+			var local = this.extend(config, local);
+
+			this.createEvent = function(title, message) {
+				return {title: title, message: message};
+			};
+
+			this.searchEvents = function(searchFor, events) {
+				var matchingEvents = [];
+				for (var eventIndex=0; eventIndex < events.length; eventIndex++) {
+					var event = events[eventIndex];
+					if (event.title == searchFor) {
+						matchingEvents.push(event);
+					};
+				}
+				return matchingEvents
+			};
+
+			return local;
+		}
 
 		localContainer.loadImages = function(loadObject, callWhenComplete, folder) {
 			folder = folder ? folder : "";

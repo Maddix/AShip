@@ -16,7 +16,7 @@ function WindowLib(easyFrame) {
 			active: false,
 			inputContext: undefined,
 			validate: function(object) {
-				if (object.updateGraphics && object.setup && object.inputContext) return true;
+				if (object.updateGraphics && object.setup && object.inputContext && object.updateEvents) return true;
 			}
 		};
 		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
@@ -31,8 +31,14 @@ function WindowLib(easyFrame) {
 
 		local.orderedObject_add = local.add;
 		local.add = function(objectName, object) {
-			this.orderedObject_add(objectName, object);
-			if (this.context) object.setup(this.context);
+			if (this.orderedObject_add(objectName, object)) {
+				if (this.context) object.setup(this.context);
+				return true;
+			}
+		};
+
+		local.updateEvents = function(events) {
+
 		};
 
 		local.inputContext = function(input) {
@@ -52,6 +58,12 @@ function WindowLib(easyFrame) {
 			return processedInput;
 		};
 
+		local.updateLogic = function(frame) {
+			this.iterateOverObjects(function(object) {
+				if (object.updateLogic) object.updateLogic(frame);
+			});
+		}
+
 		local.updateGraphics = function() {
 			this.iterateOverObjects(function(object) {
 				object.updateGraphics();
@@ -67,6 +79,20 @@ function WindowLib(easyFrame) {
 		};
 		this.easy.Base.extend(this.getMenuContainer(config), local);
 
+		local.menuContainer_add = local.add;
+		local.add = function(objectName, object) {
+			if (this.menuContainer_add(objectName, object)){
+				this.eventController.add(objectName, object);
+				return true;
+			};
+		};
+
+		local.menuContainer_updateLogic = local.updateLogic;
+		local.updateLogic = function(frame) {
+			this.menuContainer_updateLogic(frame);
+			this.eventController.updateLogic();
+		};
+
 		local.inputContext = function(input) {
 			for (var objectIndex=this.objectNames.length-1; objectIndex >= 0; objectIndex--) {
 				var object = this.objects[this.objectNames[objectIndex]];
@@ -77,10 +103,6 @@ function WindowLib(easyFrame) {
 				}
 			}
 			return input;
-		};
-
-		local.updateLogic = function(frame) {
-			eventController.updateLogic();
 		};
 
 		return local;
@@ -306,11 +328,15 @@ function WindowLib(easyFrame) {
 
 	localContainer.getLabelWidget = function(config) {
 		var local = {};
-		this.easy.Base.extend(this.widget, local);
-		this.easy.Base.extend(this.easy.Base.getAtomText(config), local);
-		local.updateText = local.update;
+		this.easy.Base.extend(this.widget(), local);
+		this.easy.Base.extend(this.easy.Graphics.getAtomText(config), local);
 
-		local.update = function(frame, newPos, ratio) {
+		local.inputContext = function(input) {
+			return input;
+		};
+
+		local.updateText = local.updateGraphics;
+		local.updateGraphics = function(newPos, newRatio) {
 			this.pos = newPos;
 			this.updateText();
 		};
