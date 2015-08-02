@@ -46,45 +46,49 @@ function main() {
 	layerController.createDiv();
 	
 	// Create a canvas to draw images on and add it to the layerController
-	layerController.addLayer("mainLayer", easy.base.getLayer());
+	var mainLayer = easy.Base.getLayer();
+	// Note that it doesn't matter when you add the layer to the layer controller
+	layerController.addLayer("mainLayer", mainLayer);
+	
+	// Create a logic controller, this just calls 'updateLogic' on objects you give it and passes in frame
+	var logicController = easy.Base.getLogicController();
 	
 	/*==============
 	  Create content
 	  ==============*/
 	
-	var rectangle = easy.base.getAtomRectangle({
-		pos:[50, 50], // Set the rectangles position to x = 50, y = 50
-		ratio:[150, 50], // Width, Height
-		color:"green", // Fill color
-		velocity:[5, -5] // displacement in pixels per second
+	var rectangle = easy.Base.getAtomRectangle({
+		pos: [50, 50], // Set the rectangles position to x = 50, y = 50
+		ratio: [150, 50], // Set the width and height of the rectangle
+		color: "green", // Fill color
+		velocity: [5, -5] // Displacement in pixels per second
 	});
 	
-	// getAtomRectangle has a update() function already, so we need to preserve it
-	rectangle.updateRect = rectangle.update;
-	
-	// Give rectangle a new update function
-	rectangle.update = function(frame) {
-		// Change the rectangles position by velocity per second, frame.delta makes sure that the movement is smooth 
+	// Add a updateLogic() function to rectangle
+	rectangle.updateLogic = function(frame) {
+		// Change the rectangles position by velocity per second, frame.delta makes sure that the movement is smooth
 		this.pos[0] += this.velocity[0]*frame.delta;
 		this.pos[1] += this.velocity[1]*frame.delta;
-		// Call the original update function (It doesn't take a frame object)
-		this.updateRect();
 	};
 	
 	// Add our rectangle to the mainLayer
-	layerController.getLayer("mainLayer").add(rectangle);
+	mainLayer.add(rectangle);
+	// Now add it to the logicController
+	logicCOntroller.add("rectangle", rectangle);
 	
 	/*===========
 	  Engine loop
 	  ===========*/
 	
-	var mainLoop = easy.base.loop({
+	var mainLoop = easy.Base.loop({
 		func:function(frame) {
 			// Call update on the layerController and pass in the frame object
-			layerController.update(frame); // layerController will update everything in its object list and so on
+			logicController.update(frame);
+			// Now update the layerController
+			layerController.updateGraphics(); 
 		}, 
 		fps:60, // If your browser is reporting less than 60 fps then set fps to 80 (Such is the case with opera)
-		useRAF:true // Request animation frame
+		useRAF:true // Request animation frame (This makes updates slower, but more consistent)
 	});
 	
 	// Start the loop
