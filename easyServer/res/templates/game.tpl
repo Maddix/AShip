@@ -28,7 +28,7 @@
 		$(function() {
 			//'use strict'; // Used to turn on extra browser warnings?
 			var easy = EasyFrame();
-            easy.base.loadImages({
+            easy.Base.loadImages({
                 "player":"ship.png",
                 "playera":"shipa.png",
                 "playerb":"shipb.png",
