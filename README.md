@@ -25,7 +25,7 @@ I plan on adding audio, websockets, and other cool things.
 
 # Examples
 
-The example below creates a canvas with a green rectangle that moves to the lower right of the screen by 5px a second. (This example is now outdated but still useful.)
+The example below creates a canvas with a green rectangle that moves to the lower right of the screen by 5px a second.
 
 ```javascript
 function main() {
