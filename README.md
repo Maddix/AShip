@@ -74,7 +74,7 @@ function main() {
 	// Add our rectangle to the mainLayer
 	mainLayer.add(rectangle);
 	// Now add it to the logicController
-	logicCOntroller.add("rectangle", rectangle);
+	logicController.add("rectangle", rectangle);
 	
 	/*===========
 	  Engine loop
