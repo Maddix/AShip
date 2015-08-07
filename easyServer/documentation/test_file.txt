@@ -1,0 +1,61 @@
+function Main(parameter_one, parameter_two) {
+	var example = {
+		temp: "example",
+		temp_two: "example_two",
+		exampleFunc: function(param, param, param, param) {
+			// Stuff
+		},
+		temp_three: 1001
+	};
+
+	example.add = function(one, two) {
+		callToThing(function(one) {
+				// Stuff
+			},
+			function(two) {
+				// Stuff
+			},
+			one,
+			two
+		)
+	}
+
+	example.remove = function(this, that) {
+		function inside() {
+			// Stuff
+		}
+
+		callToOutsideStuff(inside(), this, inside(), that)
+	}
+
+	example.crazy = function     ( wee, wooooo, haaaa        ) {
+		//                Still Valid!                                 Yeee sir!
+		callToOutsideStuff(        function   (wee,
+
+			wooooo,
+
+			function(haaaa, "yes") {
+				// Stuff
+			},
+
+			function(              "deeper",
+
+
+
+				function    ( "          end"     ){
+					// Hm
+				}
+			) {
+				// Stuff
+			},
+		){
+
+			// More Stuff
+				}) {
+
+					//Last call
+		}
+
+	return example;
+
+}
