@@ -2,11 +2,18 @@ function Main(parameter_one, parameter_two) {
 	var example = {
 		temp: "example",
 		temp_two: "example_two",
-		exampleFunc: function(param, param, param, param) {
+		temp_three: "This is a multi space string, we should keep this as is.",
+		exampleFunc: function(param, param, param, param) { // Ze comment is here. heheh
 			// Stuff
 		},
 		temp_three: 1001
 	};
+
+
+	console.log("Print This");
+	global = "Foo ya"
+
+	var IgNoRThIs                 =      23
 
 	example.add = function(one, two) {
 		callToThing(function(one) {
