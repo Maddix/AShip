@@ -2,11 +2,7 @@
 
 import sys
 
-PAD_LIST = ["(", ")", ",", ".", ":", "{", "}", "[", "]", "=", "+", "-", ";", "//", "/*", "*/"]
-
-def find(line, text):
-	if line.find(text) != -1:
-		return True
+# Still a work in progress
 
 def load_file(path, filename, operation="r"):
 	file = []
@@ -14,45 +10,9 @@ def load_file(path, filename, operation="r"):
 		file = open_file.readlines()
 	return file
 
-def parse_file(loaded_file, pad_list):
-	parsed = []
-
-	for line in loaded_file:
-		clean = line.strip().strip("\n")
-		cleaned = []
-
-		for item in pad_list:
-			clean = clean.replace(item, " " + item + " ") # Should I use str.format here?
-
-		clean = clean.split(" ")
-		# Keep track if we pass the single line comment syntax
-		isComment = False
-		for item in clean:
-			if item is not "":
-				if item.strip() == "//":
-					isComment = True
-				if not isComment:
-					cleaned.append(item)
-
-		if cleaned != []:
-			parsed.extend(cleaned)
-
-	return parsed
-
-
-def make_thought(lines):
-	pass
-
+# This is the sketchyest code I have ever written. I feel ashamed. It does work though.
 def parse_new(loaded_file):
 	#print(loaded_file)
-	thought = {
-		"head": "",
-		"parameters": [],
-		"body": {}
-	}
-
-
-
 	cleaned = []
 	for line in loaded_file:
 		striped = line.strip().split("//")[0]
@@ -94,16 +54,16 @@ def parse_new(loaded_file):
 			marker = group
 			for foot in depth:
 				marker = marker[foot]
-			t = line.split(" ")[0]
-			print("->", t)
-			marker[t] = []
+			local_name = line.split(" ")[0]
+			print("->", local_name)
+			marker[local_name] = []
 
 		if get_local_defaults:
 			marker = group
 			for foot in depth:
 				marker = marker[foot]
 			#print(marker)
-			marker.append(line)
+			marker[0].append(line)
 			print("- - ->", line)
 
 		if line.count("var local ="):
@@ -111,8 +71,9 @@ def parse_new(loaded_file):
 			marker = group
 			for foot in depth:
 				marker = marker[foot]
-			marker["defaults"] = []
-			depth.append(t)
+			marker[local_name].append([])
+			depth.append(local_name)
+
 
 		if get_local_defaults and line.count("};"):
 			get_local_defaults = False
@@ -133,25 +94,10 @@ def parse_new(loaded_file):
 			depth.pop()
 			print(line)
 
-	print(group)
+	# I don't think I need levels..
 	print(level_map)
 
+	return group
 
-# parsed_file should be reversed at least when you call it from outside the function
-# parent_objects should be a dict
-def format_parsed_file(parsed_file):
-
-	for word in parsed_file:
-		print(word)
-
-
-#print(format_parsed_file(parse_file(load_file("", "test_file.txt"), PAD_LIST).reverse()))
 loaded = load_file("", "test_file.txt")
-parsed = parse_file(loaded, PAD_LIST)
-#print(parsed)
-
-
-#formated = format_parsed_file(parsed)
-#print(formated)
-
-parse_new(loaded)
+print(parse_new(loaded))
