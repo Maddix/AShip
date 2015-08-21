@@ -107,6 +107,7 @@ function GameMath() {
 	};
 
 	// Make parameters more understandable
+	// Will return true if anything messes up. Change it so that it returns undefined if the function breaks.
 	local.checkWithinBounds = function(pos, boxOrigin, boxRatio, offset) {
 		var inside = true;
 		// left or right
