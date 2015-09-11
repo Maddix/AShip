@@ -69,6 +69,8 @@ function createContent(DATA) {
 	// Windows
 	// -------
 
+	/*
+
 	var windowManager = easy.WindowLib.getMenuManager();
 	DATA.windowManager = windowManager;
 
@@ -132,6 +134,8 @@ function createContent(DATA) {
 	menu.add(windowManager);
 	logic.add("windowManager", windowManager);
 	profile.add("windowManager",
+
+	*/
 
 	/*
 

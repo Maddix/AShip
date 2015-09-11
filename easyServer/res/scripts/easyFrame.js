@@ -473,9 +473,8 @@ function EasyFrame() {
 				objects: {},
 				objectNames: [],
 				// validate is a function that takes a object and returns a bool depending if the object has what you want.
-				// Ugh, need to fix this.
 				validate: function(object) {
-						return object;
+						return true;
 					}
 			};
 			this.extend(config, local);
@@ -514,7 +513,7 @@ function EasyFrame() {
 
 			// func takes an object.
 			local.iterateOverObjects = function(func) {
-				for (var nameIndex in this.objectNames) {
+				for (var nameIndex=0; nameIndex < this.objectNames.length; nameIndex++) {
 					// Might not be completely clear. If you return true then we break.
 					if (func(this.objects[this.objectNames[nameIndex]])) break;
 				}
