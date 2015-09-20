@@ -1,6 +1,6 @@
 
 function createContent(DATA) {
-// Define common layers from the layerController
+	// Define common layers from the layerController
 	var backgroundLayer = DATA.layerController.getLayer("backgroundLayer");
 	var particleLayer = DATA.layerController.getLayer("particleLayer");
 	var objectLayer = DATA.layerController.getLayer("objectLayer");
@@ -33,7 +33,7 @@ function createContent(DATA) {
 	var space = easy.Graphics.getAtomText({text:"'Space' to reset position and velocity", color:"white", ratio:[0, 15], pos:[10, 190]});
 	devOverlay.add(space);
 
-	// * ============= *
+	// *  ============= *
 	//    Input profile
 	// *  ============= *
 
@@ -131,11 +131,11 @@ function createContent(DATA) {
 
 	menu.add(windowManager);
 	logic.add("windowManager", windowManager);
-	profile.add("windowManager",
+	profile.add("windowManager", windowManager);
 
 	/*
 
-	* ======= *
+	*  ======= *
 	   Windows
 	*  ======= *
 

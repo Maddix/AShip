@@ -445,9 +445,9 @@ function EasyFrame() {
 
 		// Better named and fits better I think.
 		// Note, only extend objects of the same type; piece and object must be the same type.
-		localContainer.extend = function(piece, object, overwrite) {
+		localContainer.extend = function(piece, object, dontOverwrite) {
 			object = object ? object : {};
-			if (piece) for (var item in piece) if (!object[item] || !overwrite) object[item] = piece[item];
+			if (piece) for (var item in piece) if (!object[item] || !dontOverwrite) object[item] = piece[item];
 			return object;
 		}
 

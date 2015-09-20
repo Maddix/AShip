@@ -11,7 +11,7 @@ function WindowLib(easyFrame) {
 
 	localContainer.getMenuContainer = function(config) {
 		var local = {
-			name: "Name me FOOL!",
+			name: "Unnamed_Object",
 			activeObject: null,
 			context: null,
 			active: false,
@@ -85,7 +85,6 @@ function WindowLib(easyFrame) {
 			this.iterateOverObjects(function(object) {
 				object.setup(context, local.name, this.eventController);
 			});
-
 		};
 
 		local.menuContainer_add = local.add;
@@ -161,7 +160,9 @@ function WindowLib(easyFrame) {
 
 		local.updateEvents = function(events) {
 			console.log("Processing events..");
-			this.iterateOverEvents(this.searchEvents(this.name + "_moveWindow", events), function(event) {
+			//if (events) console.log("Events:", events);
+
+			this.iterateOverEvents(this.searchEvents("_moveWindow", events), function(event) {
 				console.log("Event Found!");
 				if (event.message.pos) this.pos = event.message.pos;
 			});
@@ -212,6 +213,7 @@ function WindowLib(easyFrame) {
 			// Setup
 			if (input.keys["LMB"]) {
 				if (!this.clicked) {
+					console.log("clicked");
 					this.clicked = true;
 					if (localContainer.easy.Math.checkWithinBounds(input.mouse["mousePosition"], this.pos, this.ratio, 0)) {
 						this.inputActive = true;
@@ -219,13 +221,13 @@ function WindowLib(easyFrame) {
 				}
 			}
 
-
 			if (this.inputActive) {
-				this.dragEvent = this.createEvent(this.targetName + "_moveWindow", {pos: input.mouse["mousePosition"]});
+				this.dragEvent = this.createEvent("_moveWindow", {pos: input.mouse["mousePosition"]});
 				delete input.keys["LMB"];
 			}
 
 			if (input.keys["LMB"] === false) {
+				console.log("Released");
 				this.clicked = false;
 				this.inputActive = false;
 			}

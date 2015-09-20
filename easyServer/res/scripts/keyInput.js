@@ -3,7 +3,7 @@
 
 function InputHandler(easyFrame) {
 	var localContainer = {
-		version:"1.0",
+		version:"3.0",
 		requires: "Jquery 2.0.3+ and Jquery-mousewheel",
 		easy:easyFrame
 	};
