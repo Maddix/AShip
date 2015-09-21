@@ -1,4 +1,4 @@
-// Maddix 2/1/2014 (MM/DD/YYYY)
+// Maddix - Started 2/1/2014 (MM/DD/YYYY)
 
 // /////////////////////////////////////////////
 // General Notes for understanding this micro-framework(?)
@@ -9,21 +9,16 @@
 // - context is a Canvas.context("2d") object
 
 // I think I might need name-spaces.
-// Overhauling object extendance with early and late code merging. I need to overhaul the way
-// objects update too. I also need to fix the window system and start using that. I have one to
-// many layers. (WindowController -> Window -> Block -> Widget) Window and Block serve the same
-// purpose and as such makes things more confusing and error prone.
 
 // Objects need a way to communicate. Different systems need it too. I then need to handle world-space
 // and object-space which will tie into collision detection and objects interacting.
-
-// Split Objects from functions?
 
 // This is a Micro-framework (I hope.)
 function EasyFrame() {
 
 	'use strict'; // Not sure if this does anything any more.
 
+	// Not sure I need this.
 	function layers() {
 		var localContainer = {
 			version:"1"
@@ -334,7 +329,7 @@ function EasyFrame() {
 		localContainer.getBaseShape = function() {
 			return Base.extend(this.atom(), {
 				ratio:[100, 100],
-				color:"white"
+				color:"white" // Should be black?
 			});
 		};
 
@@ -347,41 +342,37 @@ function EasyFrame() {
 			};
 		};
 
-		// No border FYI
-		localContainer.getAtomRectangleSimple = function(config) {
-			var local = this.getBaseShape();
+		// Should I move includeBorder into the config?
+		localContainer.getRectangle = function(config, includeBorder) {
+			var local = {};
+			Base.extend(this.getBaseShape(), local);
+			if (includeBorder) Base.extend(this.getBaseBorder(), local);
 			Base.extend(config, local);
 
-			local.updateGraphics = function() {
-				// Blur, its really slow. Cash the object with the blur when in use.
-				//this.context.shadowBlur = 1;
-				//this.context.shadowColor = "black";
+			if (includeBorder) {
+				local.updateGraphics = function() {
+					this.context.beginPath();
+					this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
+					this.context.globalAlpha = this.alpha;
+					this.context.fillStyle = this.color;
+					this.context.fill();
+					// Rect border
+					this.context.globalAlpha = this.borderAlpha;
+					this.context.lineJoin = this.borderStyle;
+					this.context.lineWidth = this.borderWidth;
+					this.context.strokeStyle = this.borderColor;
+					this.context.stroke();
+				};
+			} else {
+				local.updateGraphics = this.updateGraphics = function() {
+					this.context.beginPath();
+					this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
+					this.context.globalAlpha = this.alpha;
+					this.context.fillStyle = this.color;
+					this.context.fill();
+				};
+			}
 
-				this.context.beginPath();
-				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
-				this.context.globalAlpha = this.alpha;
-				this.context.fillStyle = this.color;
-				this.context.fill();
-			};
-			return local;
-		};
-
-		// About the same speed as the non simple function..
-		localContainer.getAtomRectangle = function(config) {
-			var local = this.getBaseBorder();
-			Base.extend(this.getAtomRectangleSimple(config), local);
-			// This system isn't fool proof, I might need another.
-			local.updateRectangleColor = local.updateGraphics;
-			local.updateGraphics = function() {
-				this.updateRectangleColor();
-
-				// Rect border
-				this.context.globalAlpha = this.borderAlpha;
-				this.context.lineJoin = this.borderStyle;
-				this.context.lineWidth = this.borderWidth;
-				this.context.strokeStyle = this.borderColor;
-				this.context.stroke();
-			};
 			return local;
 		};
 
@@ -394,10 +385,10 @@ function EasyFrame() {
 			Base(config, local);
 			local.updateGraphics = function() {
 				this.context.globalAlpha = this.alpha;
-				this.context.beginPath(); // ?
+				this.context.beginPath(); // Needed. Major lag if removed.
 				this.context.moveTo(this.pos[0], this.pos[1]);
 				this.context.lineTo(this.pos[0] + this.ratio[0], this.pos[1] + this.ratio[1]);
-				this.context.closePath(); // ?
+				this.context.closePath(); // ? Not so sure if needed.
 				this.context.lineJoin = this.style;
 				this.context.lineWidth = this.lineWidth;
 				this.context.strokeStyle = this.color;
@@ -442,9 +433,7 @@ function EasyFrame() {
 			version:"1" // Not really used. Heh
 		};
 
-
-		// Better named and fits better I think.
-		// Note, only extend objects of the same type; piece and object must be the same type.
+		// Only works with objects. Set overwrite to true to only copy undefined keys.
 		localContainer.extend = function(piece, object, overwrite) {
 			object = object ? object : {};
 			if (piece) for (var item in piece) if (!object[item] || !overwrite) object[item] = piece[item];
@@ -514,8 +503,8 @@ function EasyFrame() {
 			// func takes an object.
 			local.iterateOverObjects = function(func) {
 				for (var nameIndex=0; nameIndex < this.objectNames.length; nameIndex++) {
-					// Might not be completely clear. If you return true then we break.
-					if (func(this.objects[this.objectNames[nameIndex]])) break;
+					// Might not be completely clear. If you return true then we break. Return false to continue.
+					if (func(this.objects[this.objectNames[nameIndex]], this.objectNames[nameIndex])) break;
 				}
 			}
 
@@ -736,7 +725,7 @@ function EasyFrame() {
 	easy.WindowLib = WindowLib(easy);
 	easy.InputHandler = InputHandler(easy);
 	easy.Particles = Particles(easy);
-	easy.Math = GameMath()// Add math into this and update all the code to use it :S
+	easy.Math = GameMath() // Add math into this and update all the code to use it :S
 
 	return easy;
 

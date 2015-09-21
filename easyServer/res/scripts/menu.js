@@ -7,70 +7,147 @@ function WindowLib(easyFrame) {
 		easy: easyFrame
 	};
 
+	localContainer.widget = function() {
+		return {
+			arrangePos: [0, 0], // 0 to 1
+			arrangeRatio: [1, 1], // 0 to 1
+			isMouseOver: function(mousePosition) {
+				return easy.Math.checkWithinBounds(mousePosition, this.pos, this.ratio, 0);
+			}
+		};
+	};
 
-	localContainer.container = function(config) {
+	localContainer.containerController = function(config) {
 		var local = {
-			pos: [0, 0],
-			ratio: [0, 0],
-			arrangePos: [50, 50], // Position self in the center of parent container
-			//arrangeRatio: [50 50], // Fill half of the parent container
-			events: [], // [{type:"", target:"", data:{}}, ..]
-			handleEvent: function(event) {
-
-			},
 			validate: function(object) {
-				return true;
+				if (object.setup
+				   	&& object.inputContext) return true;
 			}
 		};
 		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
 		this.easy.Base.extend(config, local);
 
 		local.setup = function(context) {
-			var this.context = context
 			this.iterateOverObjects(function(object) {
 				object.setup(context);
 			});
 		};
 
-		local.updateLogic = function(frame, positionData) {
-			// Arrange self
-			this.pos = [
-				positionData.pos[0] + (positionData.pos[0] * (this.arrangePos[0] / 100)),
-				positionData.pos[1] + (positionData.pos[1] * (this.arrangePos[1] / 100))
-			]
+		local.updateLogic = function(frame) {
 
-			// Arrange children
 			this.iterateOverObjects(function(object) {
-				object.updateLogic(frame, {
-					pos: local.pos
-				});
+				object.pos = [
+					local.pos[0] + (local.ratio[0] * object.arrangePos[0]),
+					local.pos[1] + (local.ratio[1] * object.arrangePos[1])
+				];
+				object.ratio = [
+					local.ratio[0] * object.arrangeRatio[0],
+					local.ratio[1] * object.arrangeRatio[1],
+				];
+				object.updateLogic(frame);
 			});
+
 		};
 
-		local.eventContext = function(events) {
-			var newEvents = [];
-			this.iterateOverObjects(function(object) {
-				object.eventContext(events).forEach(function(item) {
-					newEvents.push(item);
-				});
-			});
-		};
 
-		local.processEvents = function() {
-			for (var eventIndex=0; eventIndex < this.events.length; eventIndex++) {
-				this.handleEvent(this.events[eventIndex]);
-			}
-			this.events = [];
-		};
-
+		// Return false/undefined for not found, object for found.
 		local.inputContext = function(input) {
-
-
+			this.iterateOverObjects(function(object, name) {
+				if (object.isMouseOver(input.mouse["mousePosition"])) {
+					local.changePosition(name, 0);
+					var used = this.objects[found].inputContext(input);
+					if (used) {
+						input = used;
+						return true; // Break
+					}
+				}
+			});
+			return input;
 		};
 
 		return local;
 	};
 
+	localContainer.container = function(config) {
+		var local = {
+			pos: [0, 0],
+			ratio: [0, 0],
+			arrangePos: [.5, .5], // Position self in the center of parent container
+			arrangeRatio: [.5, .5], // Fill half of the parent container
+			context: undefined,
+			validate: function(object) {
+				if (object.setup
+					&& object.arrangePos
+					&& object.arrangeRatio
+					&& object.inputContext) return true;
+			}
+		};
+		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
+		this.easy.Base.extend(this.widget(), local);
+		this.easy.Base.extend(config, local);
+
+		local.setup = function(context) {
+			this.context = context;
+			this.iterateOverObjects(function(object) {
+				object.setup(context);
+			});
+		};
+
+		local.updateLogic = function(frame) {
+
+			// Arrange children - In this case arrange free
+			this.iterateOverObjects(function(object) {
+				object.pos = [
+					local.pos[0] + (local.ratio[0] * object.arrangePos[0]),
+					local.pos[1] + (local.ratio[1] * object.arrangePos[1])
+				];
+				object.ratio = [
+					local.ratio[0] * object.arrangeRatio[0],
+					local.ratio[1] * object.arrangeRatio[1],
+				];
+				object.updateLogic(frame);
+			});
+		};
+
+		local.updateGraphics = function() {
+			this.iterateOverObjects(function(object) {
+				object.updateGraphics();
+			});
+		};
+
+		local.eventContext = function(events) {
+
+		};
+
+		local.inputContext = function(input) {
+			this.iterateOverObjects(function(object, name) {
+				if (object.isMouseOver(input.mouse["mousePosition"])) {
+					local.changePosition(name, 0);
+					var used = this.objects[found].inputContext(input);
+					if (used) {
+						input = used;
+						return true; // Break
+					}
+				}
+			});
+			return input;
+		};
+
+		return local;
+	};
+
+	localContainer.square = function(config) {
+		var local = this.easy.Base.extend(this.widget());
+		this.easy.Base.extend(this.easy.Graphics.getRectangle(config, true), local);
+		local.updateLogic = function(frame) {
+			//console.log(this.arrangePos);
+		};
+
+		local.inputContext = function(context) {
+		};
+
+		return local;
+	};
 
 
 	return localContainer;

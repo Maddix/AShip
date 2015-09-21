@@ -15,13 +15,12 @@ function createContent(DATA) {
 	*  ====================== */
 
 	// Background rect, to be the bottom layer
-	var background = easy.Graphics.getAtomRectangle({
+	var background = easy.Graphics.getRectangle({
 		pos:[0, 0],
 		ratio:[DATA.screenRatio[0], DATA.screenRatio[1]],
 		color:"black"
 	});
 	backgroundLayer.add(background);
-
 
 	// Directions
 	var up = easy.Graphics.getAtomText({text:"'W' to move forward", color:"white", ratio:[0, 15], pos:[10, 100]});
@@ -33,7 +32,7 @@ function createContent(DATA) {
 	var space = easy.Graphics.getAtomText({text:"'Space' to reset position and velocity", color:"white", ratio:[0, 15], pos:[10, 190]});
 	devOverlay.add(space);
 
-	// * ============= *
+	// *  ============= *
 	//    Input profile
 	// *  ============= *
 
@@ -68,6 +67,34 @@ function createContent(DATA) {
 	// -------
 	// Windows
 	// -------
+
+	var containerController = easy.WindowLib.container({
+		pos: [100, 100],
+		ratio: [200, 200]
+		//arrangePos: [.1, .1],
+		//arrangeRatio: [.5, .5]
+	});
+
+	var container = easy.WindowLib.container({
+		arrangePos: [0, 0],
+		arrangeRatio: [1, 1]
+	});
+
+	var square = easy.WindowLib.square({
+		color: "orange",
+		borderColor: "white",
+		borderWidth: 2,
+		arrangePos: [0, 0],
+		arrangeRatio: [1, .15]
+	});
+
+
+	container.add("square", square);
+	containerController.add("win", container);
+
+	console.log(menu.add(containerController));
+	console.log(containerController.context);
+	console.log(logic.add("windowController", containerController));
 
 	/*
 
