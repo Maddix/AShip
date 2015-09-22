@@ -23,13 +23,13 @@ function createContent(DATA) {
 	backgroundLayer.add(background);
 
 	// Directions
-	var up = easy.Graphics.getAtomText({text:"'W' to move forward", color:"white", ratio:[0, 15], pos:[10, 100]});
+	var up = easy.Graphics.getText({text:"'W' to move forward", color:"white", pos:[10, 100]}, 15);
 	devOverlay.add(up);
-	var side = easy.Graphics.getAtomText({text:"'A' & 'D' to move left and right", color:"white", ratio:[0, 15], pos:[10, 130]});
+	var side = easy.Graphics.getText({text:"'A' & 'D' to move left and right", color:"white", pos:[10, 130]}, 15);
 	devOverlay.add(side);
-	var back = easy.Graphics.getAtomText({text:"'S' to move backward", color:"white", ratio:[0, 15], pos:[10, 160]});
+	var back = easy.Graphics.getText({text:"'S' to move backward", color:"white", pos:[10, 160]}, 15);
 	devOverlay.add(back);
-	var space = easy.Graphics.getAtomText({text:"'Space' to reset position and velocity", color:"white", ratio:[0, 15], pos:[10, 190]});
+	var space = easy.Graphics.getText({text:"'Space' to reset position and velocity", color:"white", pos:[10, 190]}, 15);
 	devOverlay.add(space);
 
 	// *  ============= *
@@ -69,32 +69,54 @@ function createContent(DATA) {
 	// -------
 
 	var containerController = easy.WindowLib.container({
-		pos: [100, 100],
-		ratio: [200, 200]
-		//arrangePos: [.1, .1],
-		//arrangeRatio: [.5, .5]
+		pos: [0, 0],
+		ratio: DATA.screenRatio
 	});
 
-	var container = easy.WindowLib.container({
+	console.log("Adding containerController to menu layer status:", menu.add(containerController));
+	console.log("Adding containerController to logic layer status:", logic.add("windowController", containerController));
+
+	// FPS and Delta display
+	// ---------------------
+
+	var displayFPS = easy.WindowLib.text({
+		text: "FPS:",
+		arrangePos: [.1, .5],
+		arrangeRatio: [0, 0],
+		baseline: "middle"
+	}, 15);
+	displayFPS.updateLogic = function(frame) {
+		this.text = "FPS: " + frame.rate;
+	};
+
+	var displayDelta = easy.WindowLib.text({
+		text: "Delta:",
+		arrangePos: [.6, .5],
+		arrangeRatio: [0, 0],
+		baseline: "middle"
+	}, 15);
+	displayDelta.updateLogic = function(frame) {
+		this.text = "Delta: " + frame.delta;
+	};
+
+	var displayBackground = easy.WindowLib.square({
+		color: "orange",
+		borderWidth: 2,
+		borderColor: "white",
 		arrangePos: [0, 0],
 		arrangeRatio: [1, 1]
 	});
 
-	var square = easy.WindowLib.square({
-		color: "orange",
-		borderColor: "white",
-		borderWidth: 2,
-		arrangePos: [0, 0],
-		arrangeRatio: [1, .15]
+	var displayContainer = easy.WindowLib.container({
+		arrangePos: [.6, .05],
+		arrangeRatio: [.35, .05]
 	});
 
+	displayContainer.add("background", displayBackground);
+	displayContainer.add("fps", displayFPS);
+	displayContainer.add("delta", displayDelta);
 
-	container.add("square", square);
-	containerController.add("win", container);
-
-	console.log(menu.add(containerController));
-	console.log(containerController.context);
-	console.log(logic.add("windowController", containerController));
+	containerController.add("display", displayContainer);
 
 	/*
 

@@ -16,7 +16,7 @@
 // This is a Micro-framework (I hope.)
 function EasyFrame() {
 
-	'use strict'; // Not sure if this does anything any more.
+	'use strict'; // Try putting this somewhere "var private = {};" It should throw an error.
 
 	// Not sure I need this.
 	function layers() {
@@ -32,6 +32,8 @@ function EasyFrame() {
 			version:"1"
 		};
 
+
+		// Should this have orderedObject? I think so..
 		localContainer.getLayer = function() {
 			var local = {
 				canvas: undefined,
@@ -296,22 +298,37 @@ function EasyFrame() {
 			return local;
 		};
 
-		localContainer.getAtomText = function(config) {
+		localContainer.getText = function(config, fontWidth) {
+			// Can't be touched from outside the constructor. (^'u')^ - {yey}
+			var privateLocal = {
+				width: 0, // This is determined by the height and length of local.text
+				height: fontWidth ? fontWidth : 12
+			};
 			var local = {
 				text: "null",
-				ratio: [0, 20], // text width, text height
 				font:"Arial",
 				color:"white",
-				align: "start",
-				baseline: "alphabetic"
+				align: "start", // start, end, left, center, right
+				baseline: "alphabetic" // top, bottom, middle, alphabetic, hanging
 			};
 			Base.extend(this.atom(), local);
 			Base.extend(config, local);
 
-			local.setTextWidth = function() {
-				this.context.font = this.ratio[1] + "px " + this.font;
-				this.ratio[0] = this.context.measureText(this.text).width;
-				//console.log(this.text + " is " + this.ratio[0] + "px big!");
+			local.setSize = function(height) {
+				privateLocal.height = height;
+			};
+
+			local.getSize = function() {
+				return [privateLocal.width, privateLocal.height];
+			};
+
+			local.setFont = function() {
+				this.context.font = privateLocal.height + "px " + this.font;
+			};
+
+			local.getTextWidth = function() {
+				this.setFont();
+				privateLocal.width = this.context.measureText(this.text).width;
 			};
 
 			local.updateGraphics = function() {
@@ -319,12 +336,12 @@ function EasyFrame() {
 				this.context.fillStyle = this.color;
 				this.context.textAlign = this.align;
 				this.context.textBaseline = this.baseline;
-				this.context.font = this.ratio[1] + "px " + this.font;
+				this.setFont();
 				this.context.fillText(this.text, this.pos[0], this.pos[1]);
 			};
+
 			return local;
 		};
-
 
 		localContainer.getBaseShape = function() {
 			return Base.extend(this.atom(), {
