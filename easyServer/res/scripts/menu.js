@@ -11,9 +11,16 @@ function WindowLib(easyFrame) {
 		return {
 			arrangePos: [0, 0], // 0 to 1
 			arrangeRatio: [1, 1], // 0 to 1
+			active: false,
 			isMouseOver: function(mousePosition) {
-				return easy.Math.checkWithinBounds(mousePosition, this.pos, this.ratio, 0);
-			}
+				return localContainer.easy.Math.checkWithinBounds(mousePosition, this.pos, this.ratio, 0);
+			},
+			mouserOver: function() {
+				this.active = true;
+			},
+			//mouseOff: function() {
+			//	this.active = false;
+			//}
 		};
 	};
 
@@ -29,10 +36,10 @@ function WindowLib(easyFrame) {
 					&& object.arrangePos
 					&& object.arrangeRatio
 					&& object.inputContext) return true;
-			}
+			},
+			reversedObjectNames: []
 		};
 		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
-		this.easy.Base.extend(this.widget(), local);
 		this.easy.Base.extend(config, local);
 
 		local.setup = function(context) {
@@ -42,15 +49,26 @@ function WindowLib(easyFrame) {
 			});
 		};
 
+		local.isMouseOver = function(mousePosition) {
+			return localContainer.easy.Math.checkWithinBounds(mousePosition, this.pos, this.ratio, 0);
+		},
+
 		local.orderedObject_add = local.add;
 		local.add = function(objectName, object) {
-			if (this.orderedObject_add(objectName, object) && this.context) {
-				object.setup(this.context);
+			if (this.orderedObject_add(objectName, object)) {
+				if (this.context) object.setup(this.context);
+				this.reversedObjectNames.splice(0, 0, objectName);
+			}
+		};
+
+		local.reverseIterateOverObjects = function(func) {
+			for (var nameIndex=this.reversedObjectNames.length-1; 0 <= nameIndex; nameIndex--) {
+				// Might not be completely clear. If you return true then we break. Return false to continue.
+				if (func(this.objects[this.reversedObjectNames[nameIndex]], this.reversedObjectNames[nameIndex])) break;
 			}
 		};
 
 		local.updateLogic = function(frame) {
-
 			// Arrange children - In this case arrange free
 			this.iterateOverObjects(function(object) {
 				object.pos = [
@@ -76,14 +94,21 @@ function WindowLib(easyFrame) {
 		};
 
 		local.inputContext = function(input) {
-			this.iterateOverObjects(function(object, name) {
+			this.reverseIterateOverObjects(function(object, name) {
 				if (object.isMouseOver(input.mouse["mousePosition"])) {
-					local.changePosition(name, 0);
-					var used = this.objects[found].inputContext(input);
+					//local.changePosition(name);
+					var used = object.inputContext(input);
 					if (used) {
+						//console.log(name);
+						if (!object.active) object.active = true;
 						input = used;
 						return true; // Break
 					}
+				}
+				if (object.active) {
+					object.active = false;
+					console.log("This!", name);
+					object.mouseOff();
 				}
 			});
 			return input;
@@ -99,12 +124,11 @@ function WindowLib(easyFrame) {
 			//console.log(this.arrangePos);
 		};
 
-		local.inputContext = function(context) {
+		local.inputContext = function(input) {
 		};
 
 		return local;
 	};
-
 
 	localContainer.text = function(config, fontWidth) {
 		var local = this.easy.Base.extend(this.widget());
@@ -119,8 +143,38 @@ function WindowLib(easyFrame) {
 			//console.log(this.arrangePos);
 		};
 
-		local.inputContext = function(context) {
+		local.inputContext = function(input) {
+
 		};
+
+		return local;
+	};
+
+	localContainer.touchSquare = function(config) {
+		var local = {
+		};
+		this.easy.Base.extend(this.square(config), local);
+
+		local.mouseOff = function() {
+			this.color = "orange";
+			console.log("PRESSED!");
+		};
+
+		local.inputContext = function(input) {
+			if (this.active) this.color = "pink";
+			console.log("input!");
+			if (input.keys["LMB"]) {
+				console.log("Pressed");
+				delete input.keys["LMB"];
+			}
+
+			if (input.keys["LMB"] === false) {
+				console.log("Released");
+				delete input.keys["LMB"];
+			}
+
+			return input;
+		}
 
 		return local;
 	};

@@ -99,7 +99,7 @@ function createContent(DATA) {
 		this.text = "Delta: " + frame.delta;
 	};
 
-	var displayBackground = easy.WindowLib.square({
+	var displayBackground = easy.WindowLib.touchSquare({
 		color: "orange",
 		borderWidth: 2,
 		borderColor: "white",
@@ -115,8 +115,12 @@ function createContent(DATA) {
 	displayContainer.add("background", displayBackground);
 	displayContainer.add("fps", displayFPS);
 	displayContainer.add("delta", displayDelta);
+	console.log(displayContainer.objectNames)
+
 
 	containerController.add("display", displayContainer);
+
+	profile.add("container", containerController);
 
 	/*
 

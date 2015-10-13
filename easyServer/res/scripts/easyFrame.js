@@ -474,14 +474,14 @@ function EasyFrame() {
 
 
 		// Should I add hasObject, getObjectNames functions?
-		localContainer.orderedObject = function(config) {
+		localContainer.orderedObject = function(config) {this.active = true;
 			var local = {
 				objects: {},
 				objectNames: [],
 				// validate is a function that takes a object and returns a bool depending if the object has what you want.
 				validate: function(object) {
-						return true;
-					}
+					return true;
+				}
 			};
 			this.extend(config, local);
 
