@@ -195,39 +195,23 @@ function InputHandler(easyFrame) {
 		return local;
 	};
 
-	localContainer.getProfileManager = function(config) {
-		var local = this.easy.Base.extend(this.easy.Base.orderedObject(config));
-
-		local.update = function(newKeyList) {
-			var remainingKeys = newKeyList;
-			for (var profileIndex in this.objectNames) {
-				var profile = this.objects[this.objectNames[profileIndex]];
-				if (remainingKeys) remainingKeys = profile.update(remainingKeys);
-				else break;
-			}
-		};
-
-		return local;
-	};
-
-	localContainer.profile = function(config) {
+	// Profiles just hold groups of objects that have inputContexts. They can even hold other Profiles.
+	localContainer.Profile = function(config) {
 		var local = {
-			controlContext: null,
 			validate: function(object) {
 				if (object.inputContext) return true;
 			}
 		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
+		this.easy.Base.extend(this.easy.Base.orderedObject(config), local, true);
 
-		local.update = function(input) {
+		local.inputContext = function(input) {
 			var remainingKeys = input;
-			if (this.controlContext) var remainingKeys = this.controlContext(remainingKeys);
-			this.iterateOverObjects(function(object) {
+			this.iterateOverObjects(function(object, name) {
 				if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
-				else return true;
+				else return true; // break out of the loop
 			});
 			return input;
-		}
+		};
 
 		return local;
 	};

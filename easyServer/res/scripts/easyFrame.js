@@ -16,10 +16,10 @@
 // This is a Micro-framework (I hope.)
 function EasyFrame() {
 
-	'use strict'; // Try putting this somewhere "var private = {};" It should throw an error.
+	'use strict'; // Try putting 'var private = {};' somewhere. It should throw an error.
 
 	// Not sure I need this.
-	function layers() {
+	function Layers() {
 		var localContainer = {
 			version:"1"
 		};
@@ -33,7 +33,9 @@ function EasyFrame() {
 		};
 
 
-		// Should this have orderedObject? I think so..
+		// Should this have orderedObject? I think so.. (edit: HA I should add it!)
+		// TODO: Should this be a orderedObject? I at the very least should change
+		// 		 add to take a name and let you remove objects.
 		localContainer.getLayer = function() {
 			var local = {
 				canvas: undefined,
@@ -474,7 +476,7 @@ function EasyFrame() {
 
 
 		// Should I add hasObject, getObjectNames functions?
-		localContainer.orderedObject = function(config) {this.active = true;
+		localContainer.orderedObject = function(config) {
 			var local = {
 				objects: {},
 				objectNames: [],
@@ -517,11 +519,14 @@ function EasyFrame() {
 				}
 			};
 
-			// func takes an object.
-			local.iterateOverObjects = function(func) {
-				for (var nameIndex=0; nameIndex < this.objectNames.length; nameIndex++) {
+			// 'func' is a function that takes a object and its name. 'objectNames' is a list of strings. Not required.
+			// 'objects' is a list of objects. Not required.
+			local.iterateOverObjects = function(func, objectNames, objects) {
+				objectNames = objectNames ? objectNames : this.objectNames;
+				objects = objects ? objects : this.objects;
+				for (var nameIndex=0; nameIndex < objectNames.length; nameIndex++) {
 					// Might not be completely clear. If you return true then we break. Return false to continue.
-					if (func(this.objects[this.objectNames[nameIndex]], this.objectNames[nameIndex])) break;
+					if (func(objects[objectNames[nameIndex]], objectNames[nameIndex])) break;
 				}
 			}
 

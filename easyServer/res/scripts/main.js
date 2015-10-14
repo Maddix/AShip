@@ -27,7 +27,8 @@ function setup(images, easy) {
 	var keyMouseController = easy.InputHandler.getKeyboardMouseController({
 		blacklistKeys: ["upArrow", "leftArrow", "rightArrow", "tab", "escape", "alt", "f5"]
 	});
-	var inputController = easy.InputHandler.getProfileManager();
+	// No more difference between a controller and a unit.
+	var inputController = easy.InputHandler.Profile();
 
 	// mousePosition is pre populated because functions depend on it at start
 	keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]};
@@ -74,7 +75,7 @@ function main(DATA) {
 	// Make the loop
 	mainLoop = DATA.easyFrame.Base.loop({func:function(frame) {
 		// update keys
-		DATA.inputController.update(DATA.keyMouseController.update());
+		DATA.inputController.inputContext(DATA.keyMouseController.update());
 		// Add project/collision layer
 		// update logic
 		DATA.logicController.update(frame);

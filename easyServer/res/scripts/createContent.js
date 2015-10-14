@@ -36,11 +36,11 @@ function createContent(DATA) {
 	//    Input profile
 	// *  ============= *
 
-	var profile = easy.InputHandler.profile({
-		// Broken I think
-		userKeyMapping: {"w":"upArrow", "a":"leftArrow", "s":"downArrow", "d":"rightArrow"}
-	});
-	if (!DATA.inputController.add("main", profile)) console.log("Failed to be added.");
+	var profile = easy.InputHandler.Profile();
+	DATA.inputController.add("profile", profile);
+	var menuProfile = easy.InputHandler.Profile();
+	DATA.inputController.add("menu", menuProfile);
+
 
 	// * ============ *
 	//   Mouse Cursor
@@ -112,15 +112,15 @@ function createContent(DATA) {
 		arrangeRatio: [.35, .05]
 	});
 
-	displayContainer.add("background", displayBackground);
-	displayContainer.add("fps", displayFPS);
-	displayContainer.add("delta", displayDelta);
-	console.log(displayContainer.objectNames)
+	displayContainer.add("background", displayBackground, true);
+	displayContainer.add("fps", displayFPS, true);
+	displayContainer.add("delta", displayDelta, true);
 
+	containerController.add("display", displayContainer, true);
 
-	containerController.add("display", displayContainer);
+	menu.add("container", containerController);
 
-	profile.add("container", containerController);
+	menuProfile.add("containerController", containerController);
 
 	/*
 
