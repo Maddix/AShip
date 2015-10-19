@@ -740,7 +740,7 @@ function EasyFrame() {
 	};
 
 	var easy = {};
-	easy.auther = "Maddix";
+	easy.author = "Maddix";
 	easy.Base = Base();
 	easy.Graphics = Graphics(easy.Base);
 	easy.Components = Components(easy);

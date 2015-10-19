@@ -210,7 +210,7 @@ function InputHandler(easyFrame) {
 				if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
 				else return true; // break out of the loop
 			});
-			return input;
+			return remainingKeys;
 		};
 
 		return local;
