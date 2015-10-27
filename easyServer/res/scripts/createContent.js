@@ -88,6 +88,7 @@ function createContent(DATA) {
 	displayFPS.updateLogic = function(frame) {
 		this.text = "FPS: " + frame.rate;
 	};
+	menuProfile.add("displayFPS", displayFPS);
 
 	var displayDelta = easy.WindowLib.text({
 		text: "Delta:",
@@ -98,6 +99,7 @@ function createContent(DATA) {
 	displayDelta.updateLogic = function(frame) {
 		this.text = "Delta: " + frame.delta;
 	};
+	menuProfile.add("displayDelta", displayDelta);
 
 	var displayBackground = easy.WindowLib.touchSquare({
 		color: "orange",
@@ -112,15 +114,15 @@ function createContent(DATA) {
 		arrangeRatio: [.35, .05]
 	});
 
-	displayContainer.add("background", displayBackground, true);
-	displayContainer.add("fps", displayFPS, true);
-	displayContainer.add("delta", displayDelta, true);
+	//displayContainer.add("background", displayBackground, true);
+	//displayContainer.add("fps", displayFPS, true);
+	//displayContainer.add("delta", displayDelta, true);
 
 	containerController.add("display", displayContainer, true);
 
 	menu.add("container", containerController);
 
-	menuProfile.add("containerController", containerController);
+	//menuProfile.add("containerController", containerController);
 
 	/*
 
