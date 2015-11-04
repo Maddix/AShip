@@ -8,6 +8,14 @@ function InputHandler(easyFrame) {
 		easy:easyFrame
 	};
 
+	localContainer.Context = function(config) {
+		var local = {
+
+		}
+
+		return local;
+	}
+
 	localContainer.getKeyboardMouseController = function(config) {
 		var local = {
 			keyEvent:{}, // Keep track of held down keys (key:[bool, ID]) (true is down, false is up)
@@ -200,17 +208,32 @@ function InputHandler(easyFrame) {
 		var local = {
 			validate: function(object) {
 				if (object.inputContext) return true;
-			}
+			},
+			activeObjectName: false
 		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(config), local, true);
+		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
+		this.easy.Base.extend(config, local);
+
+		local.setActive = function(objectName) {
+			if (this.objectNames.indexOf(objectName) != -1) {
+				this.activeObjectName = objectName;
+				return true;
+			}
+			this.activeObjectName = false;
+			return false;
+		};
 
 		local.inputContext = function(input) {
-			var remainingKeys = input;
-			this.iterateOverObjects(function(object, name) {
-				if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
-				else return true; // break out of the loop
-			});
-			return remainingKeys;
+			if (this.activeObjectName) {
+				return this.objects[this.activeObjectName].inputContext(input);
+			} else {
+				var remainingKeys = input;
+				this.iterateOverObjects(function(object, name) {
+					if (remainingKeys) remainingKeys = object.inputContext(remainingKeys);
+					else return true; // break out of the loop
+				});
+				return remainingKeys;
+			}
 		};
 
 		return local;

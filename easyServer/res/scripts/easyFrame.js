@@ -32,7 +32,6 @@ function EasyFrame() {
 			version:"1"
 		};
 
-
 		// Should this have orderedObject? I think so.. (edit: HA I should add it!)
 		// TODO: Should this be a orderedObject? I at the very least should change
 		// 		 add to take a name and let you remove objects.

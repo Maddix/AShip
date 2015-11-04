@@ -34,12 +34,11 @@ function WindowLib(easyFrame) {
 		this.easy.Base.extend(this.widget(), local);
 		this.easy.Base.extend(config, local);
 
-
-
 		local.setup = function(context) {
 			this.context = context;
 			this.iterateOverObjects(function(object) {
 				object.setup(context);
+
 			});
 		};
 
@@ -66,104 +65,12 @@ function WindowLib(easyFrame) {
 
 		return local;
 	};
-
-	/*
-	localContainer.container = function(config) {
-		var local = {
-			pos: [0, 0],
-			ratio: [0, 0],
-			arrangePos: [.5, .5], // Position self in the center of parent container
-			arrangeRatio: [.5, .5], // Fill half of the parent container
-			context: undefined, // Needed to give to objects after setup has been called.
-			mouseOver: false,
-			inputProfile: localContainer.easy.InputHandler.Profile(),
-			validate: function(object) {
-				if (object.setup
-					&& object.arrangePos
-					&& object.arrangeRatio) return true;
-			}
-		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
-		this.easy.Base.extend(this.widget(), local, true);
-		this.easy.Base.extend(config, local);
-
-		local.setup = function(context) {
-			this.context = context;
-			this.iterateOverObjects(function(object) {
-				object.setup(context);
-			});
-		};
-
-		local.orderedObject_add = local.add;
-		local.add = function(objectName, object, joinInputContext) {
-			if (this.orderedObject_add(objectName, object)) {
-				if (this.context) object.setup(this.context);
-				if (joinInputContext) {
-					this.inputProfile.add(objectName, object);
-					return true;
-				} else this.orderedObject_remove(objectName);
-			}
-		};
-
-		local.orderedObject_remove = local.remove;
-		local.remove = function(objectName) {
-			this.inputProfile.remove(objectName);
-			return this.orderedObject_remove(objectName);
-		};
-
-		local.orderedObject_changePosition = local.changePosition;
-		local.changePosition = function(objectName) {
-			this.inputProfile.changePosition(objectName);
-			return this.orderedObject_changePosition(objectName);
-		};
-
-		local.updateLogic = function(frame) {
-			// Arrange children - In this case arrange free
-			this.iterateOverObjects(function(object) {
-				object.pos = [
-					local.pos[0] + (local.ratio[0] * object.arrangePos[0]),
-					local.pos[1] + (local.ratio[1] * object.arrangePos[1])
-				];
-				object.ratio = [
-					local.ratio[0] * object.arrangeRatio[0],
-					local.ratio[1] * object.arrangeRatio[1],
-				];
-				object.updateLogic(frame);
-			});
-		};
-
-		local.updateGraphics = function() {
-			this.iterateOverObjects(function(object) {
-				object.updateGraphics();
-			});
-		};
-
-		local.eventContext = function(events) {
-
-		};
-
-		local.inputContext = function(input) {
-			var over = this.isMouseOver(input.mouse["mousePosition"])
-			if (over || this.mouseOver) {
-				this.mouseOver = over;
-				return this.inputProfile.inputContext(input);
-			} else {
-				return input;
-			}
-		};
-
-		return local;
-	};
-	*/
 
 	localContainer.square = function(config) {
 		var local = this.easy.Base.extend(this.widget());
 		this.easy.Base.extend(this.easy.Graphics.getRectangle(config, true), local);
 		local.updateLogic = function(frame) {
 			//console.log(this.arrangePos);
-		};
-
-		local.inputContext = function(input) {
 		};
 
 		return local;
@@ -183,7 +90,7 @@ function WindowLib(easyFrame) {
 		};
 
 		local.inputContext = function(input) {
-
+			return input;
 		};
 
 		return local;
@@ -191,28 +98,30 @@ function WindowLib(easyFrame) {
 
 	localContainer.touchSquare = function(config) {
 		var local = {
+			haveFocus: false
 		};
 		this.easy.Base.extend(this.square(config), local);
 
 		local.inputContext = function(input) {
-
 			if (this.isMouseOver(input.mouse["mousePosition"])) {
-				this.color = "pink";
-
 				if (input.keys["LMB"]) {
 					console.log("Pressed");
+					this.haveFocus = true;
 					delete input.keys["LMB"];
 				}
 
 				if (input.keys["LMB"] === false) {
-					console.log("Released");
-					delete input.keys["LMB"];
+					console.log("Released!");
+					this.haveFocus = false;
 				}
-			} else {
-				this.color = "orange";
 			}
 
-			return input;
+			if (input.keys["LMB"] === false && this.haveFocus) {
+				console.log("Released, but not action taken.");
+				this.haveFocus = false;
+			}
+
+			if (!this.haveFocus) return input;
 		};
 
 		return local;
