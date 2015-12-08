@@ -1,27 +1,20 @@
 # About
-AShip is a HTML5 Javascipt game engine that I am building from scratch.
+AShip is a HTML5 Javascipt game thats being created beside the ToFrage engine.
 
-This is my attempt at building a game engine. I originally started out using 
+ToFrage is my attempt at building a game engine. I originally started out using
 <a href="https://github.com/ericdrowell/KineticJS/">KineticJS</a> for rendering with canvas, but due to a number of factors I decided to write my own rendering code. The project was started back in October 2013 and is still ongoing.
 
-Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of the engine. (Outdated but shows progress.)
+Here is a <a href="http://maddix.github.io/AShip/">live demo</a> of AShip and the engine. (Outdated but shows progress.)
 
 # Libraries Used
 
-- <a href="https://github.com/bottlepy/bottle">Bottlepy</a> - Used to host the project on a small server
 - <a href="http://jquery.com">Jquery</a> - Cross-browser support
 - <a href="https://github.com/jquery/jquery-mousewheel/">Jquery-mousewheel</a> - Used to get mousewheel input
 
-Everything else is made from scratch.
-
 # Features
 - Animations
-- Half finished windowing system complete with widgets
-- Advanced Input
 - Particles
-- Other great stuff
-
-I plan on adding audio, websockets, and other cool things.
+- Input management
 
 # Examples
 
@@ -29,11 +22,11 @@ The example below creates a canvas with a green rectangle that moves to the lowe
 
 ```javascript
 function main() {
-  
+
   	/*==========
 	  Main setup
 	  ==========*/
-  
+
 	// create the main library
 	var easy = easyFrame();
 
@@ -44,53 +37,53 @@ function main() {
 		ratio:[1080, 720] // The width and height of the canvas
 	});
 	layerController.createDiv();
-	
+
 	// Create a canvas to draw images on and add it to the layerController
 	var mainLayer = easy.Base.getLayer();
 	// Note that it doesn't matter when you add the layer to the layer controller
 	layerController.addLayer("mainLayer", mainLayer);
-	
+
 	// Create a logic controller, this just calls 'updateLogic' on objects you give it and passes in frame
 	var logicController = easy.Base.getLogicController();
-	
+
 	/*==============
 	  Create content
 	  ==============*/
-	
+
 	var rectangle = easy.Base.getAtomRectangle({
 		pos: [50, 50], // Set the rectangles position to x = 50, y = 50
 		ratio: [150, 50], // Set the width and height of the rectangle
 		color: "green", // Fill color
 		velocity: [5, -5] // Displacement in pixels per second
 	});
-	
+
 	// Add a updateLogic() function to rectangle
 	rectangle.updateLogic = function(frame) {
 		// Change the rectangles position by velocity per second, frame.delta makes sure that the movement is smooth
 		this.pos[0] += this.velocity[0]*frame.delta;
 		this.pos[1] += this.velocity[1]*frame.delta;
 	};
-	
+
 	// Add our rectangle to the mainLayer
 	mainLayer.add(rectangle);
 	// Now add it to the logicController
 	logicController.add("rectangle", rectangle);
-	
+
 	/*===========
 	  Engine loop
 	  ===========*/
-	
+
 	var mainLoop = easy.Base.loop({
 		func:function(frame) {
 			// Call update on the layerController and pass in the frame object
 			logicController.update(frame);
 			// Now update the layerController
-			layerController.updateGraphics(); 
-		}, 
+			layerController.updateGraphics();
+		},
 		fps:60, // If your browser is reporting less than 60 fps then set fps to 80 (Such is the case with opera)
 		useRAF:true // Request animation frame (This makes updates slower, but more consistent)
 	});
-	
+
 	// Start the loop
 	mainLoop.start();
 }

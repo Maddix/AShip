@@ -14,18 +14,10 @@
 // and object-space which will tie into collision detection and objects interacting.
 
 // This is a Micro-framework (I hope.)
+// Rename to ToFrage. Thats the office name.
 function EasyFrame() {
 
 	'use strict'; // Try putting 'var private = {};' somewhere. It should throw an error.
-
-	// Not sure I need this.
-	function Layers() {
-		var localContainer = {
-			version:"1"
-		};
-
-		return localContainer;
-	};
 
 	function Graphics(Base) {
 		var localContainer = {
@@ -742,7 +734,6 @@ function EasyFrame() {
 	easy.author = "Maddix";
 	easy.Base = Base();
 	easy.Graphics = Graphics(easy.Base);
-	easy.Components = Components(easy);
 	easy.WindowLib = WindowLib(easy);
 	easy.InputHandler = InputHandler(easy);
 	easy.Particles = Particles(easy);
