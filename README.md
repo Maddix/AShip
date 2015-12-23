@@ -9,7 +9,7 @@ Here is a <a href="http://maddix.github.io/AShip/">live demo</a>.
 # Libraries Used
 
 - <a href="http://jquery.com">Jquery</a> - Cross-browser support
-- <a href="https://github.com/jquery/jquery-mousewheel/">Jquery-mousewheel</a> - Used to get mousewheel input
+- <a href="https://github.com/jquery/jquery-mousewheel/">Jquery-mousewheel</a> - Mousewheel input
 
 # Features
 - Animations
