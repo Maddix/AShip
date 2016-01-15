@@ -75,7 +75,7 @@ function main(DATA) {
 	// Make the loop
 	mainLoop = DATA.easyFrame.Base.loop({func:function(frame) {
 		// update keys
-		DATA.inputController.inputContext(DATA.keyMouseController.update());
+		//DATA.inputController.inputContext(DATA.keyMouseController.update());
 		// Add project/collision layer
 		// update logic
 		DATA.logicController.update(frame);

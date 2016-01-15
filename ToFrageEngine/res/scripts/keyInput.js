@@ -8,7 +8,11 @@ function InputHandler(easyFrame) {
 		easy:easyFrame
 	};
 
-	localContainer.Context = function(config) {
+	localContainer.inputMap = function(config) {
+
+	}
+
+	localContainer.context = function(config) {
 		var local = {
 
 		}
@@ -16,7 +20,91 @@ function InputHandler(easyFrame) {
 		return local;
 	}
 
-	localContainer.getKeyboardMouseController = function(config) {
+	localContainer.getKeyInput = function(config) {
+		var local = {
+			element: "body",
+			listeners: []
+		};
+
+		local.addListeners = function() {
+
+			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
+				jqueryKeyEvent.which;
+				return false;
+			});
+			this.listeners.push("keydown");
+
+			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
+				jqueryKeyEvent.which;
+				return false;
+			});
+			this.listeners.push("keyup");
+		}
+
+		local.removeListeners = function() {
+			for (var item in this.listeners) {
+				$(this.element).off(item);
+			}
+		}
+
+		return local;
+	}
+
+
+	// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
+	localContainer.getMouseInput = function(config) {
+		var local = {
+			element: "canvas",
+			listeners: [],
+			eventQue: []
+		};
+
+		local.addListeners = function() {
+
+			$(this.element).on("mousemove", function(jqueryMouseEvent) {
+				jqueryMouseEvent.pageX - $(local.elementForMouse).offset().left,
+				jqueryMouseEvent.pageY - $(local.elementForMouse).offset().top
+			});
+			this.listeners.push("mousemove");
+
+			if (this.getScrollData) {
+				$(this.elementForMouse).on("mousewheel", function(jqueryMouseEvent) {
+						var delta = [jqueryMouseEvent.deltaX, jqueryMouseEvent.deltaY];
+						// normalize the scroll delta
+						for (var index in delta){
+							if (delta[index] > 1) delta[index] = 1;
+							if (delta[index] < -1) delta[index] = -1;
+						}
+					return false; // returning false prevents the default action (page scroll)
+				});
+			}
+			this.listeners.push("mousewheel");
+
+			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
+			$(this.elementForMouse).on("mousedown", function(jqueryKeyEvent) {
+				jqueryKeyEvent.stopPropagation();
+				jqueryKeyEvent.preventDefault();
+			});
+			this.listeners.push("mousedown");
+
+			$(this.elementForMouse).on("mouseup", function(jqueryKeyEvent) {
+				jqueryKeyEvent.stopPropagation();
+				jqueryKeyEvent.preventDefault();
+			});
+			this.listeners.push("mouseup");
+
+		}
+
+		local.removeListeners = function() {
+			for (var item in this.listeners) {
+				$(this.element).off(item);
+			}
+		}
+
+		return local;
+	}
+
+	localContainer.getKeyboardMouseController_old = function(config) {
 		var local = {
 			keyEvent:{}, // Keep track of held down keys (key:[bool, ID]) (true is down, false is up)
 			keyEventOrder: [], // Keep track of which key pressed first [[ID, key] ..]
