@@ -36,10 +36,10 @@ function createContent(DATA) {
 	//    Input profile
 	// *  ============= *
 
-	var profile = easy.InputHandler.Profile();
-	DATA.inputController.add("profile", profile);
-	var menuProfile = easy.InputHandler.Profile();
-	DATA.inputController.add("menu", menuProfile);
+	//var profile = easy.InputHandler.Profile();
+	//DATA.inputController.add("profile", profile);
+	//var menuProfile = easy.InputHandler.Profile();
+	//DATA.inputController.add("menu", menuProfile);
 
 
 	// * ============ *
@@ -62,7 +62,7 @@ function createContent(DATA) {
 	}
 	devOverlay.add(cursor);
 	logic.add("cursor", cursor);
-	profile.add("mouse", cursor);
+	//profile.add("mouse", cursor);
 
 	// -------
 	// Windows
@@ -88,7 +88,7 @@ function createContent(DATA) {
 	displayFPS.updateLogic = function(frame) {
 		this.text = "FPS: " + frame.rate;
 	};
-	menuProfile.add("displayFPS", displayFPS);
+	//menuProfile.add("displayFPS", displayFPS);
 
 	var displayDelta = easy.WindowLib.text({
 		text: "Delta:",
@@ -99,7 +99,7 @@ function createContent(DATA) {
 	displayDelta.updateLogic = function(frame) {
 		this.text = "Delta: " + frame.delta;
 	};
-	menuProfile.add("displayDelta", displayDelta);
+	//menuProfile.add("displayDelta", displayDelta);
 
 	var displayBackground = easy.WindowLib.touchSquare({
 		color: "orange",
@@ -108,13 +108,13 @@ function createContent(DATA) {
 		arrangePos: [0, 0],
 		arrangeRatio: [1, 1]
 	});
-	menuProfile.add("displayBackground", displayBackground);
+	//menuProfile.add("displayBackground", displayBackground);
 
 	var displayContainer = easy.WindowLib.container({
 		arrangePos: [.6, .05],
 		arrangeRatio: [.35, .05]
 	});
-	menuProfile.add("displayContainer", displayContainer);
+	//menuProfile.add("displayContainer", displayContainer);
 
 	displayContainer.add("background", displayBackground);
 	displayContainer.add("fps", displayFPS);

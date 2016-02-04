@@ -9,7 +9,11 @@ function InputHandler(easyFrame) {
 	};
 
 	localContainer.inputMap = function(config) {
+		var local = {
 
+		};
+
+		return local;
 	}
 
 	localContainer.context = function(config) {
@@ -20,89 +24,98 @@ function InputHandler(easyFrame) {
 		return local;
 	}
 
-	localContainer.getKeyInput = function(config) {
+	localContainer.getListenerManager = function(config) {
 		var local = {
-			element: "body",
 			listeners: []
 		};
+		this.easy.Base.extend(config, local);
 
-		local.addListeners = function() {
+		local.addListenerTo = function(element, listenerName, callback) {
+			$(element).on(listenerType, callback);
+			this.listeners.push(listenerType);
+		};
 
-			$(this.elementForKeys).on("keydown", function(jqueryKeyEvent) {
-				jqueryKeyEvent.which;
-				return false;
-			});
-			this.listeners.push("keydown");
-
-			$(this.elementForKeys).on("keyup", function(jqueryKeyEvent) {
-				jqueryKeyEvent.which;
-				return false;
-			});
-			this.listeners.push("keyup");
-		}
-
-		local.removeListeners = function() {
-			for (var item in this.listeners) {
-				$(this.element).off(item);
+		local.removeListenerFrom = function(element, listenerName) {
+			var index = this.listeners.indexOf(listenerName);
+			if (index) {
+				$(element).off(listenerName);
+				this.listeners.splice(index, 1);
+				return true;
 			}
-		}
+		};
+
+		local.removeListenersFrom = function(element) {
+			for (var index=0; index > this.listeners; index++) {
+				this.removeListener(element, this.listeners[index]);
+			}
+		};
 
 		return local;
 	}
 
+	localContainer.getKeyInput = function(config) {
+		var local = {
+			element: "body",
+		};
+		this.easy.Base.extend(this.getListenerManager(config), local);
+
+		local.addListeners = function() {
+			this.addListnerTo(this.element, "keydown", function(jqueryKeyEvent) {
+				jqueryKeyEvent.which;
+				return false;
+			});
+
+			this.addListnerTo(this.element, "keyup", function(jqueryKeyEvent) {
+				jqueryKeyEvent.which;
+				return false;
+			});
+		}
+
+		return local;
+	};
 
 	// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 	localContainer.getMouseInput = function(config) {
 		var local = {
 			element: "canvas",
-			listeners: [],
 			eventQue: []
 		};
+		this.easy.Base.extend(this.getListenerManager(config), local);
 
 		local.addListeners = function() {
-
-			$(this.element).on("mousemove", function(jqueryMouseEvent) {
-				jqueryMouseEvent.pageX - $(local.elementForMouse).offset().left,
-				jqueryMouseEvent.pageY - $(local.elementForMouse).offset().top
+			this.addListenerTo(this.element, "mousemove", function(jqueryMouseEvent) {
+				var mousePosition = [
+					jqueryMouseEvent.pageX - $(local.element).offset().left,
+					jqueryMouseEvent.pageY - $(local.element).offset().top
+				];
 			});
-			this.listeners.push("mousemove");
 
 			if (this.getScrollData) {
-				$(this.elementForMouse).on("mousewheel", function(jqueryMouseEvent) {
-						var delta = [jqueryMouseEvent.deltaX, jqueryMouseEvent.deltaY];
-						// normalize the scroll delta
-						for (var index in delta){
-							if (delta[index] > 1) delta[index] = 1;
-							if (delta[index] < -1) delta[index] = -1;
-						}
+				this.addListenerTo(this.element, "mousewheel", function(jqueryMouseEvent) {
+					var delta = [jqueryMouseEvent.deltaX, jqueryMouseEvent.deltaY];
+					// normalize the scroll delta
+					for (var index=0; index < delta.length; delta++){
+						if (delta[index] > 1) delta[index] = 1;
+						if (delta[index] < -1) delta[index] = -1;
+					}
 					return false; // returning false prevents the default action (page scroll)
 				});
 			}
-			this.listeners.push("mousewheel");
 
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
-			$(this.elementForMouse).on("mousedown", function(jqueryKeyEvent) {
+			this.addListenerTo(this.element, "mousedown", function(jqueryKeyEvent) {
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});
-			this.listeners.push("mousedown");
 
-			$(this.elementForMouse).on("mouseup", function(jqueryKeyEvent) {
+			this.addListenerTo(this.element, "mouseup", function(jqueryKeyEvent) {
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});
-			this.listeners.push("mouseup");
-
-		}
-
-		local.removeListeners = function() {
-			for (var item in this.listeners) {
-				$(this.element).off(item);
-			}
 		}
 
 		return local;
-	}
+	};
 
 	localContainer.getKeyboardMouseController_old = function(config) {
 		var local = {

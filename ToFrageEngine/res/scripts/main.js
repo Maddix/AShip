@@ -24,14 +24,14 @@ function setup(images, easy) {
 	layerController.addLayer("devOverlay", easy.Graphics.getLayer());
 
 	// Create KeyboardMouseController & InputController
-	var keyMouseController = easy.InputHandler.getKeyboardMouseController({
-		blacklistKeys: ["upArrow", "leftArrow", "rightArrow", "tab", "escape", "alt", "f5"]
-	});
+	//var keyMouseController = easy.InputHandler.getKeyboardMouseController({
+	//	blacklistKeys: ["upArrow", "leftArrow", "rightArrow", "tab", "escape", "alt", "f5"]
+	//});
 	// No more difference between a controller and a unit.
-	var inputController = easy.InputHandler.Profile();
+	//var inputController = easy.InputHandler.Profile();
 
 	// mousePosition is pre populated because functions depend on it at start
-	keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]};
+	//keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]};
 
 	// Create global static Data Object, it shouldn't be global should it. :/ "easyFrame.DATA" ?
 	var DATA = {
@@ -56,8 +56,8 @@ function setup(images, easy) {
 		layerController:layerController,
 		logicController:logicController,
 		screenRatio:layerController.ratio,
-		keyMouseController:keyMouseController,
-		inputController:inputController,
+		//keyMouseController:keyMouseController,
+		//inputController:inputController,
 		mainLoop:undefined,
 		easyFrame:easy,
 		debug:true
