@@ -16,13 +16,68 @@ function InputHandler(easyFrame) {
 		return local;
 	}
 
+	localContainer.createEvent = function(eventName, type) {
+		var local = {
+			name: eventName,
+			callbacks: []
+		};
+
+		local.is = function(
+
+
+		local.update = function() {
+
+		};
+
+		return local;
+	};
+
 	localContainer.context = function(config) {
 		var local = {
+			events: {},
+			inputMap: {}
 
-		}
+		};
+
+		local.createEvent = function(eventName, type,
+
+		local.join = function(eventName, callback) {
+
+		};
+
+		local.updateContext = function(input) {
+
+			for (var item in this.inputMap) {
+				if (item.key in input.input)
+			}
+
+		};
 
 		return local;
 	}
+
+	localContainer.getInputManager = function(config) {
+		var local = {
+			rawInput: {},
+			rawInputOrder: []
+		};
+		this.easy.Base.extend(config, local);
+
+		local.addInput = function(input, value) {
+			this.rawInput[input] = value;
+			if (this.rawInputOrder.indexOf(input) == -1) this.rawInputOrder.push(input);
+		};
+
+		local.getInput = function() {
+			var rawInput = this.rawInput;
+			var rawInputOrder = this.rawInputOrder;
+			this.rawInput = {};
+			this.rawInputOrder = [];
+			return {input: rawInput, inputOrder: this.rawInputOrder};
+		};
+
+		return local;
+	};
 
 	localContainer.getListenerManager = function(config) {
 		var local = {
@@ -57,16 +112,16 @@ function InputHandler(easyFrame) {
 		var local = {
 			element: "body",
 		};
-		this.easy.Base.extend(this.getListenerManager(config), local);
+		this.easy.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
 
 		local.addListeners = function() {
 			this.addListnerTo(this.element, "keydown", function(jqueryKeyEvent) {
-				jqueryKeyEvent.which;
+				this.addInput(jqueryKeyEvent.which, false);
 				return false;
 			});
 
 			this.addListnerTo(this.element, "keyup", function(jqueryKeyEvent) {
-				jqueryKeyEvent.which;
+				this.addInput(jqueryKeyEvent.which, true);
 				return false;
 			});
 		}
@@ -80,16 +135,17 @@ function InputHandler(easyFrame) {
 			element: "canvas",
 			eventQue: []
 		};
-		this.easy.Base.extend(this.getListenerManager(config), local);
+		this.easy.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
 
 		local.addListeners = function() {
 			this.addListenerTo(this.element, "mousemove", function(jqueryMouseEvent) {
-				var mousePosition = [
+				this.addInput("mousemove", [
 					jqueryMouseEvent.pageX - $(local.element).offset().left,
 					jqueryMouseEvent.pageY - $(local.element).offset().top
-				];
+				]);
 			});
 
+			// TODO: Is the for-loop too slow?
 			if (this.getScrollData) {
 				this.addListenerTo(this.element, "mousewheel", function(jqueryMouseEvent) {
 					var delta = [jqueryMouseEvent.deltaX, jqueryMouseEvent.deltaY];
@@ -98,17 +154,20 @@ function InputHandler(easyFrame) {
 						if (delta[index] > 1) delta[index] = 1;
 						if (delta[index] < -1) delta[index] = -1;
 					}
+					this.addInput("mousewheel", delta);
 					return false; // returning false prevents the default action (page scroll)
 				});
 			}
 
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 			this.addListenerTo(this.element, "mousedown", function(jqueryKeyEvent) {
+				this.addInput(jqueryKeyEvent.which, true);
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});
 
 			this.addListenerTo(this.element, "mouseup", function(jqueryKeyEvent) {
+				this.addInput(jqueryKeyEvent.which, false);
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});
