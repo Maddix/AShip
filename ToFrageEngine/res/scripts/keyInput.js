@@ -8,45 +8,77 @@ function InputHandler(easyFrame) {
 		easy:easyFrame
 	};
 
-	localContainer.inputMap = function(config) {
-		var local = {
+	// 1. Trigger
+	// 2. Callbacks
+	// 3. return the Trigger?
 
+
+	// TODO: I don't know how these will react to ranges..
+	localContainer.actionEvent = function(trigger) {
+		var local = {
+			callbacks: {},
+			totalCallbacks: 0,
+			returnOnUse: false,
+			triggered: false,
+			triggerOn: true,
+			trigger: trigger
 		};
 
-		return local;
-	}
-
-	localContainer.createEvent = function(eventName, type) {
-		var local = {
-			name: eventName,
-			callbacks: []
-		};
-
-		local.is = function(
-
-
-		local.update = function() {
-
+		local.update = function(inputValue) {
+			if (this.triggerOn == inputValue) {
+				if (!this.triggered) {
+					for (var callbackName in this.callbacks) {
+						this.callbacks[callbackName](inputValue);
+					}
+					this.triggered = true;
+				}
+				if (!this.totalCallbacks || this.returnOnUse) return true;
+			} else {
+				this.triggered = false;
+			}
 		};
 
 		return local;
 	};
 
+	// TODO: I don't know how these will react to ranges..
+	localContainer.stateEvent = function(trigger) {
+		var local = {
+			callbacks: {},
+			totalCallbacks: 0,
+			returnOnUse: false,
+			triggerOn: true,
+			trigger: trigger
+		};
+
+		local.update = function(inputValue) {
+			if (this.triggerOn == inputValue) {
+				for (var callbackName in this.callbacks) {
+					this.callbacks[callbackName](inputValue);
+				}
+				if (!this.totalCallbacks || this.returnOnUse) return true;
+			}
+		};
+
+		return local;
+	};
+
+
+
+	// Needs more thought.
 	localContainer.context = function(config) {
 		var local = {
 			events: {},
-			inputMap: {}
+			triggers: {} // {inputKey:trigger}
+		};
+
+		local.addTrigger = function(triggerName, trigger) {
 
 		};
 
-		local.createEvent = function(eventName, type,
-
-		local.join = function(eventName, callback) {
-
-		};
-
+		// Right name?
 		local.updateContext = function(input) {
-
+			// if
 			for (var item in this.inputMap) {
 				if (item.key in input.input)
 			}
