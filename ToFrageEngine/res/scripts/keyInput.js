@@ -1,7 +1,7 @@
 // This uses Jquery 2.0.3 and Jquary-mousewheel(https://github.com/brandonaaron/jquery-mousewheel)
 // Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 
-function InputHandler(easyFrame) {
+function Input(easyFrame) {
 	var localContainer = {
 		version:"1.0",
 		requires: "Jquery 2.0.3+ and Jquery-mousewheel",
@@ -80,7 +80,7 @@ function InputHandler(easyFrame) {
 		local.updateContext = function(input) {
 			// if
 			for (var item in this.inputMap) {
-				if (item.key in input.input)
+				//if (item.key in input.input)
 			}
 
 		};
@@ -100,12 +100,17 @@ function InputHandler(easyFrame) {
 			if (this.rawInputOrder.indexOf(input) == -1) this.rawInputOrder.push(input);
 		};
 
+		local.removeInput = function(input, value) {
+			delete this.rawInput[input];
+			var index = this.rawInputOrder.indexOf(input);
+			if (index != -1) this.rawInputOrder.splice(index, 1);
+		};
+
 		local.getInput = function() {
-			var rawInput = this.rawInput;
-			var rawInputOrder = this.rawInputOrder;
-			this.rawInput = {};
-			this.rawInputOrder = [];
-			return {input: rawInput, inputOrder: this.rawInputOrder};
+			return {
+				input: localContainer.easy.Base.deepCopy(this.rawInput),
+				inputOrder: localContainer.easy.Base.deepCopy(this.rawInputOrder)
+			};
 		};
 
 		return local;
@@ -118,13 +123,13 @@ function InputHandler(easyFrame) {
 		this.easy.Base.extend(config, local);
 
 		local.addListenerTo = function(element, listenerName, callback) {
-			$(element).on(listenerType, callback);
-			this.listeners.push(listenerType);
+			$(element).on(listenerName, callback);
+			this.listeners.push(listenerName);
 		};
 
 		local.removeListenerFrom = function(element, listenerName) {
 			var index = this.listeners.indexOf(listenerName);
-			if (index) {
+			if (index != -1) {
 				$(element).off(listenerName);
 				this.listeners.splice(index, 1);
 				return true;
@@ -147,13 +152,13 @@ function InputHandler(easyFrame) {
 		this.easy.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
 
 		local.addListeners = function() {
-			this.addListnerTo(this.element, "keydown", function(jqueryKeyEvent) {
-				this.addInput(jqueryKeyEvent.which, false);
+			this.addListenerTo(this.element, "keydown", function(jqueryKeyEvent) {
+				local.addInput(jqueryKeyEvent.which, true);
 				return false;
 			});
 
-			this.addListnerTo(this.element, "keyup", function(jqueryKeyEvent) {
-				this.addInput(jqueryKeyEvent.which, true);
+			this.addListenerTo(this.element, "keyup", function(jqueryKeyEvent) {
+				local.removeInput(jqueryKeyEvent.which, false);
 				return false;
 			});
 		}
@@ -171,7 +176,8 @@ function InputHandler(easyFrame) {
 
 		local.addListeners = function() {
 			this.addListenerTo(this.element, "mousemove", function(jqueryMouseEvent) {
-				this.addInput("mousemove", [
+				local.removeInput("mousemove");
+				local.addInput("mousemove", [
 					jqueryMouseEvent.pageX - $(local.element).offset().left,
 					jqueryMouseEvent.pageY - $(local.element).offset().top
 				]);
@@ -186,20 +192,21 @@ function InputHandler(easyFrame) {
 						if (delta[index] > 1) delta[index] = 1;
 						if (delta[index] < -1) delta[index] = -1;
 					}
-					this.addInput("mousewheel", delta);
+					local.removeInput("mousewheel");
+					local.addInput("mousewheel", delta);
 					return false; // returning false prevents the default action (page scroll)
 				});
 			}
 
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 			this.addListenerTo(this.element, "mousedown", function(jqueryKeyEvent) {
-				this.addInput(jqueryKeyEvent.which, true);
+				local.addInput(jqueryKeyEvent.which, true);
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});
 
 			this.addListenerTo(this.element, "mouseup", function(jqueryKeyEvent) {
-				this.addInput(jqueryKeyEvent.which, false);
+				local.removeInput(jqueryKeyEvent.which, false);
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});

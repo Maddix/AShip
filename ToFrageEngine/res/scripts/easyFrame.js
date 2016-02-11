@@ -735,7 +735,7 @@ function EasyFrame() {
 	easy.Base = Base();
 	easy.Graphics = Graphics(easy.Base);
 	easy.WindowLib = WindowLib(easy);
-	easy.InputHandler = InputHandler(easy);
+	easy.Input = Input(easy);
 	easy.Particles = Particles(easy);
 	easy.Math = GameMath() // Add math into this and update all the code to use it :S
 

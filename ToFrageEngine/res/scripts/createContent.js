@@ -23,14 +23,14 @@ function createContent(DATA) {
 	backgroundLayer.add(background);
 
 	// Directions
-	var up = easy.Graphics.getText({text:"'W' to move forward", color:"white", pos:[10, 100]}, 15);
-	devOverlay.add(up);
-	var side = easy.Graphics.getText({text:"'A' & 'D' to move left and right", color:"white", pos:[10, 130]}, 15);
-	devOverlay.add(side);
-	var back = easy.Graphics.getText({text:"'S' to move backward", color:"white", pos:[10, 160]}, 15);
-	devOverlay.add(back);
-	var space = easy.Graphics.getText({text:"'Space' to reset position and velocity", color:"white", pos:[10, 190]}, 15);
-	devOverlay.add(space);
+	//var up = easy.Graphics.getText({text:"'W' to move forward", color:"white", pos:[10, 100]}, 15);
+	//devOverlay.add(up);
+	//var side = easy.Graphics.getText({text:"'A' & 'D' to move left and right", color:"white", pos:[10, 130]}, 15);
+	//devOverlay.add(side);
+	//var back = easy.Graphics.getText({text:"'S' to move backward", color:"white", pos:[10, 160]}, 15);
+	//devOverlay.add(back);
+	//var space = easy.Graphics.getText({text:"'Space' to reset position and velocity", color:"white", pos:[10, 190]}, 15);
+	//devOverlay.add(space);
 
 	// *  ============= *
 	//    Input profile
@@ -41,6 +41,32 @@ function createContent(DATA) {
 	//var menuProfile = easy.InputHandler.Profile();
 	//DATA.inputController.add("menu", menuProfile);
 
+
+	// *  ===== *
+	//    Input
+	// *  ===== *
+
+	var key = easy.Input.getKeyInput();
+	key.addListeners();
+
+	var pressedkeys = easy.Graphics.getText({text:"Keys:", color:"white", pos:[10, 20]}, 15);
+	pressedkeys.updateGraphicsOld = pressedkeys.updateGraphics;
+	pressedkeys.updateGraphics = function(){
+		this.text = "Keys: " + key.getInput()["inputOrder"];
+		this.updateGraphicsOld();
+	};
+	devOverlay.add(pressedkeys);
+
+	var mouse = easy.Input.getMouseInput();
+	mouse.addListeners();
+
+	var pressedMouseEvents = easy.Graphics.getText({text:"Mouse:", color:"white", pos:[10, 40]}, 15);
+	pressedMouseEvents.updateGraphicsOld = pressedMouseEvents.updateGraphics;
+	pressedMouseEvents.updateGraphics = function(){
+		this.text = "Mouse: " + mouse.getInput()["input"]["mousemove"];
+		this.updateGraphicsOld();
+	};
+	devOverlay.add(pressedMouseEvents);
 
 	// * ============ *
 	//   Mouse Cursor
