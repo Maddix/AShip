@@ -467,7 +467,9 @@ function EasyFrame() {
 
 
 		// Should I add hasObject, getObjectNames functions?
-		localContainer.orderedObject = function(config) {
+		// Should I rename the object theme to be more general?
+		// If lite is true then only include add and remove functions in the returned object.
+		localContainer.orderedObject = function(config, lite) {
 			var local = {
 				objects: {},
 				objectNames: [],
@@ -496,28 +498,31 @@ function EasyFrame() {
 				}
 			};
 
-			// Leave newIndex blank if you want to move the object to the end
-			local.changePosition = function(objectName, newIndex) {
-				var index = this.objectNames.indexOf(objectName);
-				if (index != -1) {
-					this.objectNames.splice(index, 1);
-					if (newIndex >= 0 && newIndex < this.objectNames.length) {
-						this.objectNames.splice(newIndex, 0, objectName);
-					} else {
-						this.objectNames.push(objectName);
+			if (!lite) {
+				// Leave newIndex blank if you want to move the object to the end
+				local.changePosition = function(objectName, newIndex) {
+					var index = this.objectNames.indexOf(objectName);
+					if (index != -1) {
+						this.objectNames.splice(index, 1);
+						if (newIndex >= 0 && newIndex < this.objectNames.length) {
+							this.objectNames.splice(newIndex, 0, objectName);
+						} else {
+							this.objectNames.push(objectName);
+						}
+						return true;
 					}
-					return true;
-				}
-			};
+				};
 
-			// 'func' is a function that takes a object and its name. 'objectNames' is a list of strings. Not required.
-			// 'objects' is a list of objects. Not required.
-			local.iterateOverObjects = function(func, objectNames, objects) {
-				objectNames = objectNames ? objectNames : this.objectNames;
-				objects = objects ? objects : this.objects;
-				for (var nameIndex=0; nameIndex < objectNames.length; nameIndex++) {
-					// Might not be completely clear. If you return true then we break. Return false to continue.
-					if (func(objects[objectNames[nameIndex]], objectNames[nameIndex])) break;
+				// 'func' is a function that takes a object and its name. 'objectNames' is a list of strings. Not required.
+				// 'objects' is a list of objects. Not required.
+				local.iterateOverObjects = function(func, objectNames, objects) {
+					objectNames = objectNames || this.objectNames;
+					objects = objects || this.objects;
+					for (var nameIndex=0; nameIndex < objectNames.length; nameIndex++) {
+						// Might not be completely clear. If you return true then we break. Return false to continue.
+						// Should I pull 'objectNames[nameIndex]' into a var?
+						if (func(objects[objectNames[nameIndex]], objectNames[nameIndex])) break;
+					}
 				}
 			}
 

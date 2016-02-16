@@ -14,75 +14,105 @@ function Input(easyFrame) {
 
 
 	// TODO: I don't know how these will react to ranges..
-	localContainer.actionEvent = function(trigger) {
+	localContainer.actionEvent = function(config) {
 		var local = {
-			callbacks: {},
-			totalCallbacks: 0,
-			returnOnUse: false,
+			triggers: [],
+			removeTriggers: [],
 			triggered: false,
-			triggerOn: true,
-			trigger: trigger
+			triggerOn: true
 		};
+		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
 
-		local.update = function(inputValue) {
-			if (this.triggerOn == inputValue) {
-				if (!this.triggered) {
-					for (var callbackName in this.callbacks) {
-						this.callbacks[callbackName](inputValue);
-					}
-					this.triggered = true;
+		local.update = function(input) {
+			var pass = true;
+			for (var index=0; index < this.triggers.length; index++) {
+				// So if any key has 'false' (32:false) then return.. Interesting. I didn't realize this.
+				if (!input[this.triggers[index]]) {
+					pass = false;
+					break;
 				}
-				if (!this.totalCallbacks || this.returnOnUse) return true;
+			}
+
+			if (pass == this.triggerOn && !this.triggered) {
+				this.triggered = true;
+
+				// Call callbacks.
+				this.iterateOverObjects(function(callback) {
+					callback();
+				});
+
+				// Delete keys
+				for (var index=0; index < this.removeTriggers.length; index++) {
+					delete input[this.removeTriggers[index]];
+				}
 			} else {
 				this.triggered = false;
 			}
+
+			return input;
 		};
 
 		return local;
 	};
 
 	// TODO: I don't know how these will react to ranges..
-	localContainer.stateEvent = function(trigger) {
+	localContainer.stateEvent = function(config) {
 		var local = {
-			callbacks: {},
-			totalCallbacks: 0,
-			returnOnUse: false,
-			triggerOn: true,
-			trigger: trigger
+			triggers: [], // ["shift", "control", "w"] // It will be turned into keycodes - not human readable.
+			removeTriggers: [] // ["shift", "control"] // Could be used for evil.. (╯°□°）╯︵ ┻━┻ (Only returns on success)
 		};
+		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
 
-		local.update = function(inputValue) {
-			if (this.triggerOn == inputValue) {
-				for (var callbackName in this.callbacks) {
-					this.callbacks[callbackName](inputValue);
-				}
-				if (!this.totalCallbacks || this.returnOnUse) return true;
+		local.update = function(input) {
+			// Check if all the required keys are active, bail out otherwise
+			console.log("Enter Update");
+			for (var index=0; index < this.triggers.length; index++) {
+				// So if any key has 'false' (32:false) then return.. Interesting. I didn't realize this.
+				if (!input[this.triggers[index]]) return input;
 			}
+			console.log("Past check");
+			// Call callbacks.
+			this.iterateOverObjects(function(callback) {
+				callback();
+			});
+			console.log("Calling callbacks..");
+
+			// Delete keys
+			for (var index=0; index < this.removeTriggers.length; index++) {
+				delete input[this.removeTriggers[index]];
+			}
+			console.log("Deleting..");
+
+			return input;
 		};
 
 		return local;
 	};
 
+	// Console test function for stateEvent. It works!
+	//function test() {
+	//	var easy = EasyFrame();
+	//	var state = easy.Input.stateEvent({
+	//		triggers:[32, 87],
+	//		removeTriggers:[87]
+	//	});
+	//	state.add("test", function() {console.log("SHOTS FIRED!");});
+	//	return state;
+	//}
 
-
-	// Needs more thought.
+	// Needs more thought. Very light..
 	localContainer.context = function(config) {
 		var local = {
-			events: {},
-			triggers: {} // {inputKey:trigger}
 		};
+		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
 
-		local.addTrigger = function(triggerName, trigger) {
-
-		};
-
-		// Right name?
-		local.updateContext = function(input) {
-			// if
-			for (var item in this.inputMap) {
-				//if (item.key in input.input)
-			}
-
+		local.update = function(input) {
+			var remaining = input;
+			this.iterateOverObjects(function(object, name) {
+				if (remaining) remaining = object.update(input);
+				else return true;
+			});
+			return remaining;
 		};
 
 		return local;
