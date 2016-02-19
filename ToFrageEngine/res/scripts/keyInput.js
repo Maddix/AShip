@@ -17,36 +17,37 @@ function Input(easyFrame) {
 	localContainer.actionEvent = function(config) {
 		var local = {
 			triggers: [],
-			removeTriggers: [],
-			triggered: false,
-			triggerOn: true
+			returnOnSuccess: [],
+			triggered: false
 		};
 		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
 
 		local.update = function(input) {
-			var pass = true;
+			if (!this.triggered) var passToCallback = {};
+
 			for (var index=0; index < this.triggers.length; index++) {
 				// So if any key has 'false' (32:false) then return.. Interesting. I didn't realize this.
-				if (!input[this.triggers[index]]) {
-					pass = false;
-					break;
+				var trigger = this.triggers[index];
+				if (!input[trigger]) {
+					this.triggered = false;
+					return input;
+				} else if (!this.triggered) {
+					passToCallback[trigger] = input[trigger];
 				}
 			}
 
-			if (pass == this.triggerOn && !this.triggered) {
+			if (!this.triggered) {
 				this.triggered = true;
 
 				// Call callbacks.
 				this.iterateOverObjects(function(callback) {
-					callback();
+					callback(passToCallback);
 				});
 
 				// Delete keys
-				for (var index=0; index < this.removeTriggers.length; index++) {
-					delete input[this.removeTriggers[index]];
+				for (var index=0; index < this.returnOnSuccess.length; index++) {
+					delete input[this.returnOnSuccess[index]];
 				}
-			} else {
-				this.triggered = false;
 			}
 
 			return input;
@@ -59,29 +60,29 @@ function Input(easyFrame) {
 	localContainer.stateEvent = function(config) {
 		var local = {
 			triggers: [], // ["shift", "control", "w"] // It will be turned into keycodes - not human readable.
-			removeTriggers: [] // ["shift", "control"] // Could be used for evil.. (╯°□°）╯︵ ┻━┻ (Only returns on success)
+			returnOnSuccess: [] // ["shift", "control"] // Could be used for evil.. (╯°□°）╯︵ ┻━┻ Much power, great responsibility. ~ Doge
 		};
 		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
 
 		local.update = function(input) {
+			var passToCallback = {};
 			// Check if all the required keys are active, bail out otherwise
-			console.log("Enter Update");
 			for (var index=0; index < this.triggers.length; index++) {
 				// So if any key has 'false' (32:false) then return.. Interesting. I didn't realize this.
-				if (!input[this.triggers[index]]) return input;
+				var trigger = this.triggers[index];
+				if (!input[trigger]) return input;
+				else passToCallback[trigger] = input[trigger];
 			}
-			console.log("Past check");
+
 			// Call callbacks.
 			this.iterateOverObjects(function(callback) {
-				callback();
+				callback(passToCallback);
 			});
-			console.log("Calling callbacks..");
 
 			// Delete keys
-			for (var index=0; index < this.removeTriggers.length; index++) {
-				delete input[this.removeTriggers[index]];
+			for (var index=0; index < this.returnOnSuccess.length; index++) {
+				delete input[this.returnOnSuccess[index]];
 			}
-			console.log("Deleting..");
 
 			return input;
 		};
@@ -90,15 +91,15 @@ function Input(easyFrame) {
 	};
 
 	// Console test function for stateEvent. It works!
-	//function test() {
-	//	var easy = EasyFrame();
-	//	var state = easy.Input.stateEvent({
-	//		triggers:[32, 87],
-	//		removeTriggers:[87]
-	//	});
-	//	state.add("test", function() {console.log("SHOTS FIRED!");});
-	//	return state;
-	//}
+	function test() {
+		var easy = EasyFrame();
+		var action = easy.Input.actionEvent({
+			triggers:[32, 87],
+			returnOnSuccess:[87]
+		});
+		action.add("test", function() {console.log("SHOTS FIRED!");});
+		return action;
+	}
 
 	// Needs more thought. Very light..
 	localContainer.context = function(config) {
@@ -199,8 +200,7 @@ function Input(easyFrame) {
 	// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 	localContainer.getMouseInput = function(config) {
 		var local = {
-			element: "canvas",
-			eventQue: []
+			element: "canvas"
 		};
 		this.easy.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
 

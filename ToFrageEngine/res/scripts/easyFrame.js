@@ -146,13 +146,29 @@ function EasyFrame() {
 
 		localContainer.drawImageScale = function(context, image, imageOffset, position, rotation, scale) {
 			this.translateRotate(context, position, rotation);
-			context.drawImage(image, position[0] - imageOffset[0]*scale, position[1] - imageOffset[1]*scale, image.width*scale, image.height*scale);
+			context.drawImage(
+				image,
+				position[0] - imageOffset[0]*scale,
+				position[1] - imageOffset[1]*scale,
+				image.width*scale,
+				image.height*scale
+			);
 			this.reset(context);
 		};
 
 		localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, scale, clipPosition, clipRatio) {
 			this.translateRotate(context, position, rotation);
-			context.drawImage(image, clipPosition[0], clipPosition[1], clipRatio[0], clipRatio[1], (position[0] - imageOffset[0]/2)*scale, (position[1] - imageOffset[1]/2)*scale, imageOffset[0]*scale, imageOffset[1]*scale);
+			context.drawImage(
+				image,
+				clipPosition[0],
+				clipPosition[1],
+				clipRatio[0],
+				clipRatio[1],
+				(position[0] - imageOffset[0]/2)*scale,
+				(position[1] - imageOffset[1]/2)*scale,
+				imageOffset[0]*scale,
+				imageOffset[1]*scale
+			);
 			this.reset(context);
 		};
 
