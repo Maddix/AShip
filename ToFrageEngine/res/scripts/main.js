@@ -1,39 +1,32 @@
 // Still needs updating
 
-function setup(images, easy) {
-	var easy = easy;
+function setup(images, toFrage) {
+	var frage = toFrage;
 
 	// Create the layerController (AKA - Graphic controller)
-	var layerController = easy.Graphics.getLayerController({
+	var layerController = frage.Graphics.getLayerController({
 		container:"container",
 		ratio:[720, 640] // 720, 640
 	});
 	layerController.createDiv();
 
 	// Create Logic controller
-	var logicController = easy.Base.getLogicController({
+	var logicController = frage.Base.getLogicController({
 		offset: [layerController.ratio[0]/2, layerController.ratio[1]/2]
 	});
 
 	// Create all the layers we are going to use, order matters
-	layerController.addLayer("backgroundLayer", easy.Graphics.getLayer());
-	layerController.addLayer("particleLayer", easy.Graphics.getLayer());
-	layerController.addLayer("objectLayer", easy.Graphics.getLayer());
-	layerController.addLayer("hud", easy.Graphics.getLayer());
-	layerController.addLayer("menu", easy.Graphics.getLayer());
-	layerController.addLayer("devOverlay", easy.Graphics.getLayer());
+	layerController.addLayer("backgroundLayer", frage.Graphics.getLayer());
+	layerController.addLayer("particleLayer", frage.Graphics.getLayer());
+	layerController.addLayer("objectLayer", frage.Graphics.getLayer());
+	layerController.addLayer("hud", frage.Graphics.getLayer());
+	layerController.addLayer("menu", frage.Graphics.getLayer());
+	layerController.addLayer("devOverlay", frage.Graphics.getLayer());
 
-	// Create KeyboardMouseController & InputController
-	//var keyMouseController = easy.InputHandler.getKeyboardMouseController({
-	//	blacklistKeys: ["upArrow", "leftArrow", "rightArrow", "tab", "escape", "alt", "f5"]
-	//});
-	// No more difference between a controller and a unit.
-	//var inputController = easy.InputHandler.Profile();
+	// Create an eventContext to handle input.
+	var inputEventContext = frage.Events.getEventContext();
 
-	// mousePosition is pre populated because functions depend on it at start
-	//keyMouseController.mouseEvent = {mousePosition:[layerController.ratio[0]/2, layerController.ratio[1]/2]};
-
-	// Create global static Data Object, it shouldn't be global should it. :/ "easyFrame.DATA" ?
+	// Create global static Data Object, it shouldn't be global should it. :/ "toFrage.DATA" ?
 	var DATA = {
 		images: images,
 		imageFrames:{
@@ -53,14 +46,13 @@ function setup(images, easy) {
 				]
 			}
 		},
-		layerController:layerController,
-		logicController:logicController,
-		screenRatio:layerController.ratio,
-		//keyMouseController:keyMouseController,
-		//inputController:inputController,
-		mainLoop:undefined,
-		easyFrame:easy,
-		debug:true
+		layerController: layerController,
+		logicController: logicController,
+		screenRatio: layerController.ratio,
+		inputEventContext: inputEventContext,
+		mainLoop: undefined,
+		toFrage: frage,
+		debug: true
 	};
 
 	// Start main
@@ -69,12 +61,20 @@ function setup(images, easy) {
 
 function main(DATA) {
 
+	// Setup listeners for key and mouse input. It shouldn't be here but I'm moving things around.
+	var input = DATA.toFrage.Input.getInput();
+	input.addListeners();
+
 	// Create all the content
 	createContent(DATA);
 
 	// Make the loop
-	mainLoop = DATA.easyFrame.Base.loop({func:function(frame) {
+	mainLoop = DATA.toFrage.Base.loop({func:function(frame) {
 		// update keys
+		//var gatheredData = DATA.toFrage.Base.extend(mouse.getInput(), key.getInput());
+		//console.log(gatheredData["input"]);
+		DATA.inputEventContext.update(input.getInput()["input"]);
+
 		//DATA.inputController.inputContext(DATA.keyMouseController.update());
 		// Add project/collision layer
 		// update logic

@@ -7,7 +7,7 @@ html {
 	height: 100%;
 }
 body{
-	/* background-color: (#CCCCCC; -Old gray background)*/	
+	/* background-color: (#CCCCCC; -Old gray background)*/
 	height: 100%;
 	margin: 0;
 	background-repeat: no-repeat;
@@ -22,7 +22,7 @@ body{
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3a55ce', endColorstr='#0b060f',GradientType=0 ); /* IE6-9 */
 }
 
-div#easyFrame {
+div#toFrage {
 	border-style:solid;
 	border-width:4px;
 	border-color:#373737;

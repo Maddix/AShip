@@ -13,7 +13,10 @@
 	<script src="res/scripts/menu.js"></script>
 	<script src="res/scripts/math.js"></script>
 	<script src="res/scripts/particles.js"></script>
-	<script src="res/scripts/easyFrame.js"></script>
+	<script src="res/scripts/toFrage.js"></script>
+    <script src="res/scripts/base.js"></script>
+    <script src="res/scripts/events.js"></script>
+    <script src="res/scripts/graphics.js"></script>
 	<script src="res/scripts/createContent.js"></script>
 	<script src="res/scripts/keyInput.js"></script>
 	<script src="res/scripts/main.js"></script>
@@ -21,8 +24,8 @@
 	<script type="text/javascript">
 		$(function() {
 			//'use strict'; // Used to turn on extra browser warnings?
-			var easy = EasyFrame();
-            easy.Base.loadImages({
+			var frage = ToFrage();
+            frage.Base.loadImages({
                 "player":"ship.png",
                 "playera":"shipa.png",
                 "playerb":"shipb.png",
@@ -37,7 +40,7 @@
                 "engine":"engine.png",
                 "buoy_sprite":"ping_sprite_small.png"
             }, function(loadedImages) {
-                setup(loadedImages, easy);
+                setup(loadedImages, frage);
             }, "res/images/");
 		});
 	</script>

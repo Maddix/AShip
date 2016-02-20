@@ -1,10 +1,10 @@
 // /////////////
 // Window system
 
-function WindowLib(easyFrame) {
+function WindowLib(toFrage) {
 	var localContainer = {
-		version:"1.0",
-		easy: easyFrame
+		version: "1.0",
+		frage: toFrage
 	};
 
 	localContainer.widget = function() {
@@ -12,7 +12,7 @@ function WindowLib(easyFrame) {
 			arrangePos: [0, 0], // 0 to 1
 			arrangeRatio: [1, 1], // 0 to 1
 			isMouseOver: function(mousePosition) {
-				return localContainer.easy.Math.checkWithinBounds(mousePosition, this.pos, this.ratio, 0);
+				return localContainer.frage.Math.checkWithinBounds(mousePosition, this.pos, this.ratio, 0);
 			}
 		};
 	};
@@ -30,9 +30,9 @@ function WindowLib(easyFrame) {
 					&& object.arrangeRatio) return true;
 			}
 		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
-		this.easy.Base.extend(this.widget(), local);
-		this.easy.Base.extend(config, local);
+		this.frage.Base.extend(this.frage.Base.orderedObject(), local, true);
+		this.frage.Base.extend(this.widget(), local);
+		this.frage.Base.extend(config, local);
 
 		local.setup = function(context) {
 			this.context = context;
@@ -67,8 +67,8 @@ function WindowLib(easyFrame) {
 	};
 
 	localContainer.square = function(config) {
-		var local = this.easy.Base.extend(this.widget());
-		this.easy.Base.extend(this.easy.Graphics.getRectangle(config, true), local);
+		var local = this.frage.Base.extend(this.widget());
+		this.frage.Base.extend(this.frage.Graphics.getRectangle(config, true), local);
 		local.updateLogic = function(frame) {
 			//console.log(this.arrangePos);
 		};
@@ -77,8 +77,8 @@ function WindowLib(easyFrame) {
 	};
 
 	localContainer.text = function(config, fontWidth) {
-		var local = this.easy.Base.extend(this.widget());
-		this.easy.Base.extend(this.easy.Graphics.getText(config, fontWidth), local);
+		var local = this.frage.Base.extend(this.widget());
+		this.frage.Base.extend(this.frage.Graphics.getText(config, fontWidth), local);
 
 		local.setup = function(context) {
 			this.context = context;
@@ -100,7 +100,7 @@ function WindowLib(easyFrame) {
 		var local = {
 			haveFocus: false
 		};
-		this.easy.Base.extend(this.square(config), local);
+		this.frage.Base.extend(this.square(config), local);
 
 		local.inputContext = function(input) {
 			if (this.isMouseOver(input.mouse["mousePosition"])) {

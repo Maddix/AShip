@@ -1,11 +1,11 @@
 // This uses Jquery 2.0.3 and Jquary-mousewheel(https://github.com/brandonaaron/jquery-mousewheel)
 // Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
 
-function Input(easyFrame) {
+function Input(toFrage) {
 	var localContainer = {
-		version:"1.0",
+		version: "1.0",
 		requires: "Jquery 2.0.3+ and Jquery-mousewheel",
-		easy:easyFrame,
+		frage:toFrage,
 		defaultKeyMap: { // Keep in mind that the key-codes are from the Jquery event.which, need to add in special characters
 			65:"a", 66:"b", 67:"c", 68:"d", 69:"e", 70:"f", 71:"g",
 			72:"h", 73:"i", 74:"j", 75:"k", 76:"l", 77:"m", 78:"n",
@@ -38,123 +38,12 @@ function Input(easyFrame) {
 	//};
 	//local.createReversedKeyMap(); // Call it here since we don't have a setup.
 
-
-	localContainer.actionEvent = function(config) {
-		var local = {
-			triggers: [],
-			returnOnSuccess: [],
-			triggered: false
-		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
-
-		local.updateEvent = function(input) {
-			if (!this.triggered) var passToCallback = {};
-			for (var index=0; index < this.triggers.length; index++) {
-				var trigger = this.triggers[index];
-				if (!input[trigger]) {
-					this.triggered = false;
-					return input;
-				} else if (!this.triggered) {
-					passToCallback[trigger] = input[trigger];
-				}
-			}
-
-			if (!this.triggered) {
-				this.triggered = true;
-
-				// Call callbacks.
-				this.iterateOverObjects(function(callback) {
-					callback(passToCallback);
-				});
-
-				// Delete keys
-				for (var index=0; index < this.returnOnSuccess.length; index++) {
-					delete input[this.returnOnSuccess[index]];
-				}
-			}
-
-			return input;
-		};
-
-		return local;
-	};
-
-	localContainer.stateEvent = function(config) {
-		var local = {
-			triggers: [], // ["shift", "control", "w"] // It will be turned into keycodes - not human readable.
-			returnOnSuccess: [] // ["shift", "control"] // Could be used for evil.. (╯°□°）╯︵ ┻━┻ Much power, great responsibility. ~ Doge
-		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(config), local);
-
-		local.updateEvent = function(input) {
-			var passToCallback = {};
-			// Check if all the required keys are active, bail out otherwise
-			for (var index=0; index < this.triggers.length; index++) {
-				var trigger = this.triggers[index];
-				if (!input[trigger]) return input;
-				else passToCallback[trigger] = input[trigger];
-			}
-
-			// Call callbacks.
-			this.iterateOverObjects(function(callback) {
-				callback(passToCallback);
-			});
-
-			// Delete keys
-			for (var index=0; index < this.returnOnSuccess.length; index++) {
-				delete input[this.returnOnSuccess[index]];
-			}
-
-			return input;
-		};
-
-		return local;
-	};
-
-	// Needs more thought. Very light..
-	localContainer.context = function(config) {
-		var local = {
-			onHold: false,
-			validate: function(object) {
-				if (object.updateEvent) return true;
-			}
-		};
-		this.easy.Base.extend(this.easy.Base.orderedObject(), local, true);
-		this.easy.Base.extend(config, local);
-
-		local.suspend = function() {
-			this.onHold = true;
-		};
-
-		local.resume = function(name) {
-			this.onHold = false;
-		};
-
-		local.state = function() {
-			return this.onHold;
-		};
-
-		local.update = function(input) {
-			if (!this.onHold) {
-				var remaining = input;
-				this.iterateOverObjects(function(object, name) {
-					if (remaining) remaining = object.updateEvent(input);
-					else return true;
-				});
-				return remaining;
-			}
-			return input;
-		};
-
-		return local;
-	};
-
 	localContainer.getInputManager = function(config) {
 		var local = {
 			rawInput: {},
 			rawInputOrder: []
 		};
-		this.easy.Base.extend(config, local);
+		this.frage.Base.extend(config, local);
 
 		local.addInput = function(input, value) {
 			this.rawInput[input] = value;
@@ -169,8 +58,8 @@ function Input(easyFrame) {
 
 		local.getInput = function() {
 			return {
-				input: localContainer.easy.Base.deepCopy(this.rawInput),
-				inputOrder: localContainer.easy.Base.deepCopy(this.rawInputOrder)
+				input: localContainer.frage.Base.deepCopy(this.rawInput),
+				inputOrder: localContainer.frage.Base.deepCopy(this.rawInputOrder)
 			};
 		};
 
@@ -181,7 +70,7 @@ function Input(easyFrame) {
 		var local = {
 			listeners: []
 		};
-		this.easy.Base.extend(config, local);
+		this.frage.Base.extend(config, local);
 
 		local.addListenerTo = function(element, listenerName, callback) {
 			$(element).on(listenerName, callback);
@@ -206,12 +95,15 @@ function Input(easyFrame) {
 		return local;
 	}
 
-	localContainer.getKeyInput = function(config) {
+	// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
+	localContainer.getInput = function(config) {
 		var local = {
-			element: "body",
-			blacklist: {"Ctrl-R":[17, 82], "F5":[116]} // {"description":[key, ..], ..}
+			keyElement: "body",
+			mouseElement: "canvas",
+			// Only used for keys
+			blacklist: {"Ctrl-R":[17, 82], "F5":[116], "Ctrl-Shift-C":[17, 16, 67]} // {"description":[key, ..], ..}
 		};
-		this.easy.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
+		this.frage.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
 
 		local.notMatchingBlacklist = function() {
 			for (var keyComboName in this.blacklist) {
@@ -226,59 +118,47 @@ function Input(easyFrame) {
 		};
 
 		local.addListeners = function() {
-			this.addListenerTo(this.element, "keydown", function(jqueryKeyEvent) {
+			this.addListenerTo(this.keyElement, "keydown", function(jqueryKeyEvent) {
 				local.addInput(jqueryKeyEvent.which, true);
 				if (local.notMatchingBlacklist()) return false;
 			});
 
-			this.addListenerTo(this.element, "keyup", function(jqueryKeyEvent) {
+			this.addListenerTo(this.keyElement, "keyup", function(jqueryKeyEvent) {
 				local.removeInput(jqueryKeyEvent.which, false);
 				return false;
 			});
-		}
 
-		return local;
-	};
-
-	// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
-	localContainer.getMouseInput = function(config) {
-		var local = {
-			element: "canvas"
-		};
-		this.easy.Base.extend(this.getListenerManager(this.getInputManager(config)), local);
-
-		local.addListeners = function() {
-			this.addListenerTo(this.element, "mousemove", function(jqueryMouseEvent) {
-				local.removeInput("mousemove");
-				local.addInput("mousemove", [
-					jqueryMouseEvent.pageX - $(local.element).offset().left,
-					jqueryMouseEvent.pageY - $(local.element).offset().top
+			this.addListenerTo(this.mouseElement, "mousemove", function(jqueryMouseEvent) {
+				local.removeInput("mouseMove");
+				local.addInput("mouseMove", [
+					jqueryMouseEvent.pageX - $(local.mouseElement).offset().left,
+					jqueryMouseEvent.pageY - $(local.mouseElement).offset().top
 				]);
 			});
 
 			// TODO: Is the for-loop too slow?
 			if (this.getScrollData) {
-				this.addListenerTo(this.element, "mousewheel", function(jqueryMouseEvent) {
+				this.addListenerTo(this.mouseElement, "mousewheel", function(jqueryMouseEvent) {
 					var delta = [jqueryMouseEvent.deltaX, jqueryMouseEvent.deltaY];
 					// normalize the scroll delta
 					for (var index=0; index < delta.length; delta++){
 						if (delta[index] > 1) delta[index] = 1;
 						if (delta[index] < -1) delta[index] = -1;
 					}
-					local.removeInput("mousewheel");
-					local.addInput("mousewheel", delta);
+					local.removeInput("mouseWheel");
+					local.addInput("mouseWheel", delta);
 					return false; // returning false prevents the default action (page scroll)
 				});
 			}
 
 			// Note for mousedown/up, event.which ~ 1 for left, 2 for middle, 3 for right
-			this.addListenerTo(this.element, "mousedown", function(jqueryKeyEvent) {
+			this.addListenerTo(this.mouseElement, "mousedown", function(jqueryKeyEvent) {
 				local.addInput(jqueryKeyEvent.which, true);
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();
 			});
 
-			this.addListenerTo(this.element, "mouseup", function(jqueryKeyEvent) {
+			this.addListenerTo(this.mouseElement, "mouseup", function(jqueryKeyEvent) {
 				local.removeInput(jqueryKeyEvent.which, false);
 				jqueryKeyEvent.stopPropagation();
 				jqueryKeyEvent.preventDefault();

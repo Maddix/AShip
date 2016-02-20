@@ -1,8 +1,8 @@
 
-function Particles(easyFrame) {
+function Particles(toFrage) {
 	var localContainer = {
-		version:"1.0",
-		easy:easyFrame
+		version: "1.0",
+		frage: toFrage
 	}
 
 	// Make a Hex based color shifter and maybe even a HSV
@@ -12,7 +12,7 @@ function Particles(easyFrame) {
 			startColor: {red:255, green:255, blue:255, alpha:2},
 			endColor: {red:0, green:0, blue:0, alpha:0}
 		};
-		this.easy.base.extend(config, local);
+		this.frage.base.extend(config, local);
 
 		// I'm not moving this into interpolate because it would get created
 		// per particle, though it should be there
@@ -66,7 +66,7 @@ function Particles(easyFrame) {
 			context: null
 
 		};
-		this.easy.base.newObject(config, local);
+		this.frage.base.newObject(config, local);
 
 		local.setup = function(context) {
 			this.context = context;
@@ -129,7 +129,7 @@ function Particles(easyFrame) {
 		var local = {
 			ratio: [10, 10]
 		};
-		this.easy.base.newObject(this.particleSprayer(this.getRGBAColorShift(config)), local);
+		this.frage.base.newObject(this.particleSprayer(this.getRGBAColorShift(config)), local);
 		local.spawnPosOffset = [local.ratio[0]/2, local.ratio[1]/2];
 
 		local.drawRectangle = function(pos, ratio, color) {
