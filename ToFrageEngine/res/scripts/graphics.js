@@ -10,8 +10,12 @@ function Graphics(Base) {
 		var local = {
 			canvas: undefined,
 			context: undefined,
-			objects: []
+			objectCount: 0,
+			validate: function(object) {
+				if (object.updateGraphics && object.setup) return true;
+			}
 		};
+		Base.extend(Base.orderedObject(), local, true);
 
 		local.setup = function(container, id, ratio) {
 			this.createCanvas(container, id, ratio);
@@ -28,18 +32,24 @@ function Graphics(Base) {
 			this.canvas = newCanvas;
 		};
 
-		local.add = function(object) {
-			if (!object.updateGraphics && !object.setup) return false;
-			object.setup(this.context);
-			this.objects.push(object);
-			return true;
+		local.add_ordered = local.add;
+
+		//ldp.p objectName GraphicsConplient
+		//ldp.r string?true
+		//ldp If objectName is false or undefined (and all other validation checks out) then a number will be assigned and returned as a string instead of true.
+		local.add = function(objectName, object) {
+			var objectName = objectName || (this.objectCount++).toString();
+			if (this.add_ordered(objectName, object)) {
+				object.setup(this.context);
+				return this.objectCount == objectName ? objectName : true;
+			}
 		};
 
 		local.updateGraphics = function() {
 			localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
-			for (var objectIndex=0; objectIndex < this.objects.length; objectIndex++) {
-				this.objects[objectIndex].updateGraphics();
-			}
+			this.iterateOverObjects(function(object) {
+				object.updateGraphics();
+			});
 		};
 
 		return local;
@@ -53,29 +63,25 @@ function Graphics(Base) {
 	localContainer.getLayerController = function(config) {
 		var local = {
 			layerIds: 0,
-			incerLayerIds: function() {this.layerIds++;},
 			container: undefined, // set the container too?
 			ratio: [640, 480],
 			div: null, // Pass in a div if your not planning on creating one
-			layers: [],
-			layerNames: []
+			validate: function(object) {
+				if (object.setup) return true;
+			}
 		};
+		Base.extend(Base.orderedObject(), local, true);
 		Base.extend(config, local);
 
 		// Set the container
 		local.container = document.getElementById(local.container);
 
-		local.addLayer = function(name, newLayer) {
-			var layerId = "Layer" + this.layerIds + "_" + name;
-			newLayer.setup(this.div, layerId, this.ratio);
-			this.incerLayerIds();
-			this.layers.push(newLayer);
-			this.layerNames.push(name);
-		};
-
-		local.getLayer = function(name) {
-			for (var key in this.layerNames) {
-				if (name == this.layerNames[key]) return this.layers[key];
+		local.add_ordered = local.add;
+		local.add = function(objectName, object) {
+			if (this.add_ordered(objectName, object)) {
+				var layerId = "Layer".concat(this.layerIds++, "_", objectName);
+				object.setup(this.div, layerId, this.ratio);
+				return true;
 			}
 		};
 
@@ -89,7 +95,9 @@ function Graphics(Base) {
 		};
 
 		local.update = function() {
-			for (var layer=0; layer < this.layers.length; layer++) this.layers[layer].updateGraphics();
+			this.iterateOverObjects(function(object) {
+				object.updateGraphics();
+			});
 		};
 
 		return local;

@@ -8,6 +8,9 @@
 // - inputContext is just a function that checks a input object for keys to react to
 // - context is a Canvas.context("2d") object
 
+ /*ldp
+
+ */
 function ToFrage() {
 	'use strict'; // Try putting 'var private = {};' somewhere. It should throw an error.
 
