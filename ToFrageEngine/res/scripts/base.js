@@ -1,3 +1,5 @@
+// Lisp Document Parser
+
 //ldp Acts like a namespace.
 function Base() {
 	//ldp.main
@@ -90,7 +92,7 @@ function Base() {
 		};
 
 		if (!lite) {
-			//ldp.p string !int
+			//ldp.p string !number
 			//ldp.r true if items position was changed, undefined otherwise.
 			/*ldp Changes the position of a item with the given name. Leave newIndex blank if you
 				want to move the object to the end.
@@ -107,8 +109,7 @@ function Base() {
 			// Should this be here or should it be a general standalone function?
 			// 'func' is a function that takes a object and its name. 'objectNames' is a list of strings. Not required.
 			// 'objects' is a list of objects. Not required.
-			//ldp.p function !list<string> !object<string, item>
-			//ldp.r undefined
+			//ldp.p function !list<string ..> !object<string, item ..>
 			/*ldp Iterates over this.objects and repeatedly calls func with each item and
 				name. If the function returns true then break, if it returns false then
 				continue (skip to the next object). If you pass a list of keys and a object
@@ -129,7 +130,6 @@ function Base() {
 	};
 
 	//ldp.p object function !string
-	//ldp.r undefined
 	//ldp Loads images from 'loadObject' and calls 'callWhenComplete' with the loaded images. 'folder' is prepended to each image path.
 	localContainer.loadImages = function(loadObject, callWhenComplete, folder) {
 		folder = folder || "";
@@ -244,7 +244,7 @@ function Base() {
 			else this.modifier = this.pausedModifier;
 		};
 
-		//ldp.p int
+		//ldp.p number
 		//ldp.r undefined
 		//ldp Set the FPS
 		local.setFPS = function(newFps) {

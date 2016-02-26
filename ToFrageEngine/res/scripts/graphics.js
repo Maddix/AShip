@@ -3,9 +3,73 @@ function Graphics(Base) {
 		version: "1"
 	};
 
-	// Should this have orderedObject? I think so.. (edit: HA I should add it!)
-	// TODO: Should this be a orderedObject? I at the very least should change
-	// 		 add to take a name and let you remove objects.
+
+	// Matrix for the canvas
+	// context.transform(
+	// 		Sc-X, Sk-Y, D-x,
+	//		Sk-x, Sc-Y, D-y
+	// )
+	// Scale X | Skew Y  | Displace X
+	// Skew X  | Scale Y | Displace Y
+	// 0	   | 0		 | 1
+
+	//ldp.p canvasContext list<number, number> number
+	//ldp Moves then rotates the context
+	localContainer.contextTranslateRotate = function(context, position, rotation) {
+		context.translate(position[0], position[1]);
+		context.rotate(rotation);
+	};
+
+	//ldp.p canvasContext
+	//ldp Returns the context to 0,0 and sets the rotates to 0
+	localContainer.contextReset = function(context) {
+		context.setTransform(1, 0, 0, 1, 0, 0); // Only needed if we change setTransform
+		context.restore();
+	};
+
+	//ldp.p canvasContext image list<number, number> list<number, number> number
+	//ldp Draws an image on the context with the given offset, position, and rotation and then resets the context.
+	localContainer.drawImage = function(context, image, imageOffset, position, rotation) {
+		this.contextTranslateRotate(context, position, rotation);
+		context.drawImage(image, -imageOffset[0], -imageOffset[1]);
+		this.contextReset(context);
+	};
+
+	//ldp.p canvasContext image list<number, number> list<number, number> number number
+	//ldp Draws an image on the context with the given offset, position, rotation, and scale and then resets the context.
+	localContainer.drawImageScale = function(context, image, imageOffset, position, rotation, scale) {
+		this.contextTranslateRotate(context, position, rotation);
+		context.drawImage(
+			image,
+			position[0] - imageOffset[0]*scale,
+			position[1] - imageOffset[1]*scale,
+			image.width*scale,
+			image.height*scale
+		);
+		this.contextReset(context);
+	};
+
+	//ldp.p canvasContext image list<number, number> list<number, number> number number list<number, number> list<number, number>
+	//ldp Draws an image on the context with the given offset, position, rotation, and scale as well as clipping the image and then resets the context.
+	localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, scale, clipPosition, clipRatio) {
+		this.contextTranslateRotate(context, position, rotation);
+		context.drawImage(
+			image,
+			clipPosition[0],
+			clipPosition[1],
+			clipRatio[0],
+			clipRatio[1],
+			(position[0] - imageOffset[0]/2)*scale,
+			(position[1] - imageOffset[1]/2)*scale,
+			imageOffset[0]*scale,
+			imageOffset[1]*scale
+		);
+		this.contextReset(context);
+	};
+
+
+	//ldp.r object
+	//ldp Creates a canvas element and manages it. Used for drawing to the screen.
 	localContainer.getLayer = function() {
 		var local = {
 			canvas: undefined,
@@ -15,24 +79,32 @@ function Graphics(Base) {
 				if (object.updateGraphics && object.setup) return true;
 			}
 		};
+		//ldp.e
 		Base.extend(Base.orderedObject(), local, true);
 
-		local.setup = function(container, id, ratio) {
-			this.createCanvas(container, id, ratio);
-			this.context = this.canvas.getContext("2d");
-		};
+		//ldp Preserve parent functions
+		local.add_ordered = local.add;
 
-		local.createCanvas = function(container, id, ratio) {
+		//ldp.p element string list<int, int ..> boolean
+		//ldp Creates a canvas element and then gets the canvas 2d object by default.
+		local.setup = function(container, id, ratio, styles, is3d) {
 			var newCanvas = document.createElement("canvas");
 			newCanvas.setAttribute("id", id);
-			newCanvas.setAttribute("width", ratio[0] + "px");
-			newCanvas.setAttribute("height", ratio[1] + "px");
-			newCanvas.setAttribute("style", "position: absolute; background-color: transparent;");
+			newCanvas.setAttribute("width", this.haspx(ratio[0]));
+			newCanvas.setAttribute("height", this.haspx(ratio[1]));
+			newCanvas.setAttribute("style", styles);
 			container.appendChild(newCanvas);
 			this.canvas = newCanvas;
+			this.context = this.canvas.getContext(use3D ? "3d" : "2d");
 		};
 
-		local.add_ordered = local.add;
+		//ldp.p number?string
+		//ldp.r string
+		//ldp Takes a number or string and appends a 'px' if one is not present. (Aweful name. :c)
+		local.haspx = function(item) {
+			else (typeof item === "string" && item.slice(-2).toLowerCase() === "px") return item;
+			return item + "px";
+		}
 
 		//ldp.p objectName GraphicsConplient
 		//ldp.r string?true
@@ -45,8 +117,9 @@ function Graphics(Base) {
 			}
 		};
 
+		//ldp Clear the context and then have all the object draw.
 		local.updateGraphics = function() {
-			localContainer.clearScreen(this.context, this.canvas.width, this.canvas.height);
+			this.context.clearRect(0, 0, this.cavans.width, this.canvas.height);
 			this.iterateOverObjects(function(object) {
 				object.updateGraphics();
 			});
@@ -59,32 +132,41 @@ function Graphics(Base) {
 	// Layer Controller
 	// config {container:"div_id_name", width:720, height:640}
 
-	// I need to revamp this
+	//ldp.p object
+	//ldp.r object
+	//ldp Holds data on how the layers should be created and then manages them.
 	localContainer.getLayerController = function(config) {
 		var local = {
-			layerIds: 0,
-			container: undefined, // set the container too?
+			layerCountId: 0,
+			container: undefined,
 			ratio: [640, 480],
+			is3d: false,
+			styles: "position: absolute; background-color: transparent;",
 			div: null, // Pass in a div if your not planning on creating one
 			validate: function(object) {
 				if (object.setup) return true;
 			}
 		};
+		//ldp.e
 		Base.extend(Base.orderedObject(), local, true);
 		Base.extend(config, local);
 
-		// Set the container
-		local.container = document.getElementById(local.container);
-
+		// Preserve parent function
 		local.add_ordered = local.add;
+
+		//ldp Get the container and throw and error if needed
+		local.container = document.getElementById(local.container);
+		if (local.container == null) throw "LayerController given undefined element '" + local.container + "'.";
+
 		local.add = function(objectName, object) {
 			if (this.add_ordered(objectName, object)) {
-				var layerId = "Layer".concat(this.layerIds++, "_", objectName);
-				object.setup(this.div, layerId, this.ratio);
+				var layerId = "Layer".concat(this.layerCountId++, "_", objectName);
+				object.setup(this.div, layerId, this.ratio, this.styles, this.is3d);
 				return true;
 			}
 		};
 
+		//TODO Make this call from the getgo. You shouldn't have to call this.
 		local.createDiv = function() {
 			var div = document.createElement("div");
 			div.setAttribute("id", "toFrage");
@@ -112,65 +194,6 @@ function Graphics(Base) {
 			context: null,
 			setup: function(context) {this.context = context;}
 		}
-	};
-
-	localContainer.clearScreen = function(context, width, height) {
-		context.clearRect(0, 0, width, height);
-	};
-
-	localContainer.reset = function(context) {
-		// Reset blur?
-		context.setTransform(1, 0, 0, 1, 0, 0); // Only needed if we change setTransform
-		context.restore();
-	};
-
-	// Condense this into one function? Isn't dry.
-	localContainer.drawImage = function(context, image, imageOffset, position, rotation) {
-		this.translateRotate(context, position, rotation);
-		context.drawImage(image, -imageOffset[0], -imageOffset[1]);
-		this.reset(context);
-	};
-
-	localContainer.drawImageScale = function(context, image, imageOffset, position, rotation, scale) {
-		this.translateRotate(context, position, rotation);
-		context.drawImage(
-			image,
-			position[0] - imageOffset[0]*scale,
-			position[1] - imageOffset[1]*scale,
-			image.width*scale,
-			image.height*scale
-		);
-		this.reset(context);
-	};
-
-	localContainer.drawImageClip = function(context, image, imageOffset, position, rotation, scale, clipPosition, clipRatio) {
-		this.translateRotate(context, position, rotation);
-		context.drawImage(
-			image,
-			clipPosition[0],
-			clipPosition[1],
-			clipRatio[0],
-			clipRatio[1],
-			(position[0] - imageOffset[0]/2)*scale,
-			(position[1] - imageOffset[1]/2)*scale,
-			imageOffset[0]*scale,
-			imageOffset[1]*scale
-		);
-		this.reset(context);
-	};
-
-	// Matrix for the canvas
-	// context.transform(
-	// 		Sc-X, Sk-Y, D-x,
-	//		Sk-x, Sc-Y, D-y
-	// )
-	// Scale X | Skew Y  | Displace X
-	// Skew X  | Scale Y | Displace Y
-	// 0	   | 0		 | 1
-
-	localContainer.translateRotate = function(context, position, rotation) {
-		context.translate(position[0], position[1]);
-		context.rotate(rotation);
 	};
 
 	localContainer.getAtomAnimationManual = function(config) {
