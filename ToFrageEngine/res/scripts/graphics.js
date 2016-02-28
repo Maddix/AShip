@@ -67,6 +67,14 @@ function Graphics(Base) {
 		this.contextReset(context);
 	};
 
+	//ldp.p number?string
+	//ldp.r string
+	//ldp Takes a number or string and appends a 'px' if one is not present. (Aweful name. :c)
+	// Is addPx a more fitting name?
+	localContainer.makeCssPixel = function(item) {
+		if (typeof item === "string" && item.slice(-2).toLowerCase() === "px") return item;
+		return item + "px";
+	}
 
 	//ldp.r object
 	//ldp Creates a canvas element and manages it. Used for drawing to the screen.
@@ -75,6 +83,7 @@ function Graphics(Base) {
 			canvas: undefined,
 			context: undefined,
 			objectCount: 0,
+			style: "position: absolute; background-color: transparent;",
 			validate: function(object) {
 				if (object.updateGraphics && object.setup) return true;
 			}
@@ -87,24 +96,15 @@ function Graphics(Base) {
 
 		//ldp.p element string list<int, int ..> boolean
 		//ldp Creates a canvas element and then gets the canvas 2d object by default.
-		local.setup = function(container, id, ratio, styles, is3d) {
-			var newCanvas = document.createElement("canvas");
-			newCanvas.setAttribute("id", id);
-			newCanvas.setAttribute("width", this.haspx(ratio[0]));
-			newCanvas.setAttribute("height", this.haspx(ratio[1]));
-			newCanvas.setAttribute("style", styles);
-			container.appendChild(newCanvas);
-			this.canvas = newCanvas;
+		local.setup = function(container, id, ratio, is3d) {
+			this.canvas = document.createElement("canvas");
+			this.canvas.setAttribute("id", id);
+			this.canvas.setAttribute("width", localContainer.makeCssPixel(ratio[0]));
+			this.canvas.setAttribute("height", localContainer.makeCssPixel(ratio[1]));
+			this.canvas.setAttribute("style", this.style);
 			this.context = this.canvas.getContext(use3D ? "3d" : "2d");
+			container.appendChild(newCanvas);
 		};
-
-		//ldp.p number?string
-		//ldp.r string
-		//ldp Takes a number or string and appends a 'px' if one is not present. (Aweful name. :c)
-		local.haspx = function(item) {
-			else (typeof item === "string" && item.slice(-2).toLowerCase() === "px") return item;
-			return item + "px";
-		}
 
 		//ldp.p objectName GraphicsConplient
 		//ldp.r string?true
@@ -128,10 +128,6 @@ function Graphics(Base) {
 		return local;
 	};
 
-	// /////////////////
-	// Layer Controller
-	// config {container:"div_id_name", width:720, height:640}
-
 	//ldp.p object
 	//ldp.r object
 	//ldp Holds data on how the layers should be created and then manages them.
@@ -141,8 +137,14 @@ function Graphics(Base) {
 			container: undefined,
 			ratio: [640, 480],
 			is3d: false,
-			styles: "position: absolute; background-color: transparent;",
 			div: null, // Pass in a div if your not planning on creating one
+			divAttributes: {
+				id: "toFrage",
+				oncontextmenu: "return false;",
+				style: "position: relative; width:{0} height:{1};".format(
+					localContainer.makeCssPixel(this.ratio[0]),
+					localContainer.makeCssPixel(this.ratio[1]))
+			},
 			validate: function(object) {
 				if (object.setup) return true;
 			}
@@ -151,31 +153,30 @@ function Graphics(Base) {
 		Base.extend(Base.orderedObject(), local, true);
 		Base.extend(config, local);
 
-		// Preserve parent function
+		//ldp Preserve parent function
 		local.add_ordered = local.add;
 
-		//ldp Get the container and throw and error if needed
-		local.container = document.getElementById(local.container);
-		if (local.container == null) throw "LayerController given undefined element '" + local.container + "'.";
+		//ldp.p element
+		//ldp Creates or receives a div and adds attributes ot it.
+		local.setup = function(div) {
+			this.div = div || document.createElement("div");
+			for (var key in this.divAttributes) {
+				this.div.setAttribute(key, this.divAttributes[key]);
+			}
+		};
 
+		//ldp.p string object
+		//ldp.r true if the layer was added.
+		//ldp Adds a layer object and calls setup on it.
 		local.add = function(objectName, object) {
 			if (this.add_ordered(objectName, object)) {
 				var layerId = "Layer".concat(this.layerCountId++, "_", objectName);
-				object.setup(this.div, layerId, this.ratio, this.styles, this.is3d);
+				object.setup(this.div, layerId, this.ratio, this.is3d);
 				return true;
 			}
 		};
 
-		//TODO Make this call from the getgo. You shouldn't have to call this.
-		local.createDiv = function() {
-			var div = document.createElement("div");
-			div.setAttribute("id", "toFrage");
-			div.setAttribute("oncontextmenu", "return false;"); // Stops right-clicking bringing up a context menu
-			div.setAttribute("style", "position: relative; width: " + this.ratio[0] + "px; height: " + this.ratio[1] + "px;");
-			if (this.container) this.container.appendChild(div);
-			this.div = div;
-		};
-
+		//ldp Updates each layer.
 		local.update = function() {
 			this.iterateOverObjects(function(object) {
 				object.updateGraphics();
@@ -185,137 +186,196 @@ function Graphics(Base) {
 		return local;
 	};
 
-	// ////////////////////
-	// Basic object - Atom
-	localContainer.atom = function() {
-		return {
+	//ldp.p object
+	//ldp.r object
+	//ldp The simplest drawable object.
+	localContainer.drawable = function(config) {
+		var local = this.Base.extend(config, {
 			pos: [0, 0],
 			alpha: 1,
 			context: null,
 			setup: function(context) {this.context = context;}
-		}
+		});
+		//ldp This is where you would put your drawing code. As this is an example I'm leaving it commented due to performance concerns.
+		//local.updateGraphics = function() {};
+		return local;
 	};
 
-	localContainer.getAtomAnimationManual = function(config) {
+	//ldp.p object
+	//ldp.r object
+	/* ldp A simple object that will draw a given image. Complete with an offset, rotation, and scale.
+		If 'automaticImageSmoothing' is true then 'imageSmoothing' will be ignored and image smoothing
+		will be enabled and disabled depending on if the 'scale' is greater then 1 or less then 1.
+	*/
+	localContainer.image = function(config) {
 		var local = {
-			animationKeyFrames:{}, // {"AnimationName":[x, y, width, height, ..], "Idle":[0, 0, 32, 32], ..}
-			currentAnimation:"",
-			currentFrame:0,
-			imageScale:1 // set to 0?
+			image: null,
+			rotation: 0,
+			offset: [0, 0],
+			scale: 1,
+			automaticImageSmoothing: true,
+			imageSmoothing: true
 		};
-		Base(this.getAtomImage(config), local);
+		//ldp.e
+		Base.extend(this.drawable(config), local);
 
-		local.getCurrentAnimationLength = function() {
-			return this.animationKeyFrames[this.currentAnimation].length;
+		//ldp Sets the image smoothing on the context. Calling outside of drawing will waste CPU time.
+		local.setContextImageSmoothingEnabled = function() {
+			this.context.imageSmoothingEnabled = this.automaticImageSmoothing ? (this.scale > 1 ? false : true) : this.imageSmoothing;
 		};
 
+		//ldp.r list<number, number>
+		//ldp Gives the calculated offset for the set size so that the image will remain centered.
+		local.getOffsetScale = function() {
+			return [this.offset[0]*this.scale, this.offset[1]*this.scale];
+		};
+
+		//ldp Sets the alpha for the image and then draws it.
 		local.updateGraphics = function() {
-			var keyFrames = this.animationKeyFrames[this.currentAnimation];
-			var frame = this.currentFrame;
-			if (this.currentFrame >= keyFrames.length) console.warn("Warning!!! -> Animation keyFrame is out of range");
 			this.context.globalAlpha = this.alpha;
+			this.setContextImageSmoothingEnabled();
+			localContainer.drawImageScale(
+				this.context,
+				this.image,
+				this.getOffsetScale(),
+				this.pos,
+				this.rotation,
+				this.scale
+			);
+		};
+
+		return local;
+	};
+
+	//ldp.p object
+	//ldp.r object
+	//ldp Will animate over a spritesheet with keyframes. Is not automatic so you will have to set 'currentFrame' to the proper frame.
+	localContainer.animationManual = function(config) {
+		var local = {
+			animationKeyFrames: {}, // {"AnimationName":[x, y, width, height, ..], "Idle":[0, 0, 32, 32], ..}
+			currentAnimation: "",
+			currentAnimationLength: 0,
+			currentFrame: 0,
+			frame: []
+		};
+		//ldp.e
+		Base(this.image(config), local);
+
+		//ldp.p number
+		//ldp Keeps the current frame within the animation cycle.
+		local.setFrame = function(frameNumber) {
+			if (frameNumber < this.currentAnimationLength) this.currentFrame = 0;
+			else if (frameNumber > this.currentAnimationLength) this.currentFrame = this.currentAnimationLength - 1;
+			else this.currentFrame = frameNumber;
+		};
+
+		//ldp Moves the animaion forward one frame.
+		local.nextFrame = function() {
+			this.setFrame(this.currentframe + 1);
+		};
+
+		//ldp Moves the animation backward one frame.
+		local.previousFrame = function() {
+			this.setFrame(this.currentframe - 1);
+		};
+
+		//ldp Sets the selected animation frame length.
+		local.getAnimationLength = function() {
+			this.currentAnimationLength =  this.animationKeyFrames[this.currentAnimation].length/4;
+		};
+
+		//ldp Calculates the frame keys for the current frame.
+		local.getFrame = function() {
+			var keyFrames = this.animationKeyFrames[this.currentAnimation];
+			this.frame = [
+				keyFrames[this.currentFrame].slice(0, 2), // [x, y]
+				keyFrames[this.currentFrame].slice(2, 4) // [width, height]
+			];
+		};
+
+		//ldp.p string number
+		//ldp.r true if the animationName was valid
+		//ldp Sets the animation and frame to start looping over.
+		local.setCurrentAnimation = function(animationName, frameNumber) {
+			if (animationName in this.animationKeyFrames) {
+				this.currentAnimation = animationName;
+				this.getAnimationLength();
+				this.setFrame(frameNumber || 0);
+				return true;
+			}
+		};
+
+		//ldp Draws the current frame from the current animation.
+		local.updateGraphics = function() {
+			this.context.globalAlpha = this.alpha;
+			this.setContextImageSmoothingEnabled();
 			localContainer.drawImageClip(
 				this.context,
 				this.image,
-				this.offset, // Image offset
+				this.getOffsetScale(),
 				this.pos,
 				this.rotation,
-				keyFrames[frame].slice(0, 2), // ImageCut [x, y]
-				keyFrames[frame].slice(2, 4), // ImageCut [width, height]
-				this.imageScale // Image size, used to stretch or reduce
+				this.scale,
+				this.frame[0], // ImageCut [x, y]
+				this.frame[1] // ImageCut [width, height]
 			);
 		};
 		return local;
 	};
 
-	// Integrate with get getImageResize
-	localContainer.getAtomAnimation = function(config) {
+	//ldp.p object
+	//ldp.r object
+	//ldp Automatically animate without having to manually change the frame.
+	localContainer.animation = function(config) {
 		var local = {
-			animationSpeed:1, // Per second
-			animate:false, // start/continue the animation
+			framesPerSecond:1, // Per second
 			repeatAnimation:true, // Repeat the animation
-			elapsedTime:0,	// total time since last update
-			lastTime:Date.now(),
-			currentLength:0 // Length of animation
+			animate:false, // start/continue the animation
+			animateForwards: true, // false for backwards
+			lastFrameTime: 0
 		};
+		//ldp.e
+		this.Base.extend(this.animationManual(config), local);
 
-		// is this the right way of doing things? What does this really do?
-		local.changeAnimation = function(config) {
-			localContainer.extend(config, local);
-			if (this.currentAnimation !== "") {
-				this.currentLength = this.animationKeyFrames[this.currentAnimation].length-1;
+		//ldp preserve parent functions
+		local.setCurrentAnimation_manual = local.setCurrentAnimation;
+
+		//ldp.p string number number
+		//ldp.r true if the animationName was valid
+		//ldp Resets the animation timer while resetting the animation.
+		local.setCurrentAnimation = function(animationName, frameNumber, framesPerSecond) {
+			if (this.setCurrentAnimation_manual(animationName, frameNumber)) {
+				this.LastFrameTime += 1000/this.framesPerSecond;
+				if (framesPerSecond) this.framesPerSecond = framesPerSecond;
+				return true;
 			}
 		};
-		local.changeAnimation(this.getAtomAnimationManual(config));
-		local.updateImage = local.updateGraphics;
 
-		local.updateGraphics = function(frame) {
-			var currentTime = Date.now();
-			// auto-Animation is independent of the main-loop.
-			// Not sure if thats a good thing; if the game slows down the animations won't
-			// Its a bad thing I would think, fix this when I start to mess with it again
-			if (this.animate) {
-				if (this.elapsedTime >= 1000/this.animationSpeed) {
-					if (this.currentFrame < this.currentLength) {
-						this.currentFrame += 1;
-					} else {
-						this.currentFrame = 0;
-						if (!this.repeatAnimation) {
-							this.animate = false;
-						}
-					}
-					this.elapsedTime = 0;
-				}
-				this.elapsedTime += currentTime - this.lastTime;
-				this.lastTime = currentTime;
+		//ldp Check to see if the animation has reached the end of the cycled for the direction its cycling. If repeat animation is false then stop the animation.
+		local.hasAnimationFinishedCycle = function() {
+			if (!this.repeatAnimation) {
+				if (this.animateForwards && this.currentFrame == this.currentAnimationLength-1) this.animate = false;
+				else if (!this.animateForwards && this.currentFrame == 0) this.animate = false;
 			}
-			// Normal draw stuff
-			this.updateImage();
+		};
+
+		//ldp.p object
+		//ldp Increments/Decrements the frame every so many milliseconds.
+		local.updateLogic = function(frame) {
+			if (this.animate && frame.time - this.lastFrameTime >= 1000/this.framesPerSecond) {
+				if (this.animateForwards) this.nextFrame();
+				else previousFrame();
+				this.hasAnimationFinishedCycle();
+				this.lastFrameTime = frame.time;
+			}
 		};
 
 		return local;
 	};
 
-	localContainer.getAtomImage = function(config) {
-		var local = {
-			image: null,
-			rotation: 0,
-			offset: [0, 0]
-		};
-		Base.extend(this.atom(), local);
-		Base.extend(config, local);
-		local.updateGraphics = function() {
-			this.context.globalAlpha = this.alpha;
-			localContainer.drawImage(this.context, this.image, this.offset, this.pos, this.rotation);
-		};
-		return local;
-	};
 
-	// This should be extended after getAtomImage, otherwise updateGraphics won't be set to the correct one.
-	localContainer.getImageResize = function(config) {
-		var local = {
-			scale: 1,
-			imageScaledOffset: [0, 0],
-			imageSmoothing: true
-		};
-		Base(this.getAtomImage(config), local);
 
-		// This should be called at start in setup. Or should I just call it here so that it sets immediately?
-		local.setScale = function(newScale, imageSmoothing) {
-			this.scale = newScale;
-			this.imageSmoothing = imageSmoothing ? true : false;
-			this.imageScaledOffset = [this.offset[0]*newScale, this.offset[1]*newScale];
-		};
 
-		local.updateGraphics = function() {
-			console.log("Updating");
-			this.context.globalAlpha = this.alpha;
-			this.context.imageSmoothingEnabled = this.imageSmoothing;
-			localContainer.drawImageScale(this.context, this.image, this.imageScaledOffset, this.pos, this.rotation, this.scale);
-		};
-
-		return local;
-	};
 
 	localContainer.getText = function(config, fontWidth) {
 		// Can't be touched from outside the constructor. (^'u')^ - {yey}
@@ -330,7 +390,7 @@ function Graphics(Base) {
 			align: "start", // start, end, left, center, right
 			baseline: "alphabetic" // top, bottom, middle, alphabetic, hanging
 		};
-		Base.extend(this.atom(), local);
+		Base.extend(this.atdrawableom(), local);
 		Base.extend(config, local);
 
 		local.setSize = function(height) {
@@ -363,7 +423,7 @@ function Graphics(Base) {
 	};
 
 	localContainer.getBaseShape = function() {
-		return Base.extend(this.atom(), {
+		return Base.extend(this.atodrawablem(), {
 			ratio:[100, 100],
 			color:"white" // Should be black?
 		});
