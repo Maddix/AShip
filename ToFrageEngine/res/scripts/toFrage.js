@@ -9,7 +9,7 @@
 // - context is a Canvas.context("2d") object
 
  /*ldp
-
+	Wraps everything into a nice namespace.
  */
 function ToFrage() {
 	'use strict'; // Try putting 'var private = {};' somewhere. It should throw an error.

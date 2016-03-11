@@ -1,32 +1,27 @@
-// Still needs updating
-
 function setup(images, toFrage) {
 	var frage = toFrage;
 
 	// Create the layerController (AKA - Graphic controller)
 	var layerController = frage.Graphics.getLayerController({
-		container:"container",
-		ratio:[720, 640] // 720, 640
+		ratio: [720, 640]
 	});
-	layerController.createDiv();
+	layerController.setup(document.getElementById("container"));
 
 	// Create Logic controller
-	var logicController = frage.Base.getLogicController({
-		offset: [layerController.ratio[0]/2, layerController.ratio[1]/2]
-	});
+	var logicController = frage.Base.getLogicController();
 
 	// Create all the layers we are going to use, order matters
-	layerController.addLayer("backgroundLayer", frage.Graphics.getLayer());
-	layerController.addLayer("particleLayer", frage.Graphics.getLayer());
-	layerController.addLayer("objectLayer", frage.Graphics.getLayer());
-	layerController.addLayer("hud", frage.Graphics.getLayer());
-	layerController.addLayer("menu", frage.Graphics.getLayer());
-	layerController.addLayer("devOverlay", frage.Graphics.getLayer());
+	layerController.add("backgroundLayer", frage.Graphics.getLayer());
+	layerController.add("particleLayer", frage.Graphics.getLayer());
+	layerController.add("objectLayer", frage.Graphics.getLayer());
+	layerController.add("hud", frage.Graphics.getLayer());
+	layerController.add("menu", frage.Graphics.getLayer());
+	layerController.add("devOverlay", frage.Graphics.getLayer());
 
 	// Create an eventContext to handle input.
 	var inputEventContext = frage.Events.getEventContext();
 
-	// Create global static Data Object, it shouldn't be global should it. :/ "toFrage.DATA" ?
+	// Data object
 	var DATA = {
 		images: images,
 		imageFrames:{

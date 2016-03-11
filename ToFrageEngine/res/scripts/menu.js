@@ -68,7 +68,7 @@ function WindowLib(toFrage) {
 
 	localContainer.square = function(config) {
 		var local = this.frage.Base.extend(this.widget());
-		this.frage.Base.extend(this.frage.Graphics.getRectangle(config, true), local);
+		this.frage.Base.extend(this.frage.Graphics.rectangle(config), local);
 		local.updateLogic = function(frame) {
 			//console.log(this.arrangePos);
 		};
@@ -78,7 +78,7 @@ function WindowLib(toFrage) {
 
 	localContainer.text = function(config, fontWidth) {
 		var local = this.frage.Base.extend(this.widget());
-		this.frage.Base.extend(this.frage.Graphics.getText(config, fontWidth), local);
+		this.frage.Base.extend(this.frage.Graphics.text(config, fontWidth), local);
 
 		local.setup = function(context) {
 			this.context = context;

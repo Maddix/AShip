@@ -177,7 +177,7 @@ function Base() {
 	}
 
 	// TODO: Start here
-	//ldp Really old, was used with the ship physics stuff. I remove them from the project a while ago, though I will add it back in. Ignore for now.
+	//ldp Really old, was used with the ship physics stuff. Ignore for now.
 	localContainer.atomPhysics = {
 		shape: 2,
 		size: 10,
@@ -224,9 +224,6 @@ function Base() {
 		//ldp.e
 		this.extend(config, local);
 
-		// Called for free on creation.
-		local.setFPS(local.fps);
-
 		//ldp Checks that the browser can use requestAnimationFrame. Defaults to setTimeout otherwise.
 		local.getCallbackFunction = function() {
 			this.requestFunction = function(callback) {
@@ -250,6 +247,9 @@ function Base() {
 		local.setFPS = function(newFps) {
 			this.fps = 1000/newFps;
 		};
+
+		// Called for free on creation.
+		local.setFPS(local.fps);
 
 		//ldp Starts the loop
 		local.start = function() {

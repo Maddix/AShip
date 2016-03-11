@@ -3,7 +3,6 @@ function Graphics(Base) {
 		version: "1"
 	};
 
-
 	// Matrix for the canvas
 	// context.transform(
 	// 		Sc-X, Sk-Y, D-x,
@@ -91,19 +90,20 @@ function Graphics(Base) {
 		//ldp.e
 		Base.extend(Base.orderedObject(), local, true);
 
-		//ldp Preserve parent functions
+		//ldp Preserve parent function
 		local.add_ordered = local.add;
 
 		//ldp.p element string list<int, int ..> boolean
 		//ldp Creates a canvas element and then gets the canvas 2d object by default.
 		local.setup = function(container, id, ratio, is3d) {
-			this.canvas = document.createElement("canvas");
-			this.canvas.setAttribute("id", id);
-			this.canvas.setAttribute("width", localContainer.makeCssPixel(ratio[0]));
-			this.canvas.setAttribute("height", localContainer.makeCssPixel(ratio[1]));
-			this.canvas.setAttribute("style", this.style);
-			this.context = this.canvas.getContext(use3D ? "3d" : "2d");
-			container.appendChild(newCanvas);
+			var canvas = document.createElement("canvas");
+			canvas.setAttribute("id", id);
+			canvas.setAttribute("width", localContainer.makeCssPixel(ratio[0]));
+			canvas.setAttribute("height", localContainer.makeCssPixel(ratio[1]));
+			canvas.setAttribute("style", this.style);
+			this.context = canvas.getContext(is3d ? "3d" : "2d");
+			container.appendChild(canvas);
+			this.canvas = canvas;
 		};
 
 		//ldp.p objectName GraphicsConplient
@@ -119,7 +119,7 @@ function Graphics(Base) {
 
 		//ldp Clear the context and then have all the object draw.
 		local.updateGraphics = function() {
-			this.context.clearRect(0, 0, this.cavans.width, this.canvas.height);
+			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 			this.iterateOverObjects(function(object) {
 				object.updateGraphics();
 			});
@@ -134,16 +134,15 @@ function Graphics(Base) {
 	localContainer.getLayerController = function(config) {
 		var local = {
 			layerCountId: 0,
-			container: undefined,
 			ratio: [640, 480],
 			is3d: false,
 			div: null, // Pass in a div if your not planning on creating one
 			divAttributes: {
 				id: "toFrage",
 				oncontextmenu: "return false;",
-				style: "position: relative; width:{0} height:{1};".format(
-					localContainer.makeCssPixel(this.ratio[0]),
-					localContainer.makeCssPixel(this.ratio[1]))
+				style: "position: relative;",
+				width: localContainer.makeCssPixel(720),
+				height: localContainer.makeCssPixel(640)
 			},
 			validate: function(object) {
 				if (object.setup) return true;
@@ -158,11 +157,13 @@ function Graphics(Base) {
 
 		//ldp.p element
 		//ldp Creates or receives a div and adds attributes ot it.
-		local.setup = function(div) {
-			this.div = div || document.createElement("div");
+		local.setup = function(container) {
+			var div = document.createElement("div");
 			for (var key in this.divAttributes) {
-				this.div.setAttribute(key, this.divAttributes[key]);
+				div.setAttribute(key, this.divAttributes[key]);
 			}
+			container.appendChild(div);
+			this.div = div;
 		};
 
 		//ldp.p string object
@@ -190,7 +191,7 @@ function Graphics(Base) {
 	//ldp.r object
 	//ldp The simplest drawable object.
 	localContainer.drawable = function(config) {
-		var local = this.Base.extend(config, {
+		var local = Base.extend(config, {
 			pos: [0, 0],
 			alpha: 1,
 			context: null,
@@ -335,9 +336,9 @@ function Graphics(Base) {
 			lastFrameTime: 0
 		};
 		//ldp.e
-		this.Base.extend(this.animationManual(config), local);
+		Base.extend(this.animationManual(config), local);
 
-		//ldp preserve parent functions
+		//ldp preserve parent function
 		local.setCurrentAnimation_manual = local.setCurrentAnimation;
 
 		//ldp.p string number number
@@ -373,11 +374,10 @@ function Graphics(Base) {
 		return local;
 	};
 
-
-
-
-
-	localContainer.getText = function(config, fontWidth) {
+	//ldp.p object number
+	//ldp.r object
+	//ldp Creates a object that will render text. I will need to make another pass when I start using this again.
+	localContainer.text = function(config, fontWidth) {
 		// Can't be touched from outside the constructor. (^'u')^ - {yey}
 		var privateLocal = {
 			width: 0, // This is determined by the height and length of local.text
@@ -385,31 +385,38 @@ function Graphics(Base) {
 		};
 		var local = {
 			text: "null",
-			font:"Arial",
-			color:"white",
+			font: "Arial",
+			color: "white",
 			align: "start", // start, end, left, center, right
 			baseline: "alphabetic" // top, bottom, middle, alphabetic, hanging
 		};
-		Base.extend(this.atdrawableom(), local);
-		Base.extend(config, local);
+		//ldp.e
+		Base.extend(this.drawable(config), local);
 
+		//ldp.p number
+		//ldp Set the height of the text.
 		local.setSize = function(height) {
 			privateLocal.height = height;
 		};
 
+		//ldp.r list<number, number>
+		//ldp get the size of the text.
 		local.getSize = function() {
 			return [privateLocal.width, privateLocal.height];
 		};
 
+		//ldp Set the font on the context.
 		local.setFont = function() {
-			this.context.font = privateLocal.height + "px " + this.font;
+			this.context.font = "{0} {1}".format(localContainer.makeCssPixel(privateLocal.height), this.font);
 		};
 
+		//ldp Set the font and get the width of the text
 		local.getTextWidth = function() {
 			this.setFont();
 			privateLocal.width = this.context.measureText(this.text).width;
 		};
 
+		//ldp Render the text
 		local.updateGraphics = function() {
 			this.context.globalAlpha = this.alpha;
 			this.context.fillStyle = this.color;
@@ -422,30 +429,47 @@ function Graphics(Base) {
 		return local;
 	};
 
-	localContainer.getBaseShape = function() {
-		return Base.extend(this.atodrawablem(), {
+	//ldp.p object
+	//ldp.r object
+	//ldp Defines common things in shapes.
+	localContainer.shape = function(config) {
+		var local = {
 			ratio:[100, 100],
-			color:"white" // Should be black?
-		});
+			color:"white" // Should it be black?
+		};
+		//ldp.e
+		Base.extend(this.drawable(config), local);
+		return local;
 	};
 
-	localContainer.getBaseBorder = function() {
-		return {
+	//ldp.p object
+	//ldp.r object
+	//ldp Defines common things with borders around shapes.
+	localContainer.border = function(config) {
+		var local = {
 			borderWidth:1,
 			borderColor:"black",
 			borderStyle:"round", // bevel, round, miter
 			borderAlpha:1
 		};
+		//ldp.e
+		Base.extend(config, local);
+		return local;
 	};
 
-	// Should I move includeBorder into the config?
-	localContainer.getRectangle = function(config, includeBorder) {
-		var local = {};
-		Base.extend(this.getBaseShape(), local);
-		if (includeBorder) Base.extend(this.getBaseBorder(), local);
-		Base.extend(config, local);
+	//ldp.p object
+	//ldp.r object
+	//ldp Draws a rectangle with or without a border.
+	localContainer.rectangle = function(config) {
+		var local = {
+			includeBorder: true
+		};
+		//ldp.e
+		Base.extend(this.shape(config.includeBorder ? this.border(config) : config), local);
 
-		if (includeBorder) {
+		//ldp Set the right draw function
+		if (local.includeBorder) {
+			//ldp Draw the rectangle with a border.
 			local.updateGraphics = function() {
 				this.context.beginPath();
 				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
@@ -460,7 +484,8 @@ function Graphics(Base) {
 				this.context.stroke();
 			};
 		} else {
-			local.updateGraphics = this.updateGraphics = function() {
+			//ldp Draw the rectangle without a border.
+			local.updateGraphics = function() {
 				this.context.beginPath();
 				this.context.rect(this.pos[0], this.pos[1], this.ratio[0], this.ratio[1]);
 				this.context.globalAlpha = this.alpha;
@@ -472,13 +497,64 @@ function Graphics(Base) {
 		return local;
 	};
 
-	localContainer.getAtomLine = function(config) {
+
+	// Not tested yet.
+	//ldp.p object
+	//ldp.r object
+	//ldp Draws a circle.
+	localContainer.circle = function(config) {
 		var local = {
-			style:"round",
+			includeBorder: true,
+			angleRatio: [0, 2*Math.PI],
+			radius: 100,
+			clockwise: true,
+			color: "white"
+		};
+		//ldp.e
+		Base.extend(this.drawable(config.includeBorder ? this.border(config) : config), local);
+
+		//ldp Set the right draw function
+		if (local.includeBorder) {
+			//ldp Draw the rectangle with a border.
+			local.updateGraphics = function() {
+				this.context.beginPath();
+				this.context.arc(this.pos[0], this.pos[1], this.radius, this.angleRatio[0], this.angleRatio[1], this.clockwise);
+				this.context.globalAlpha = this.alpha;
+				this.context.fillStyle = this.color;
+				this.context.fill();
+				// Rect border
+				this.context.globalAlpha = this.borderAlpha;
+				this.context.lineJoin = this.borderStyle;
+				this.context.lineWidth = this.borderWidth;
+				this.context.strokeStyle = this.borderColor;
+				this.context.stroke();
+			};
+		} else {
+			//ldp Draw the rectangle without a border.
+			local.updateGraphics = function() {
+				this.context.beginPath();
+				this.context.arc(this.pos[0], this.pos[1], this.radius, this.angleRatio[0], this.angleRatio[1], this.clockwise);
+				this.context.globalAlpha = this.alpha;
+				this.context.fillStyle = this.color;
+				this.context.fill();
+			};
+		}
+
+		return local;
+	};
+
+	//ldp.p object
+	//ldp.r object
+	//ldp Draws a line.
+	localContainer.line = function(config) {
+		var local = {
+			style: "round",
 			lineWidth: 1
 		};
-		Base(this.getBaseShape(), local);
-		Base(config, local);
+		//ldp.e
+		Base(this.shape(config), local);
+
+		//ldp Draw the line.
 		local.updateGraphics = function() {
 			this.context.globalAlpha = this.alpha;
 			this.context.beginPath(); // Needed. Major lag if removed.
@@ -493,15 +569,19 @@ function Graphics(Base) {
 		return local;
 	};
 
-	localContainer.getAtomCustomLines = function(config) {
+	//ldp.p object
+	//ldp.r object
+	//ldp Draws multiple lines.
+	localContainer.lines = function(config) {
 		var local = {
-			style:"round",
-			lineWidth:1,
+			style: "round",
+			lineWidth: 1,
 			shape: [] // Holds lists of points, each new list is a new line -> [[startX,startY, x,y, ..], [startX,startY, x,y], ..]
 		};
-		Base(this.getBaseShape(), local);
-		Base(config, local);
+		//ldp.e
+		Base(this.shape(config), local);
 
+		//ldp Draw all the lines.
 		local.updateGraphics = function() {
 			this.context.globalAlpha = this.alpha;
 			this.context.beginPath();
