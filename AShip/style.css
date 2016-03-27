@@ -1,0 +1,18 @@
+
+div{
+	width:auto;
+	margin:auto;
+}
+html {
+	height: 100%;
+}
+body{
+	background-color: #2B2727;
+}
+
+div#toFrage {
+	border-style:solid;
+	border-width:4px;
+	border-color:#E47E00;
+	cursor: none;
+}
