@@ -40,8 +40,8 @@ function Graphics(Base) {
 		this.contextTranslateRotate(context, position, rotation);
 		context.drawImage(
 			image,
-			position[0] - imageOffset[0]*scale,
-			position[1] - imageOffset[1]*scale,
+			-imageOffset[0]*scale,
+			-imageOffset[1]*scale,
 			image.width*scale,
 			image.height*scale
 		);
@@ -58,8 +58,8 @@ function Graphics(Base) {
 			clipPosition[1],
 			clipRatio[0],
 			clipRatio[1],
-			(position[0] - imageOffset[0]/2)*scale,
-			(position[1] - imageOffset[1]/2)*scale,
+			(-imageOffset[0]/2)*scale,
+			(-imageOffset[1]/2)*scale,
 			imageOffset[0]*scale,
 			imageOffset[1]*scale
 		);
@@ -225,12 +225,6 @@ function Graphics(Base) {
 			this.context.imageSmoothingEnabled = this.automaticImageSmoothing ? (this.scale > 1 ? false : true) : this.imageSmoothing;
 		};
 
-		//ldp.r list<number, number>
-		//ldp Gives the calculated offset for the set size so that the image will remain centered.
-		local.getOffsetScale = function() {
-			return [this.offset[0]*this.scale, this.offset[1]*this.scale];
-		};
-
 		//ldp Sets the alpha for the image and then draws it.
 		local.updateGraphics = function() {
 			this.context.globalAlpha = this.alpha;
@@ -238,7 +232,7 @@ function Graphics(Base) {
 			localContainer.drawImageScale(
 				this.context,
 				this.image,
-				this.getOffsetScale(),
+				this.offset,
 				this.pos,
 				this.rotation,
 				this.scale
