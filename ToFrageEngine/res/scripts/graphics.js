@@ -140,9 +140,10 @@ function Graphics(Base) {
 			divAttributes: {
 				id: "toFrage",
 				oncontextmenu: "return false;",
-				style: "position: relative;",
-				width: localContainer.makeCssPixel(720),
-				height: localContainer.makeCssPixel(640)
+				style: "position: relative; width: {0}; height: {1};".format(
+					localContainer.makeCssPixel(720),
+					localContainer.makeCssPixel(640)
+				)
 			},
 			validate: function(object) {
 				if (object.setup) return true;
